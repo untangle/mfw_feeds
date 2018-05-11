@@ -1,0 +1,9 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006-2011 OpenWrt.org
+
+START=90
+STOP=90
+
+boot() {
+	ln -s /usr/lib/GeoLite2-Country.mmdb /tmp/GeoLite2-Country.mmdb
+}
