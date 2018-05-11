@@ -1,0 +1,36 @@
+CONFIG_TARGET_x86=y
+CONFIG_TARGET_x86_64=y
+CONFIG_TARGET_x86_64_Generic=y
+CONFIG_DEVEL=y
+CONFIG_TOOLCHAINOPTS=y
+CONFIG_GCC_LIBSSP=y
+CONFIG_LIBC="glibc"
+CONFIG_LIBC_USE_GLIBC=y
+# CONFIG_LIBC_USE_MUSL is not set
+CONFIG_PACKAGE_geoip-database=y
+CONFIG_PACKAGE_iptables-mod-conndict=y
+CONFIG_PACKAGE_iptables-mod-nfqueue=y
+CONFIG_PACKAGE_kmod-ipt-conndict=y
+CONFIG_PACKAGE_kmod-ipt-nfqueue=y
+CONFIG_PACKAGE_kmod-nf-conntrack-netlink=y
+CONFIG_PACKAGE_kmod-nfnetlink=y
+CONFIG_PACKAGE_kmod-nfnetlink-log=y
+CONFIG_PACKAGE_kmod-nfnetlink-queue=y
+CONFIG_PACKAGE_libmnl=y
+CONFIG_PACKAGE_libnavl=y
+CONFIG_PACKAGE_libnetfilter-conntrack=y
+CONFIG_PACKAGE_libnetfilter-log=y
+CONFIG_PACKAGE_libnetfilter-queue=y
+CONFIG_PACKAGE_libnfnetlink=y
+CONFIG_PACKAGE_libssp=y
+CONFIG_PACKAGE_libstdcpp=y
+CONFIG_PACKAGE_packetd=y
+CONFIG_STRIP_ARGS="--strip-all"
+CONFIG_TARGET_IMAGES_PAD=y
+CONFIG_TARGET_SUFFIX="gnu"
+CONFIG_USE_GLIBC=y
+CONFIG_USE_STRIP=y
+CONFIG_VDI_IMAGES=y
+CONFIG_VMDK_IMAGES=y
+# CONFIG_USE_LIBSTDCXX is not set
+CONFIG_USE_UCLIBCXX=y
