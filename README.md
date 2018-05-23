@@ -34,11 +34,15 @@ Building Openwrt with an Untangle Feed
 
 The steps below describe building an openwrt x86 image with support for
 running packetd. This is accomplished by pulling in a custom feed with
-the packetd application (precompiled for now) and a couple of
-dependencies. This is just an example of how we might build an openwrt
-based firmware image.
+the packetd application and a couple of dependencies. This is just an
+example of how we might build an openwrt based firmware image.
 
-First, grab the mainline openwrt git repository:
+Install build dependencies (you need an Untangle mirror in your
+sources.list):
+
+> apt-get install untangle-classd untangle-geoip-database libnetfilter-log-dev libnetfilter-queue-dev
+
+Grab the mainline openwrt git repository:
 
 > git clone [https://git.openwrt.org/openwrt/openwrt.git]
 > cd openwrt
