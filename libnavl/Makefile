@@ -27,22 +27,18 @@ define Package/libnavl/description
   Userspace packet processing daemon
 endef
 
-define Build/Prepare
-	curl -o $(PKG_BUILD_DIR)/libnavl.so.4.5 http://updates.untangle.com/openwrt/libnavl.so.4.5
-endef
-
 define Build/Compile
 	true
 endef
 
 define Build/InstallDev
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/libnavl.so.4.5 $(1)/usr/lib/
+	$(INSTALL_BIN) /usr/lib/libnavl.so.4.5 $(1)/usr/lib/
 endef
 
 define Package/libnavl/install
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/libnavl.so.4.5 $(1)/usr/lib/
+	$(INSTALL_BIN) /usr/lib/libnavl.so.4.5 $(1)/usr/lib/
 endef
 
 $(eval $(call BuildPackage,libnavl))
