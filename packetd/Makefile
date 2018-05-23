@@ -39,9 +39,6 @@ define Package/packetd/description
 	Userspace packet processing daemon
 endef
 
-define Build/Compile
-endef
-
 define Package/packetd/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./files/update_rules $(1)/usr/bin/
