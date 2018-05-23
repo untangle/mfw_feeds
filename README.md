@@ -1,17 +1,11 @@
 OpenWRT in QEMU
 ===============
 
-1) Run an image
----------------
-
 Launch with something like:
 
-> \~/ngfw\_pkgs/untangle-development-kernel/files/usr/bin/openwrt-qemu-run
-> -= f openwrt-x86-64-combined-ext4.img -b br0 -c br10 -t g
+> \~/ngfw\_pkgs/untangle-development-kernel/files/usr/bin/openwrt-qemu-run -f openwrt-x86-64-combined-ext4.img -b br0 -c br10 -t g
 
-This should launch OpenWRT (in x86\_64) in QEMU
-
-\
+This should launch OpenWRT (in x86\_64) in QEMU.
 
 In order to access the admin UI if you did not include luci you'll need
 to do:
@@ -24,11 +18,9 @@ You can also install other useful stuff:
 
 > opkg install tcpdump
 
-\
-
 At this point you can only access the the UI and SSH on the internal
-int= erface. To do this give br10 (internal bridge specified above) an
-address o= n the 192.168.1.x so your host can reach it.
+interface. To do this give br10 (internal bridge specified above) an
+address on the 192.168.1.x so your host can reach it.
 
 > ip addr add 192.168.1.2/24 dev br10
 
@@ -41,7 +33,7 @@ Building Openwrt with an Untangle Feed
 ======================================
 
 The steps below describe building an openwrt x86 image with support for
-running packetd. This is accomplished by pulling in a custom feed wit= h
+running packetd. This is accomplished by pulling in a custom feed with
 the packetd application (precompiled for now) and a couple of
 dependencies. This is just an example of how we might build an openwrt
 based firmware image.
