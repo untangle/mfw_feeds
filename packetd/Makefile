@@ -32,7 +32,7 @@ define Package/packetd/description
 endef
 
 define Build/Prepare
-	$(CP) src/packetd $(PKG_BUILD_DIR)/
+	curl -o $(PKG_BUILD_DIR)/packetd http://updates.untangle.com/openwrt/packetd
 	$(CP) src/update_rules $(PKG_BUILD_DIR)/
 endef
 

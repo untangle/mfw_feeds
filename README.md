@@ -52,8 +52,6 @@ Run the feed update script:
 
 > ./scripts/feeds update -a
 
-FIXME: detail how to grab libnavl/src/libnavl.so.4.5 and packetd/src/packetd
-
 Unfortunately, it doesn't seem like the feeds infrastructure supports
 patching existing packages/makefiles/etc, so we'll manually patch in
 conndict support for the kernel and iptables:

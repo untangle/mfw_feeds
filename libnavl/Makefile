@@ -28,7 +28,7 @@ define Package/libnavl/description
 endef
 
 define Build/Prepare
-	$(CP) src/libnavl.so.4.5 $(PKG_BUILD_DIR)/
+	curl -o $(PKG_BUILD_DIR)/libnavl.so.4.5 http://updates.untangle.com/openwrt/libnavl.so.4.5
 endef
 
 define Build/Compile
