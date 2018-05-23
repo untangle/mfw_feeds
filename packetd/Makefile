@@ -39,9 +39,13 @@ define Package/packetd/description
 	Userspace packet processing daemon
 endef
 
+define Package/packetd/compile
+	go build -o $(PKG_BUILD_DIR)/packetd
+endef
+
 define Package/packetd/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) ./files/update_rules $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/update_rules $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/packetd $(1)/usr/bin/
 endef
 
