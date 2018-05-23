@@ -40,7 +40,8 @@ define Package/packetd/description
 endef
 
 define Build/Compile
-	go build -o $(PKG_BUILD_DIR)/packetd
+	cd $(PKG_BUILD_DIR)
+	go build -o packetd
 endef
 
 define Package/packetd/install
