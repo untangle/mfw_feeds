@@ -39,7 +39,7 @@ define Package/packetd/description
 	Userspace packet processing daemon
 endef
 
-define Package/packetd/compile
+define Build/packetd/Compile
 	go build -o $(PKG_BUILD_DIR)/packetd
 endef
 
