@@ -1,10 +1,3 @@
-#
-# Copyright (C) 2016 OpenWrt.org
-#
-# This is free software, licensed under the GNU General Public License v2.
-# See /LICENSE for more information.
-#
-
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=packetd
@@ -12,12 +5,12 @@ PKG_VERSION:=0.1.0
 PKG_RELEASE:=2018-05-23
 PKG_LICENSE:=GPL-2.0
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
-PKG_MIRROR_HASH:=b31503be646939003bb1a82671f8b7106644460a
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE_URL:=https://github.com/untangle/packetd.git
 PKG_SOURCE_VERSION:=master
+# PKG_SOURCE_VERSION:=$(shell git ls-remote $(PKG_SOURCE_URL) $(PKG_BRANCH) ...)
+PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 
 PKG_MAINTAINER:=Michael Hotz <mahotz@untangle.com>
 
