@@ -13,7 +13,7 @@ PKG_SOURCE_URL:=https://github.com/untangle/ngfw_pkgs.git/untangle-python-sync-s
 PKG_SOURCE_VERSION:=master
 
 include $(INCLUDE_DIR)/package.mk
-include ../../lang/python/python-package.mk
+include ../../feeds/packages/lang/python/python-package.mk
 
 define Package/untangle-python-sync-settings
   SECTION:=net
