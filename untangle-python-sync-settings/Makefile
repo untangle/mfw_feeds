@@ -5,23 +5,27 @@ PKG_VERSION:=0.1
 PKG_RELEASE:=2018-05-30
 PKG_LICENSE:=GPL-2.0
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
-PKG_MIRROR_HASH:=b31503be646939003bb1a82671f8b7106644460a
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
-PKG_SOURCE_URL:=https://github.com/untangle/ngfw_pkgs.git/untangle-python-sync-settings
+PKG_SOURCE_URL:=https://github.com/untangle/ngfw_pkgs.git
 PKG_SOURCE_VERSION:=master
+# PKG_SOURCE_VERSION:=$(shell git ls-remote $(PKG_SOURCE_URL) $(PKG_BRANCH) ...)
+PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+MAKE_PATH:=untangle-python-sync-settings
+
+PKG_MAINTAINER:=Dirk Morris <dmorris@untangle.com>
 
 include $(INCLUDE_DIR)/package.mk
-include ../../packages/lang/python/python-package.mk
+#include ../../packages/lang/python/python-package.mk
+$(call include_mk, python3-package.mk)
 
 define Package/untangle-python-sync-settings
-  SECTION:=net
-  CATEGORY:=Network
+  SECTION:=lang
+  CATEGORY:=Languages
+  SUBMENU:=Python3
   TITLE:=Library for manipulating Untangle system settings
-  MAINTAINER:=Dirk Morris <dmorris@untangle.com>
   URL:=https://untangle.com
-  DEPENDS:=+python
+  DEPENDS:=+python3
 endef
 
 define Package/untangle-python-sync-settings/description
@@ -29,17 +33,17 @@ define Package/untangle-python-sync-settings/description
 endef
 
 define Build/Compile
-	$(call Build/Compile/PyMod,., \
+	$(call Build/Compile/PyMod3,., \
 		install --prefix="/usr" --root="$(PKG_INSTALL_DIR)", \
 	)
 endef
 
 define Package/untangle-python-sync-settings/install
-	$(INSTALL_DIR) $(1)$(PYTHON_PKG_DIR)
+	$(INSTALL_DIR) $(1)$(PYTHON3_PKG_DIR)
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(CP) \
-		$(PKG_INSTALL_DIR)$(PYTHON_PKG_DIR)/* \
-		$(1)$(PYTHON_PKG_DIR)/
+		$(PKG_INSTALL_DIR)$(PYTHON3_PKG_DIR)/* \
+		$(1)$(PYTHON3_PKG_DIR)/
 	$(CP) $(PKG_INSTALL_DIR)/usr/bin/* $(1)/usr/bin
 endef
 
