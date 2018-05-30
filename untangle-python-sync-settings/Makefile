@@ -6,18 +6,19 @@ PKG_RELEASE:=2018-05-30
 PKG_LICENSE:=GPL-2.0
 
 PKG_SOURCE_PROTO:=git
+# FIXME: cloning this takes forever
 PKG_SOURCE_URL:=https://github.com/untangle/ngfw_pkgs.git
 PKG_SOURCE_VERSION:=master
 # PKG_SOURCE_VERSION:=$(shell git ls-remote $(PKG_SOURCE_URL) $(PKG_BRANCH) ...)
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
-MAKE_PATH:=untangle-python-sync-settings
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+PKG_BUILD_DEPENDS:=python3-setuptools
 
 PKG_MAINTAINER:=Dirk Morris <dmorris@untangle.com>
 
 include $(INCLUDE_DIR)/package.mk
-#include ../../packages/lang/python/python-package.mk
-$(call include_mk, python3-package.mk)
+include ../../packages/lang/python/python3-package.mk
 
 define Package/untangle-python-sync-settings
   SECTION:=lang
@@ -33,9 +34,8 @@ define Package/untangle-python-sync-settings/description
 endef
 
 define Build/Compile
-	$(call Build/Compile/PyMod3,., \
-		install --prefix="/usr" --root="$(PKG_INSTALL_DIR)", \
-	)
+	$(call Build/Compile/Py3Mod,$(PKG_NAME), \
+		install --prefix="/usr" --root="$(PKG_INSTALL_DIR)", )
 endef
 
 define Package/untangle-python-sync-settings/install
@@ -47,4 +47,5 @@ define Package/untangle-python-sync-settings/install
 	$(CP) $(PKG_INSTALL_DIR)/usr/bin/* $(1)/usr/bin
 endef
 
+$(eval $(call Py3Package,untangle-python-sync-settings))
 $(eval $(call BuildPackage,untangle-python-sync-settings))
