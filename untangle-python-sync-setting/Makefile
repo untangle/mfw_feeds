@@ -15,7 +15,7 @@ PKG_SOURCE_VERSION:=master
 include $(INCLUDE_DIR)/package.mk
 include ../../lang/python/python-package.mk
 
-define Package/untangle-python-sync-setting
+define Package/untangle-python-sync-settings
   SECTION:=net
   CATEGORY:=Network
   TITLE:=Library for manipulating Untangle system settings
