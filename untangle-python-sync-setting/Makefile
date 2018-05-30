@@ -24,7 +24,7 @@ define Package/untangle-python-sync-settings
   DEPENDS:=+python
 endef
 
-define Package/untangle-python-sync-setting/description
+define Package/untangle-python-sync-settings/description
 	This module is a Library for manipulating Untangle system settings.
 endef
 
@@ -34,7 +34,7 @@ define Build/Compile
 	)
 endef
 
-define Package/scapy/install
+define Package/untangle-python-sync-settings/install
 	$(INSTALL_DIR) $(1)$(PYTHON_PKG_DIR)
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(CP) \
