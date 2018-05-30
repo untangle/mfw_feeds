@@ -63,8 +63,8 @@ conndict support for the kernel and iptables:
 > patch -p1 < feeds/untangle/patches/0001-Add-conndict-support.patch
 
 Run the feeds install script to install all of the packages in the
-untangle feed (packetd, libnavl, and geoip-database as of this
-writing):
+untangle feed (packetd, libnavl, geoip-database and
+untangle-python-sync-settings as of this writing):
 
 > ./script/feeds install -a -p untangle
 
