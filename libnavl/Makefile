@@ -1,8 +1,10 @@
+include $(TOPDIR)/rules.mk
+
 PKG_NAME:=libnavl
 PKG_RELEASE:=2018-05-09
 
 PKG_SOURCE:=libnavl.so.4.5.0
-PKG_SOURCE_URL:=http://foo:foo@updates.untangle.com/public/openwrt/
+PKG_SOURCE_URL:=http://foo:foo@updates.untangle.com/public/openwrt
 PKG_HASH:=edd381c64149086a3da2adf09c48e7162f345143a7cf8afe2ca75d949bf7f40d
 
 include $(INCLUDE_DIR)/package.mk
