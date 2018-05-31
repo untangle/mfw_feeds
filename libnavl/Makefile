@@ -1,15 +1,9 @@
-#
-# Copyright (C) 2016 OpenWrt.org
-#
-# This is free software, licensed under the GNU General Public License v2.
-# See /LICENSE for more information.
-#
-
-include $(TOPDIR)/rules.mk
-include $(INCLUDE_DIR)/kernel.mk
-
 PKG_NAME:=libnavl
 PKG_RELEASE:=2018-05-09
+
+PKG_SOURCE:=libnavl.so.4.5.0
+PKG_SOURCE_URL:=http://foo:foo@updates.untangle.com/public/openwrt/
+PKG_HASH:=edd381c64149086a3da2adf09c48e7162f345143a7cf8afe2ca75d949bf7f40d
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -20,7 +14,6 @@ define Package/libnavl
   TITLE:=Traffic Classification Library
   VERSION:=$(PKG_RELEASE)
   MAINTAINER:=Michael Hotz <mahotz@untangle.com>
-  URL:=https://www.github.com/untangle/ngfw_hades-pkgs/untangle-classd
 endef
 
 define Package/libnavl/description
@@ -33,12 +26,12 @@ endef
 
 define Build/InstallDev
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(INSTALL_BIN) /usr/lib/libnavl.so.4.5 $(1)/usr/lib/
+	$(INSTALL_BIN) $(BUILD_DIR)/$(PKG_SOURCE) $(1)/usr/lib/
 endef
 
 define Package/libnavl/install
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(INSTALL_BIN) /usr/lib/libnavl.so.4.5 $(1)/usr/lib/
+	$(INSTALL_BIN) /usr/lib/$(PKG_SOURCE) $(1)/usr/lib/
 endef
 
 $(eval $(call BuildPackage,libnavl))

@@ -45,11 +45,10 @@ running packetd. This is accomplished by pulling in a custom feed with
 the packetd application and a couple of dependencies. This is just an
 example of how we might build an openwrt based firmware image.
 
-Install build dependencies (you need an Untangle mirror in your
-sources.list):
+Install build dependencies:
 
 ```
-apt-get install untangle-classd libnetfilter-log-dev libnetfilter-queue-dev
+apt-get install libnetfilter-log-dev libnetfilter-queue-dev
 ```
 
 Grab the mainline openwrt git repository:
