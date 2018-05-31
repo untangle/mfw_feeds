@@ -37,8 +37,8 @@ login on the external interface goto Network & Firewall and change the
 WAN zone INPUT from "reject" to "accept" Then you will be able to ssh
 and admin from outside (beware SSH may have no password required!)
 
-Building Openwrt with an Untangle Feed
-======================================
+Building Openwrt with the Untangle Feed
+=======================================
 
 The steps below describe building an openwrt x86 image with support for
 running packetd. This is accomplished by pulling in a custom feed with
@@ -142,6 +142,9 @@ ls bin/targets/x86/64-glibc
 openwrt-x86-64-combined-ext4.img
 [...]
 ```
+
+Using this image to try out packetd
+===================================
 
 Boot the image and enable ssh as described above. At the openwrt prompt
 start packetd:
