@@ -4,7 +4,7 @@ OpenWRT in QEMU
 Launch with something like:
 
 ```
-\~/ngfw\_pkgs/untangle-development-kernel/files/usr/bin/openwrt-qemu-run -f openwrt-x86-64-combined-ext4.img -b br0 -c br10 -t g
+~/ngfw_pkgs/untangle-development-kernel/files/usr/bin/openwrt-qemu-run -f openwrt-x86-64-combined-ext4.img -b br0 -c br10 -t g
 ```
 
 This should launch OpenWRT (in x86\_64) in QEMU.
@@ -34,7 +34,7 @@ ip addr add 192.168.1.2/24 dev br10
 
 Then you can login at http://192.168.1.1. If you want to be able to
 login on the external interface goto Network & Firewall and change the
-WAN zone INPUT from "reject" to "accept"\ Then you will be able to ssh
+WAN zone INPUT from "reject" to "accept" Then you will be able to ssh
 and admin from outside (beware SSH may have no password required!)
 
 Building Openwrt with an Untangle Feed
@@ -91,7 +91,7 @@ untangle-python-sync-settings as of this writing):
 Optional: Install packages from the other default feeds:
 
 ```
-/script/feeds install some\_package\_i\_want
+/script/feeds install some_package_i_want
 ```
 
 Copy the seed config for our image and run defconfig to expand it:
