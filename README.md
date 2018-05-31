@@ -48,7 +48,7 @@ example of how we might build an openwrt based firmware image.
 Install build dependencies:
 
 ```
-apt-get install libnetfilter-log-dev libnetfilter-queue-dev
+apt-get install build-essential git curl gawk file wget unzip time python2.7 libncurses-dev
 ```
 
 Grab the mainline openwrt git repository:
@@ -84,13 +84,13 @@ untangle feed (packetd, libnavl, geoip-database and
 untangle-python-sync-settings as of this writing):
 
 ```
-./script/feeds install -a -p untangle
+./scripts/feeds install -a -p untangle
 ```
 
 Optional: Install packages from the other default feeds:
 
 ```
-/script/feeds install some_package_i_want
+/scripts/feeds install some_package_i_want
 ```
 
 Copy the seed config for our image and run defconfig to expand it:
