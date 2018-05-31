@@ -49,7 +49,7 @@ Install build dependencies (you need an Untangle mirror in your
 sources.list):
 
 ```
-apt-get install untangle-classd untangle-geoip-database libnetfilter-log-dev libnetfilter-queue-dev
+apt-get install untangle-classd libnetfilter-log-dev libnetfilter-queue-dev
 ```
 
 Grab the mainline openwrt git repository:
