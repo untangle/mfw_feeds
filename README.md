@@ -1,42 +1,3 @@
-OpenWRT in QEMU
-===============
-
-Launch with something like:
-
-```
-~/ngfw_pkgs/untangle-development-kernel/files/usr/bin/openwrt-qemu-run -f openwrt-x86-64-combined-ext4.img -b br0 -c br10 -t g
-```
-
-This should launch OpenWRT (in x86\_64) in QEMU.
-
-In order to access the admin UI if you did not include luci you'll need
-to do:
-
-```
-opkg update
-opkg install uhttpd
-opkg install luci
-```
-
-You can also install other useful stuff:
-
-```
-opkg install tcpdump
-```
-
-At this point you can only access the the UI and SSH on the internal
-interface. To do this give br10 (internal bridge specified above) an
-address on the 192.168.1.x so your host can reach it.
-
-```
-ip addr add 192.168.1.2/24 dev br10
-```
-
-Then you can login at http://192.168.1.1. If you want to be able to
-login on the external interface goto Network & Firewall and change the
-WAN zone INPUT from "reject" to "accept" Then you will be able to ssh
-and admin from outside (beware SSH may have no password required!)
-
 Building Openwrt with the Untangle Feed
 =======================================
 
@@ -135,23 +96,76 @@ make -j1 V=s
 ```
 
 If everything compiled correctly you should have a gzipped image in the
-bin directory:
+bin directory (to use with for instance QEMU):
 
 ```
 gunzip bin/targets/x86/64-glibc/openwrt-x86-64-combined-ext4.img.gz
 ```
 
-It can then be used with the QEMU steps at the top of this page:
+There is also a VirtualBox disk image:
 
 ```
-ls bin/targets/x86/64-glibc
-[...]
-openwrt-x86-64-combined-ext4.img
-[...]
+bin/targets/x86/64-glibc/openwrt-x86-64-combined-ext4.vdi
 ```
 
-Using this image to try out packetd
-===================================
+Running the image
+=================
+
+To launch OpenWRT x86\_64 in QEMU, make sure br0 is a pre-existing
+bridge with external access. On my machine, it looks like this, with
+eth0 being the actual physical interface connected to my network:
+
+```
+# ip ad show br0
+3: br0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether e0:cb:4e:a9:80:64 brd ff:ff:ff:ff:ff:ff
+    inet 172.17.17.6/24 brd 172.17.17.255 scope global br0
+       valid_lft forever preferred_lft forever
+# ip ad show eth0
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast master br0 state UP group default qlen 1000
+    link/ether e0:cb:4e:a9:80:64 brd ff:ff:ff:ff:ff:ff
+```
+
+Then run something like (br10 will be created dynamically):
+
+```
+~/ngfw_pkgs/untangle-development-kernel/files/usr/bin/openwrt-qemu-run -f openwrt-x86-64-combined-ext4.img -b br0 -c br10 -t g
+```
+
+Note: you can also use the VirtualBox image directly, but you'll need to
+take care of the entire networking setup yourself.
+
+Once your OpenWRT is booted up, in order to access the admin UI you'll
+need to add some extra packages if you haven't bundled them in the
+image:
+
+```
+opkg update
+opkg install uhttpd
+opkg install luci
+```
+
+Other useful programs can also be added, for instance:
+
+```
+opkg install tcpdump
+```
+
+At this point you can only access the the UI and SSH on the internal
+interface. To do this give br10 (internal bridge specified above) an
+address on the 192.168.1.x so your host can reach it.
+
+```
+ip addr add 192.168.1.2/24 dev br10
+```
+
+You can then login at http://192.168.1.1. If you want to be able to
+login on the external interface goto Network & Firewall and change the
+WAN zone INPUT from "reject" to "accept" Then you will be able to ssh
+and admin from outside (beware SSH may have no password required!)
+
+Trying out packetd
+==================
 
 Boot the image and enable ssh as described above. At the openwrt prompt
 start packetd:
@@ -160,7 +174,7 @@ start packetd:
 packetd
 ```
 
-Packetd is running, but we aren't sending it any packets yet. From a
+Packetd is now running, but we aren't sending it any packets yet. From a
 seperate terminal, ssh in and run update\_rules to insert the iptables
 rules needed to start passing traffic to packetd:
 
