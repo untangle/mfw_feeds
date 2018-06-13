@@ -175,7 +175,7 @@ packetd
 ```
 
 Packetd is now running, but we aren't sending it any packets yet. From a
-seperate terminal, ssh in and run update\_rules to insert the iptables
+separate terminal, ssh in and run update\_rules to insert the iptables
 rules needed to start passing traffic to packetd:
 
 ```
