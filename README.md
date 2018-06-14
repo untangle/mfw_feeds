@@ -157,7 +157,7 @@ uci commit
 ```
 
 You're can now ssh into your the host's eth1 IP, which it should have
-grabbed from DHCP your your bridged interface:
+grabbed from DHCP through your bridged interface:
 
 ```
 ip ad show eth1
