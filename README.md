@@ -111,6 +111,8 @@ bin/targets/x86/64-glibc/openwrt-x86-64-combined-ext4.vdi
 Running the image
 =================
 
+In QEMU
+-------
 To launch OpenWRT x86\_64 in QEMU, make sure br0 is a pre-existing
 bridge with external access. On my machine, it looks like this, with
 eth0 being the actual physical interface connected to my network:
@@ -132,12 +134,42 @@ Then run something like (br10 will be created dynamically):
 ~/ngfw_pkgs/untangle-development-kernel/files/usr/bin/openwrt-qemu-run -f openwrt-x86-64-combined-ext4.img -b br0 -c br10 -t g
 ```
 
-Note: you can also use the VirtualBox image directly, but you'll need to
-take care of the entire networking setup yourself.
+In Virtualbox
+-------------
 
-Once your OpenWRT is booted up, in order to access the admin UI you'll
-need to add some extra packages if you haven't bundled them in the
-image:
+Create a new VM using the vdi image, but *do not boot it* before
+changing its network settings: you want the 1st interface to be some
+some of an internal net, without a need for connectivity (this will be
+eth0, which OpenWRT uses as its internal interface), and the 2nd
+interface should ideally be bridged (this will be eth1, used as the
+external interface by OpenWRT)
+
+Accessing the host
+------------------
+
+At this point the external interface is firewalled off, and you want to
+change that:
+
+```
+uci set firewall.@zone[1].input=ACCEPT
+uci commit
+/etc/init.t/firewall restart
+```
+
+You're can now ssh into your the host's eth1 IP, which it should have
+grabbed from DHCP your your bridged interface:
+
+```
+ip ad show eth1
+```
+
+Beware SSH will by default have no password required!
+
+Using the admin UI
+------------------
+
+You can also install the admin UI, if you need it and haven't bundled
+them in the image:
 
 ```
 opkg update
@@ -145,24 +177,14 @@ opkg install uhttpd
 opkg install luci
 ```
 
+Installing extra programs
+-------------------------
+
 Other useful programs can also be added, for instance:
 
 ```
 opkg install tcpdump
 ```
-
-At this point you can only access the the UI and SSH on the internal
-interface. To do this give br10 (internal bridge specified above) an
-address on the 192.168.1.x so your host can reach it.
-
-```
-ip addr add 192.168.1.2/24 dev br10
-```
-
-You can then login at http://192.168.1.1. If you want to be able to
-login on the external interface goto Network & Firewall and change the
-WAN zone INPUT from "reject" to "accept" Then you will be able to ssh
-and admin from outside (beware SSH may have no password required!)
 
 Trying out packetd
 ==================
@@ -179,7 +201,7 @@ separate terminal, ssh in and run update\_rules to insert the iptables
 rules needed to start passing traffic to packetd:
 
 ```
-update_rules
+sh /usr/bin/update_rules
 ```
 
 Now bask in the packetd glory.
