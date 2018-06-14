@@ -196,9 +196,10 @@ start packetd:
 packetd
 ```
 
-Packetd is now running, but we aren't sending it any packets yet. From a
-separate terminal, ssh in and run update\_rules to insert the iptables
-rules needed to start passing traffic to packetd:
+Packetd is now running, and exposes its REST interface on port 8080, but
+we aren't sending it any packets yet. From a separate terminal, ssh in
+and run update\_rules to insert the iptables rules needed to start
+passing traffic to packetd:
 
 ```
 sh /usr/bin/update_rules
