@@ -21,7 +21,8 @@ define Package/packetd
   CATEGORY:=Network
   SUBMENU:=Firewall
   DEPENDS:=+libnetfilter-conntrack +libnetfilter-queue +libnetfilter-log +geoip-database \
-	  +iptables-mod-nfqueue +iptables-mod-conndict
+	  +iptables-mod-nfqueue +iptables-mod-conndict \
+	  +libc +libpthread
   # FIXME: needed ?
   KCONFIG:=CONFIG_NETFILTER_NETLINK_GLUE_CT=y CONFIG_NF_CT_NETLINK_HELPER=y \
 	  CONFIG_NF_CONNTRACK_DICT=y CONFIG_NF_CONNTRACK_DICT_LIVEPATCH=n
