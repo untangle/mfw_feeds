@@ -5,7 +5,7 @@ PKG_RELEASE:=2018-05-09
 
 PKG_SOURCE:=GeoLite2-Country.mmdb.gz
 PKG_SOURCE_URL:=http://geolite.maxmind.com/download/geoip/database
-PKG_HASH:=238555277c1a7cc71f10fcba6f42e84692d441960a6d828d0236c05df35f73df
+PKG_HASH:=092efb018dbca440372fb6a7f9b09f6e17df402a1448085ac8c797046788d1de
 
 include $(INCLUDE_DIR)/package.mk
 
