@@ -39,7 +39,7 @@ endef
 
 define Package/packetd/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/update_rules $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/packetd_rules $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/packetd $(1)/usr/bin/
 endef
 
