@@ -47,7 +47,7 @@ Optional: Install packages from the other default feeds:
 
 Copy the seed config for our image and run defconfig to expand it:
 ```
-cp feeds/untangle/configs/config.seed.x86 .config
+cp feeds/untangle/configs/config.seed.x86.glibc .config
 make defconfig
 ```
 
