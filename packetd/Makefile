@@ -27,8 +27,9 @@ define Package/packetd
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Firewall
+  PKG_BUILD_DEPENDS:=golang
   DEPENDS:=+libnetfilter-conntrack +libnetfilter-queue +libnetfilter-log +geoip-database \
-	  +iptables-mod-nfqueue +iptables-mod-conndict +golang
+	  +iptables-mod-nfqueue +iptables-mod-conndict
   # FIXME: needed ?
   KCONFIG:=CONFIG_NETFILTER_NETLINK_GLUE_CT=y CONFIG_NF_CT_NETLINK_HELPER=y \
 	  CONFIG_NF_CONNTRACK_DICT=y CONFIG_NF_CONNTRACK_DICT_LIVEPATCH=n
