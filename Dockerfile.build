@@ -1,0 +1,27 @@
+FROM debian:stretch
+
+USER root
+
+RUN apt-get update
+RUN apt-get install -y git
+RUN apt-get install -y curl
+RUN apt-get install -y build-essential
+RUN apt-get install -y gawk
+RUN apt-get install -y file wget unzip time libncurses5 python2.7
+RUN apt-get install -y libncurses5-dev
+RUN apt-get install -y libssl-dev
+RUN apt-get install -y gettext
+RUN apt-get install -y swig
+RUN apt-get install -y zlib1g-dev
+
+# RUN useradd -ms /bin/bash untangle
+# WORKDIR /home/untangle
+# USER untangle
+
+ENV SRC=/home/untangle/openwrt
+RUN mkdir -p ${SRC}
+VOLUME ${SRC}
+
+WORKDIR ${SRC}
+
+ENTRYPOINT [ "./build.sh" ]
