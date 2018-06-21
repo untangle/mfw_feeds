@@ -13,7 +13,7 @@ before_install:
 - docker pull untangleinc/mfw:build
 
 script:
-- docker-compose -f docker-compose.build.yml run build
+- docker-compose -f docker-compose.build.yml run build musl V=s
 
 notifications:
   email: false
