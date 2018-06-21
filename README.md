@@ -1,92 +1,77 @@
-Building Openwrt with the Untangle Feed
+Building OpenWRT with the Untangle Feed
 =======================================
 
-The steps below describe building an openwrt x86 image with support for
+The steps below describe building an OpenWRT x86 image with support for
 running packetd. This is accomplished by pulling in a custom feed with
-the packetd application and a couple of dependencies. This is just an
-example of how we might build an openwrt based firmware image.
+the packetd application and a couple of dependencies.
 
-Install build dependencies:
+The Docker build method uses a volume to perform the build, you can mix
+both methods at any time: the build results will always be on your local
+disk.
 
-```
-apt-get install build-essential git curl gawk file wget unzip time python2.7 libncurses-dev
-```
+Building in Docker:
+-------------------
 
-Grab the Untangle-patched openwrt git repository:
+Grab the Untangle-patched OpenWRT git repository:
 ```
 git clone https://github.com/untangle/openwrt.git
 cd openwrt
 ```
 
-Use the Untangle feeds.conf:
+Build it for your intended libc target:
 ```
-cp feeds.conf.untangle feeds.conf
-```
-
-Run the feed update script:
-```
-./scripts/feeds update -a
+docker-compose -f Dockerfile-build.yml run build (musl|glibc)
 ```
 
-Install required official packages:
+The OpenWRT documentation warns that building with -jN can cause
+issues. If you hit a failure with -jN the first thing to do is to rerun
+with -j1. Adding V=s increases verbosity so that you'll have output to
+look at when/if something still fails to build:
+
 ```
-/scripts/feeds install python3
-/scripts/feeds install diffutils
+docker-compose -f Dockerfile-build.yml run build (musl|glibc) -j1 V=s
 ```
 
-Run the feeds install script to install all of the packages in the
-untangle feed:
+Building directly on a Stretch host:
+------------------------------------
+
+Install build dependencies:
 ```
-./scripts/feeds install -a -p untangle
+apt-get install build-essential curl file gawk gettext git libncurses5-dev libssl-dev python2.7 swig time unzip wget zlib1g-dev
 ```
 
-Optional: Install packages from the other default feeds:
+Grab the Untangle-patched OpenWRT git repository:
 ```
-/scripts/feeds install some_package_i_want
-```
-
-Copy the seed config for our image and run defconfig to expand it:
-```
-cp feeds/untangle/configs/config.seed.x86.glibc .config
-make defconfig
+git clone https://github.com/untangle/openwrt.git
+cd openwrt
 ```
 
-Optional: Use menuconfig to add other things to the image:
+Build it for your intended libc target:
 ```
-make menuconfig
-```
-
-Download everything needed to build the image (use -jN for speed):
-```
-make -j32 download
+./build.sh (musl|glibc)
 ```
 
-Build everything:
-```
-make -j32
-```
-
-The openwrt documentation warns that building with -jN can cause
+The OpenWRT documentation warns that building with -jN can cause
 issues. If you hit a failure with -jN the first thing to do is to rerun
 with -j1. Adding V=s increases verbosity so that you'll have output to
 look at when/if something still fails to build:
 ```
-make -j1 V=s
+./build.sh (musl|glibc) -j1 V=s
 ```
 
-If everything compiled correctly you should have a gzipped image in the
+Setting up a VM
+===============
+
+If everything built correctly you should have a gzipped image in the
 bin directory (to use with for instance QEMU):
 ```
-gunzip bin/targets/x86/64-glibc/openwrt-x86-64-combined-ext4.img.gz
+gunzip bin/targets/x86/64*/openwrt-x86-64-combined-ext4.img.gz
 ```
 
 There is also a VirtualBox disk image:
 ```
-bin/targets/x86/64-glibc/openwrt-x86-64-combined-ext4.vdi
+bin/targets/x86/64*/openwrt-x86-64-combined-ext4.vdi
 ```
-
-Running the image
-=================
 
 In QEMU
 -------
@@ -119,30 +104,32 @@ eth0, which OpenWRT uses as its internal interface), and the 2nd
 interface should ideally be bridged (this will be eth1, used as the
 external interface by OpenWRT)
 
+Running the image
+=================
+
 Accessing the host
 ------------------
 
-At this point the external interface is firewalled off, and you want to
-change that:
+After starting your VM, the external interface is firewalled off, and
+you need to change that:
 ```
 uci set firewall.@zone[1].input=ACCEPT
 uci commit
 /etc/init.t/firewall restart
 ```
 
-You're can now ssh into your the host's eth1 IP, which it should have
+You can now ssh into your the host's eth1 IP, which it should have
 grabbed from DHCP through your bridged interface:
 ```
 ip ad show eth1
 ```
 
-Beware SSH will by default have no password required!
+Beware: SSH will by default not require a password!
 
-Using the admin UI
-------------------
+Using the OpenWRT admin UI
+--------------------------
 
-You can also install the admin UI, if you need it and haven't bundled
-them in the image:
+You can also install the OpenWRT admin UI if you need it:
 ```
 opkg update
 opkg install uhttpd
@@ -160,7 +147,7 @@ opkg install tcpdump
 Trying out packetd
 ==================
 
-Boot the image and enable ssh as described above. At the openwrt prompt
+Boot the image and enable ssh as described above. At the OpenWRT prompt
 start packetd:
 ```
 packetd
@@ -171,7 +158,7 @@ we aren't sending it any packets yet. From a separate terminal, ssh in
 and run update\_rules to insert the iptables rules needed to start
 passing traffic to packetd:
 ```
-sh /usr/bin/update_rules
+packetd_rules
 ```
 
 Now bask in the packetd glory.
