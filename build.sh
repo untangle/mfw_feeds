@@ -21,7 +21,7 @@ cp feeds/untangle/configs/config.seed.x86.${LIBC} .config
 make defconfig
 
 # download
-make -j32 download
+make ${@:-j32} download
 
 # build
 make ${@:-j32}

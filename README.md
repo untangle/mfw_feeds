@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/untangle/mfw_packetd.svg?branch=master)](https://travis-ci.org/untangle/mfw_packetd)
-[![Go Report Card](https://goreportcard.com/badge/github.com/untangle/mfw_packetd)](https://goreportcard.com/report/github.com/untangle/mfw_packetd)
+[![Build Status](https://travis-ci.org/untangle/packetd.svg?branch=master)](https://travis-ci.org/untangle/packetd)
+[![Go Report Card](https://goreportcard.com/badge/github.com/untangle/packetd)](https://goreportcard.com/report/github.com/untangle/packetd)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
 # packetd
@@ -26,7 +26,7 @@ Building in docker
 For this to work you *have* to have your clone under a path of the form:
 
 ```
-[...]/src/github.com/untangle/mfw_packetd
+[...]/src/github.com/untangle/packetd
 ```
 
 libc target
