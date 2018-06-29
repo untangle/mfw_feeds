@@ -29,10 +29,10 @@ define Package/packetd
   SUBMENU:=Firewall
   PKG_BUILD_DEPENDS:=golang
   DEPENDS:=+libnetfilter-conntrack +libnetfilter-queue +libnetfilter-log +geoip-database \
-	  +iptables-mod-nfqueue +iptables-mod-conndict
+	  +iptables-mod-nfqueue
   # FIXME: needed ?
   KCONFIG:=CONFIG_NETFILTER_NETLINK_GLUE_CT=y CONFIG_NF_CT_NETLINK_HELPER=y \
-	  CONFIG_NF_CONNTRACK_DICT=y CONFIG_NF_CONNTRACK_DICT_LIVEPATCH=n
+	  CONFIG_NF_CONNTRACK_DICT=m
   TITLE:=Userspace packet processing daemon
   URL:=https://www.github.com/untangle/packetd
 endef
