@@ -52,7 +52,7 @@ define Build/Compile
                         CC=$(TARGET_CC) \
                         CXX=$(TARGET_CXX) \
                         $(call GoPackage/Environment) ; \
-	go get ; go build -v -o packetd
+	make
 endef
 
 define Package/packetd/install
