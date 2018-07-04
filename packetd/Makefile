@@ -1,8 +1,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=packetd
-PKG_VERSION:=0.1.1
-PKG_RELEASE:=2018-06-13
+PKG_VERSION:=latest
+PKG_RELEASE:=latest
 PKG_LICENSE:=GPL-2.0
 
 PKG_SOURCE_PROTO:=git
@@ -15,7 +15,7 @@ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 GO_PKG:=github.com/untangle/packetd
 GO_PKG_INSTALL_EXTRA:=packetd_rules
 
-PKG_MAINTAINER:=Michael Hotz <mahotz@untangle.com>
+PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
 
 include $(INCLUDE_DIR)/package.mk
 # FIXME: standardize on OpenWRT+golang macros, ideally we wouldn't
