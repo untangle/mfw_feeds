@@ -14,7 +14,7 @@ PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 
 GO_PKG:=github.com/untangle/packetd
-GO_PKG_INSTALL_EXTRA:=packetd_rules
+GO_PKG_INSTALL_EXTRA:=packetd_rules Makefile
 
 PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
 
