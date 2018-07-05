@@ -12,3 +12,10 @@ services:
     volumes:
       - ./:/home/untangle/openwrt
     command: musl
+
+networks:
+  default:
+    ipam:
+       driver: default
+       config:
+         - subnet: 192.168.123.0/24
