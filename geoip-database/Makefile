@@ -1,11 +1,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=geoip-database
-PKG_RELEASE:=2018-05-09
+PKG_RELEASE:=latest
 
 PKG_SOURCE:=GeoLite2-Country.mmdb.gz
 PKG_SOURCE_URL:=http://geolite.maxmind.com/download/geoip/database
-PKG_HASH:=092efb018dbca440372fb6a7f9b09f6e17df402a1448085ac8c797046788d1de
+PKG_HASH:=dea358329840929e93c00c4e4cf1a27e694fe9bb19ea150193849a7533d98939
+
+PKG_MAINTAINER:=Michael Hotz <mahotz@untangle.com>
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -13,8 +15,6 @@ define Package/geoip-database
   SECTION:=libs
   CATEGORY:=Libraries
   TITLE:=IP Geolocation Database
-  VERSION:=$(PKG_RELEASE)
-  MAINTAINER:=Michael Hotz <mahotz@untangle.com>
 endef
 
 define Package/geoip-database/description

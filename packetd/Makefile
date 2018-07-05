@@ -7,6 +7,7 @@ PKG_LICENSE:=GPL-2.0
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/untangle/packetd.git
+# FIXME: this should be a tag, as should PKG_VERSION above
 PKG_SOURCE_VERSION:=master
 # PKG_SOURCE_VERSION:=$(shell git ls-remote $(PKG_SOURCE_URL) $(PKG_BRANCH) ...)
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
