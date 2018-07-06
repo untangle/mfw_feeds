@@ -20,7 +20,7 @@ cd openwrt
 
 Build it for your intended libc target:
 ```
-docker-compose -f Dockerfile-build.yml run build (musl|glibc)
+docker-compose -f Dockerfile-build.yml run build (-d x86_64|wrt3200, -l musl|glibc)
 ```
 
 The OpenWRT documentation warns that building with -jN can cause
