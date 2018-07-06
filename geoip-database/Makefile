@@ -1,13 +1,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=geoip-database
-PKG_RELEASE:=latest
+PKG_VERSION:=latest
 
 PKG_SOURCE:=GeoLite2-Country.mmdb.gz
 PKG_SOURCE_URL:=http://geolite.maxmind.com/download/geoip/database
 PKG_HASH:=dea358329840929e93c00c4e4cf1a27e694fe9bb19ea150193849a7533d98939
 
-PKG_MAINTAINER:=Michael Hotz <mahotz@untangle.com>
+PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
 
 include $(INCLUDE_DIR)/package.mk
 

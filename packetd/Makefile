@@ -2,7 +2,6 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=packetd
 PKG_VERSION:=latest
-PKG_RELEASE:=latest
 PKG_LICENSE:=GPL-2.0
 
 PKG_SOURCE_PROTO:=git
