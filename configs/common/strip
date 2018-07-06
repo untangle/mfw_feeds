@@ -1,0 +1,2 @@
+CONFIG_STRIP_ARGS="--strip-all"
+CONFIG_USE_STRIP=y
