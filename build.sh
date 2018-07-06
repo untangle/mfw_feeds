@@ -33,7 +33,7 @@ cp feeds.conf.untangle feeds.conf
 make defconfig
 
 # download
-make ${@:-j32} download
+make ${@:--j32} download
 
 # build
-make ${@:-j32}
+make ${@:--j32}
