@@ -3,12 +3,13 @@
 set -e
 
 usage() {
-  echo "Usage: $0 -d <device> [-l <libc>]"
-  echo "  -d <device> : x86_64, wrt3200, ..."
+  echo "Usage: $0 [-d <device>] [-l <libc>]"
+  echo "  -d <device> : x86_64, wrt3200, ... (defaults to x86_64)"
   echo "  -l <libc>   : musl, glibc (defaults to musl)"
   exit 1
 }
 
+DEVICE="x86_64"
 LIBC="musl"
 while getopts "d:l:h" opt ; do
   case "$opt" in
@@ -17,10 +18,6 @@ while getopts "d:l:h" opt ; do
     h) usage ;;
   esac
 done
-
-if [ -z "$DEVICE" ] ; then
-  usage
-fi
 
 DIR=$(readlink -f $(dirname "$0"))
 
