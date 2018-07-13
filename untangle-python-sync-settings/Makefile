@@ -25,7 +25,7 @@ define Package/untangle-python-sync-settings
   SUBMENU:=Python3
   TITLE:=Library for manipulating Untangle system settings
   URL:=https://untangle.com
-  DEPENDS:=+python3
+  DEPENDS:=+python3 +diffutils
 endef
 
 define Package/untangle-python-sync-settings/description
