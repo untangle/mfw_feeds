@@ -32,7 +32,7 @@ define Package/packetd
 	  +iptables-mod-nfqueue
   # FIXME: needed ?
   KCONFIG:=CONFIG_NETFILTER_NETLINK_GLUE_CT=y CONFIG_NF_CT_NETLINK_HELPER=y \
-	  CONFIG_NF_CONNTRACK_DICT=m
+	  CONFIG_NF_CONNTRACK_DICT=m CONFIG_NFT_QUEUE=m
   TITLE:=Userspace packet processing daemon
   URL:=https://www.github.com/untangle/packetd
 endef
