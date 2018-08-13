@@ -20,7 +20,7 @@ git clone https://github.com/untangle/openwrt.git
 cd openwrt
 ```
 
-Build it for your intended libc target:
+Build it for your intended device and libc targets:
 ```
 docker-compose -f Dockerfile-build.yml run build (-d x86_64|wrt3200|wrt1900, -l musl|glibc)
 ```
@@ -31,7 +31,7 @@ with -j1. Adding V=s increases verbosity so that you'll have output to
 look at when/if something still fails to build:
 
 ```
-docker-compose -f Dockerfile-build.yml run build (musl|glibc) -j1 V=s
+docker-compose -f Dockerfile-build.yml run build (-d x86_64|wrt3200, -l musl|glibc) -j1 V=s
 ```
 
 Building directly on a Stretch host:
@@ -50,7 +50,7 @@ cd openwrt
 
 Build it for your intended libc target:
 ```
-./build.sh (musl|glibc)
+./build.sh (-d x86_64|wrt3200, -l musl|glibc)
 ```
 
 The OpenWRT documentation warns that building with -jN can cause
@@ -58,7 +58,7 @@ issues. If you hit a failure with -jN the first thing to do is to rerun
 with -j1. Adding V=s increases verbosity so that you'll have output to
 look at when/if something still fails to build:
 ```
-./build.sh (musl|glibc) -j1 V=s
+./build.sh (-d x86_64|wrt3200, -l musl|glibc) -j1 V=s
 ```
 
 Setting up a VM
