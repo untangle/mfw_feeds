@@ -36,6 +36,10 @@
 		    "type": "array",
 		    "items": { "$ref": "#/definitions/device_settings" }
 		}
+		"switches": {
+		    "type": "array",
+		    "items": { "$ref": "#/definitions/switch_settings" }
+		}
 	    }
 	},
 	"interface_settings": {
@@ -458,6 +462,58 @@
 		"action": {
 		    "type": "string",
 		    "enum": ["REJECT"]
+		}
+	    }
+	},
+	"switch_settings": {
+	    "type": "object",
+	    "description": "Ethernet switch settings",
+	    "required": [],
+	    "additionalProperties": false,
+	    "properties": {
+		"name": {
+		    "type": "string",
+		    "description": "The switch name (switch0)"
+		},
+		"ports": {
+		    "type": "array",
+		    "description": "The ports of the switch",
+		    "items": { "$ref": "#/definitions/switch_port" }
+		},
+		"vlans": {
+		    "type": "array",
+		    "description": "The vlans of the switch",
+		    "items": { "$ref": "#/definitions/switch_vlan" }
+		}
+	    }
+	},
+	"switch_port": {
+	    "type": "object",
+	    "description": "A port on an Ethernet switch",
+	    "required": [],
+	    "properties": {
+		"id": {
+		    "type": "string",
+		    "description": "The port id"
+		},
+		"pvid": {
+		    "type": "string",
+		    "description": "The primary vlan id"
+		},
+		"cpu_port": {
+		    "type": "boolean",
+		    "description": "True if this port is connected directly to the CPU"
+		}
+	    }
+	},
+	"switch_vlan": {
+	    "type": "object",
+	    "description": "A vlan on an Ethernet switch",
+	    "required": [],
+	    "properties": {
+		"id": {
+		    "type": "string",
+		    "description": "The vlan id"
 		}
 	    }
 	}
