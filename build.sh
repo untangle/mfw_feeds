@@ -26,6 +26,7 @@ cp feeds.conf.untangle feeds.conf
 
 # install feeds
 ./scripts/feeds update -a
+./scripts/feeds install -a -p packages
 ./scripts/feeds install -a -p untangle
 
 # config
