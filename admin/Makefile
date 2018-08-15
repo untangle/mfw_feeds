@@ -31,7 +31,7 @@ define Build/Compile
 endef
 
 define Package/admin/install
-	make DESTDIR=$(1) install
+	make DESTDIR=$(1)/var/www install
 endef
 
 $(eval $(call BuildPackage,admin))
