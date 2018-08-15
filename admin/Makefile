@@ -20,6 +20,7 @@ define Package/admin
   SECTION:=ui
   CATEGORY:=User Interface
   TITLE:=MFW admin interface
+  URL:=https://www.github.com/untangle/mfw_admin
 endef
 
 define Package/admin/description
@@ -31,7 +32,7 @@ define Build/Compile
 endef
 
 define Package/admin/install
-	make DESTDIR=$(1)/var/www install
+	make -C $(PKG_BUILD_DIR) DESTDIR=$(1)/var/www install
 endef
 
 $(eval $(call BuildPackage,admin))
