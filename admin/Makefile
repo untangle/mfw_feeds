@@ -32,7 +32,7 @@ define Build/Compile
 endef
 
 define Package/admin/install
-	make -C $(PKG_BUILD_DIR) DESTDIR=$(1)/var/www install
+	make -C $(PKG_BUILD_DIR) DESTDIR=$(1)/www install
 endef
 
 $(eval $(call BuildPackage,admin))
