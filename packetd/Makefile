@@ -1,21 +1,20 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=packetd
-PKG_VERSION:=latest
 PKG_LICENSE:=GPL-2.0
-
+PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/untangle/packetd.git
-# FIXME: this should be a tag, as should PKG_VERSION above
-PKG_SOURCE_VERSION:=master
-# PKG_SOURCE_VERSION:=$(shell git ls-remote $(PKG_SOURCE_URL) $(PKG_BRANCH) ...)
+
+include ../version.mk
+PKG_VERSION:=$(call UNTANGLE_VERSION,$(PKG_SOURCE_URL))
+PKG_SOURCE_VERSION:=$(PKG_VERSION)
+
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 
 GO_PKG:=github.com/untangle/packetd
 GO_PKG_INSTALL_EXTRA:=packetd_rules Makefile
-
-PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
 
 include $(INCLUDE_DIR)/package.mk
 # FIXME: standardize on OpenWRT+golang macros, ideally we wouldn't
@@ -27,14 +26,14 @@ define Package/packetd
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Firewall
+  TITLE:=Userspace packet processing daemon
+  URL:=https://www.github.com/untangle/packetd
   PKG_BUILD_DEPENDS:=golang
   DEPENDS:=+libnetfilter-conntrack +libnetfilter-queue +libnetfilter-log +geoip-database \
 	  +iptables-mod-nfqueue
   # FIXME: needed ?
   KCONFIG:=CONFIG_NETFILTER_NETLINK_GLUE_CT=y CONFIG_NF_CT_NETLINK_HELPER=y \
 	  CONFIG_NF_CONNTRACK_DICT=m CONFIG_NFT_QUEUE=m
-  TITLE:=Userspace packet processing daemon
-  URL:=https://www.github.com/untangle/packetd
 endef
 
 define Package/packetd/description
