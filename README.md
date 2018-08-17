@@ -50,7 +50,7 @@ cd openwrt
 
 Build it for your intended libc target:
 ```
-./build.sh (-d x86_64|wrt3200, -l musl|glibc)
+./build.sh [-d (x86_64|wrt3200)] [-l (musl|glibc)] [-v (<branch>|<tag>|release)]
 ```
 
 The OpenWRT documentation warns that building with -jN can cause
@@ -58,7 +58,7 @@ issues. If you hit a failure with -jN the first thing to do is to rerun
 with -j1. Adding V=s increases verbosity so that you'll have output to
 look at when/if something still fails to build:
 ```
-./build.sh (-d x86_64|wrt3200, -l musl|glibc) -j1 V=s
+./build.sh [-d (x86_64|wrt3200)] [-l (musl|glibc)] [-v (<branch>|<tag>|release)] -j1 V=s
 ```
 
 Setting up a VM
