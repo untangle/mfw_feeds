@@ -46,4 +46,4 @@ make UNTANGLE_VERSION=${VERSION} download
 
 # build
 # make ${@:--j32}
-make
+make UNTANGLE_VERSION=${VERSION}
