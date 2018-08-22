@@ -3,3 +3,4 @@ staging_dir/
 dl/
 bin/
 logs/
+tmp/
