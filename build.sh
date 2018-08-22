@@ -41,9 +41,7 @@ cp feeds.conf.untangle feeds.conf
 make defconfig
 
 # download
-# make ${@:--j32} UNTANGLE_VERSION=${VERSION} download
-make UNTANGLE_VERSION=${VERSION} download
+make ${@:--j32} UNTANGLE_VERSION=${VERSION} download
 
 # build
-# make ${@:--j32}
-make UNTANGLE_VERSION=${VERSION}
+make ${@:--j32} UNTANGLE_VERSION=${VERSION}
