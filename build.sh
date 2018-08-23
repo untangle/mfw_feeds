@@ -7,6 +7,7 @@ usage() {
   echo "Usage: $0 [-d <device>] [-l <libc>] [-v (latest|<branch>|<tag>)]"
   echo "  -d <device>              : x86_64, wrt3200, wrt1900 (defaults to x86_64)"
   echo "  -l <libc>                : musl, glibc (defaults to musl)"
+  echo "  -m <make options>        : pass those to OpenWRT's make \"as is\" (default is -j32)"
   echo "  -v latest|<branch>|<tag> : version to build from (defaults to master)"
   echo "                             - 'release' is a special keyword meaning 'most recent tag from each"
   echo "                                package's source repository'"
@@ -18,15 +19,16 @@ usage() {
 DEVICE="x86_64"
 LIBC="musl"
 VERSION="master"
-while getopts "d:l:v:h" opt ; do
+MAKE_OPTIONS="-j32"
+while getopts "d:l:v:h:m:" opt ; do
   case "$opt" in
     d) DEVICE="$OPTARG" ;;
     l) LIBC="$OPTARG" ;;
     v) VERSION="$OPTARG" ;;
+    m) MAKE_OPTIONS="$OPTARG" ;;
     h) usage ;;
   esac
 done
-shift $(($OPTIND - 1))
 
 # add Untangle feed definitions
 cp feeds.conf.untangle feeds.conf
@@ -41,7 +43,7 @@ cp feeds.conf.untangle feeds.conf
 make defconfig
 
 # download
-make ${@:--j32} UNTANGLE_VERSION=${VERSION} download
+make $MAKE_OPTIONS UNTANGLE_VERSION=${VERSION} download
 
 # build
-make ${@:--j32} UNTANGLE_VERSION=${VERSION}
+make $MAKE_OPTIONS UNTANGLE_VERSION=${VERSION}
