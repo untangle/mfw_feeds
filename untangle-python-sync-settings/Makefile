@@ -43,6 +43,8 @@ define Package/untangle-python-sync-settings/install
 		$(PKG_INSTALL_DIR)$(PYTHON3_PKG_DIR)/* \
 		$(1)$(PYTHON3_PKG_DIR)/
 	$(CP) $(PKG_INSTALL_DIR)/usr/bin/* $(1)/usr/bin
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) files/sync-settings.init $(1)/etc/init.d/sync-settings
 endef
 
 $(eval $(call Py3Package,untangle-python-sync-settings))

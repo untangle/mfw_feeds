@@ -1,0 +1,12 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006-2011 OpenWrt.org
+
+START=90
+STOP=90
+
+boot() {
+	if [ ! -f /etc/config/settings.json ] ; then
+		logger -t "sync-settings" "Creating settings.json"
+		sync-settings -c
+	fi
+}
