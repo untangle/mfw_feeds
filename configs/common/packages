@@ -19,3 +19,4 @@ CONFIG_PACKAGE_nftables=y
 CONFIG_PACKAGE_packetd=y
 CONFIG_PACKAGE_python3=y
 CONFIG_PACKAGE_untangle-python-sync-settings=y
+CONFIG_PACKAGE_tcpdump=y
