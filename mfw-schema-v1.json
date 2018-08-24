@@ -35,7 +35,7 @@
 		"devices": {
 		    "type": "array",
 		    "items": { "$ref": "#/definitions/device_settings" }
-		}
+		},
 		"switches": {
 		    "type": "array",
 		    "items": { "$ref": "#/definitions/switch_settings" }
