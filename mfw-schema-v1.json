@@ -476,7 +476,7 @@
 	"switch_settings": {
 	    "type": "object",
 	    "description": "Ethernet switch settings",
-	    "required": [],
+	    "required": ["name", "ports", "vlans"],
 	    "additionalProperties": false,
 	    "properties": {
 		"name": {
@@ -498,7 +498,7 @@
 	"switch_port": {
 	    "type": "object",
 	    "description": "A port on an Ethernet switch",
-	    "required": [],
+	    "required": ["id", "pvid", "cpu_port"],
 	    "properties": {
 		"id": {
 		    "type": "string",
@@ -517,7 +517,7 @@
 	"switch_vlan": {
 	    "type": "object",
 	    "description": "A vlan on an Ethernet switch",
-	    "required": [],
+	    "required": ["id"],
 	    "properties": {
 		"id": {
 		    "type": "string",
