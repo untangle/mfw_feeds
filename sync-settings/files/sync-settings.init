@@ -6,7 +6,7 @@ STOP=11
 
 boot() {
 	if [ ! -f /etc/config/settings.json ] ; then
-		logger -t "sync-settings" "Creating settings.json"
-		sync-settings -c
+		logger -t "sync-settings" "Creating /etc/config/settings.json"
+		/usr/bin/sync-settings -c -n | logger -t "sync-settings"
 	fi
 }
