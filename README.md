@@ -22,7 +22,7 @@ cd openwrt
 
 Build it for your intended device and libc targets:
 ```
-docker-compose -f Dockerfile-build.yml run build (-d x86_64|wrt3200, -l musl|glibc)
+docker-compose -f Dockerfile-build.yml run build (-d x86_64|wrt1900|wrt3200|omnia, -l musl|glibc)
 ```
 
 The OpenWRT documentation warns that building with -jN can cause
@@ -31,7 +31,7 @@ with -j1. Adding V=s increases verbosity so that you'll have output to
 look at when/if something still fails to build:
 
 ```
-docker-compose -f Dockerfile-build.yml run build (-d x86_64|wrt3200, -l musl|glibc) -m "-j1 V=s"
+docker-compose -f Dockerfile-build.yml run build (-d x86_64|wrt1900|wrt3200|omnia, -l musl|glibc) -m "-j1 V=s"
 ```
 
 Building directly on a Stretch host:
@@ -50,7 +50,7 @@ cd openwrt
 
 Build it for your intended libc target:
 ```
-./build.sh [-d (x86_64|wrt3200)] [-l (musl|glibc)] [-v (<branch>|<tag>|release)]
+./build.sh [-d (x86_64|wrt1900|wrt3200|omnia)] [-l (musl|glibc)] [-v (<branch>|<tag>|release)]
 ```
 
 The OpenWRT documentation warns that building with -jN can cause
@@ -58,7 +58,7 @@ issues. If you hit a failure with -jN the first thing to do is to rerun
 with -j1. Adding V=s increases verbosity so that you'll have output to
 look at when/if something still fails to build:
 ```
-./build.sh [-d (x86_64|wrt3200)] [-l (musl|glibc)] [-v (<branch>|<tag>|release)] -m "-j1 V=s"
+./build.sh [-d (x86_64|wrt1900|wrt3200|omnia)] [-l (musl|glibc)] [-v (<branch>|<tag>|release)] -m "-j1 V=s"
 ```
 
 Setting up a VM
@@ -74,6 +74,8 @@ There is also a VirtualBox disk image:
 ```
 bin/targets/x86/64*/openwrt-x86-64-combined-ext4.vdi
 ```
+
+Read further instructions below for VirtualBox
 
 In QEMU
 -------
@@ -93,7 +95,7 @@ eth0 being the actual physical interface connected to my network:
 
 Then run something like (br10 will be created dynamically):
 ```
-~/ngfw_pkgs/untangle-development-kernel/files/usr/bin/openwrt-qemu-run -f openwrt-x86-64-combined-ext4.img -b br0 -c br10 -t g
+~/ngfw_pkgs/untangle-development-kernel/files/usr/bin/ut-qemu-run -f openwrt-x86-64-combined-ext4.img -b br0 -c br10 -t g
 ```
 
 In Virtualbox
@@ -106,27 +108,19 @@ eth0, which OpenWRT uses as its internal interface), and the 2nd
 interface should ideally be bridged (this will be eth1, used as the
 external interface by OpenWRT)
 
+Beware: SSH will by default not require a password!
+
 Running the image
 =================
 
 Accessing the host
 ------------------
 
-After starting your VM, the external interface is firewalled off, and
-you need to change that:
-```
-uci set firewall.@zone[1].input=ACCEPT
-uci commit
-/etc/init.t/firewall restart
-```
-
 You can now ssh into your the host's eth1 IP, which it should have
 grabbed from DHCP through your bridged interface:
 ```
 ip ad show eth1
 ```
-
-Beware: SSH will by default not require a password!
 
 Using the OpenWRT admin UI
 --------------------------
@@ -149,18 +143,16 @@ opkg install tcpdump
 Trying out packetd
 ==================
 
-Boot the image and enable ssh as described above. At the OpenWRT prompt
-start packetd:
+packetd is started by default by procd and listens on port 8080 for now.
+
+You can stop it with:
+
+```
+/etc/init.d/packetd stop
+```
+
+To run it in the foreground where you can see debugging output just run:
 ```
 packetd
 ```
 
-Packetd is now running, and exposes its REST interface on port 8080, but
-we aren't sending it any packets yet. From a separate terminal, ssh in
-and run update\_rules to insert the iptables rules needed to start
-passing traffic to packetd:
-```
-packetd_rules
-```
-
-Now bask in the packetd glory.
