@@ -27,7 +27,8 @@ while getopts "d:l:v:h:m:" opt ; do
   case "$opt" in
     d) DEVICE="$OPTARG" ;;
     l) LIBC="$OPTARG" ;;
-    v) VERSION="$OPTARG" ;;
+    v) VERSION="$OPTARG"
+       [[ $VERSION == "release" ]] && VERSION="" ;;
     m) MAKE_OPTIONS="$OPTARG" ;;
     h) usage ;;
   esac
