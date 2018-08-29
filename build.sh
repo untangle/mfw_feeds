@@ -3,6 +3,9 @@
 set -e
 #set -x
 
+# hides perl warning about locale
+export LC_ALL=${LC_ALL:-C}
+
 usage() {
   echo "Usage: $0 [-d <device>] [-l <libc>] [-v (latest|<branch>|<tag>)]"
   echo "  -d <device>              : x86_64, wrt3200, wrt1900 (defaults to x86_64)"
