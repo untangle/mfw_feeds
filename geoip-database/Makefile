@@ -30,9 +30,8 @@ define Build/Compile
 endef
 
 define Package/geoip-database/install
-	$(INSTALL_DIR) $(1)/usr/share/untangle-geoip $(1)/etc/init.d
-	$(INSTALL_BIN) files/geoip-database.init $(1)/etc/init.d/geoip-database
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/GeoLite2-Country.mmdb $(1)/usr/share/untangle-geoip
+	$(INSTALL_DIR) $(1)/usr/share/geoip
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/GeoLite2-Country.mmdb $(1)/usr/share/geoip
 endef
 
 $(eval $(call BuildPackage,geoip-database))
