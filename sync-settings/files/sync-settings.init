@@ -1,8 +1,8 @@
 #!/bin/sh /etc/rc.common
-# Copyright (C) 2006-2011 OpenWrt.org
 
-START=90
-STOP=90
+# 11 is right after boot (10)
+START=11
+STOP=11
 
 boot() {
 	if [ ! -f /etc/config/settings.json ] ; then

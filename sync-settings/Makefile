@@ -45,6 +45,7 @@ define Package/sync-settings/install
 	$(CP) $(PKG_INSTALL_DIR)/usr/bin/* $(1)/usr/bin
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) files/sync-settings.init $(1)/etc/init.d/sync-settings
+	$(INSTALL_BIN) files/nft-rules.init $(1)/etc/init.d/nft-rules
 endef
 
 $(eval $(call Py3Package,sync-settings))
