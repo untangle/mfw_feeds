@@ -7,11 +7,6 @@ PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/untangle/mfw_admin.git
 
 include ../version.mk
-PKG_VERSION:=$(call UNTANGLE_VERSION,$(PKG_SOURCE_URL))
-PKG_SOURCE_VERSION:=$(PKG_VERSION)
-
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 
 include $(INCLUDE_DIR)/package.mk
 
