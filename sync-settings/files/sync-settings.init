@@ -9,7 +9,7 @@ boot() {
 		logger -t "sync-settings" "Creating /etc/config/settings.json"
 		/usr/bin/sync-settings -c -n | logger -t "sync-settings"
 	fi
-	/usr/bin/sync-settings -c -n -f /etc/config/defaults.json
+	/usr/bin/sync-settings -c -s -f /etc/config/defaults.json
 
     # FIXME
     # We need to check the version and call an upgrade utility if the version of the settings is out-of-date
