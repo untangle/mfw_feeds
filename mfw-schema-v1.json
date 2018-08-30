@@ -10,7 +10,9 @@
 	},
 	"network": { "$ref": "#/definitions/network_settings" },
 	"system": { "$ref": "#/definitions/system_settings" },
-	"firewall": { "$ref": "#/definitions/firewall_settings" }
+	"firewall": { "$ref": "#/definitions/firewall_settings" },
+	"dhcp": { "$ref": "#/definitions/dhcp_settings" },
+	"dns": { "$ref": "#/definitions/dns_settings" }
     },
     "definitions": {
 	"firewall_settings": {
@@ -49,14 +51,6 @@
 		"switches": {
 		    "type": "array",
 		    "items": { "$ref": "#/definitions/switch_settings" }
-		},
-		"dhcp": {
-		    "type": "array",
-		    "items": { "$ref": "#/definitions/dhcp_settings" }
-		},
-		"dns": {
-		    "type": "array",
-		    "items": { "$ref": "#/definitions/dns_settings" }
 		}
 	    }
 	},
