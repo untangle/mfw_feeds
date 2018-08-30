@@ -38,6 +38,7 @@ done
 cp feeds.conf.mfw feeds.conf
 
 # install feeds
+rm -fr {.,package}/feeds/untangle*
 ./scripts/feeds update -a
 ./scripts/feeds install -a -p packages
 ./scripts/feeds install -a -p mfw
