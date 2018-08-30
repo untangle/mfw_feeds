@@ -9,9 +9,19 @@
 	    "minimum": 1
 	},
 	"network": { "$ref": "#/definitions/network_settings" },
-	"system": { "$ref": "#/definitions/system_settings" }
+	"system": { "$ref": "#/definitions/system_settings" },
+	"firewall": { "$ref": "#/definitions/firewall_settings" }
     },
     "definitions": {
+	"firewall_settings": {
+	    "type": "object",
+	    "properties": {
+		"tables": {
+		    "type": "array",
+		    "items": { "$ref": "#/definitions/table" }
+		}
+	    }
+	},
 	"system_settings": {
 	    "type": "object",
 	    "description": "system settings",
@@ -406,6 +416,58 @@
 		}
 	    }
 	},
+	"table": {
+	    "type": "object",
+	    "properties": {
+		"name": {
+		    "type": "string",
+		    "description": "The name of the table"
+		},
+		"family": {
+		    "type": "string",
+		    "description": "The family of the table",
+		    "enum": ["inet","ip","ip6","arp","bridge","netdev"]
+		},
+		"chains": {
+		    "type": "array",
+		    "items": { "$ref": "#/definitions/chain" }
+		}
+	    }
+	},
+	"chain": {
+	    "type": "object",
+	    "properties": {
+		"name": {
+		    "type": "string",
+		    "description": "The name of the chain"
+		},
+		"type": {
+		    "type": "string",
+		    "description": "The type of chain, only applies to base chains",
+		    "enum": ["filter","route","nat"]
+		},
+		"hook": {
+		    "type": "string",
+		    "description": "The netfilter hook, only applies to base chains",
+		    "enum": ["prerouting","input","forward","output","postrouting","ingress"]
+		},
+		"priority": {
+		    "type": "integer",
+		    "description": "The netfilter priority, only applies to base chains"
+		},
+		"base": {
+		    "type": "boolean",
+		    "description": "True if base chain, False otherwise"
+		},
+		"editable": {
+		    "type": "boolean",
+		    "description": "True if chain is editable, False otherwise"
+		},
+		"rules": {
+		    "items": { "$ref": "#/definitions/rule" }
+		}
+	    }
+	},
 	"rule": {
 	    "type": "object",
 	    "description": "A rule",
@@ -469,7 +531,10 @@
 	    "properties": {
 		"action": {
 		    "type": "string",
-		    "enum": ["REJECT"]
+		    "enum": ["JUMP","GOTO","REJECT"]
+		},
+		"chain": {
+		    "type": "string"
 		}
 	    }
 	},
