@@ -13,7 +13,7 @@ usage() {
   echo "  -m <make options>        : pass those to OpenWRT's make \"as is\" (default is -j32)"
   echo "  -v latest|<branch>|<tag> : version to build from (defaults to master)"
   echo "                             - 'release' is a special keyword meaning 'most recent tag from each"
-  echo "                                package's source repository'"
+  echo "                               package's source repository'"
   echo "                             - <branch> or <tag> can be any valid git object as long as it exists"
   echo "                               in each package's source repository (mfw_admin, packetd, ngfw_pkgs, etc)"
   exit 1
@@ -34,7 +34,7 @@ while getopts "d:l:v:h:m:" opt ; do
   esac
 done
 
-# add Untangle feed definitions
+# add MFW feed definitions
 cp feeds.conf.untangle feeds.conf
 
 # install feeds
@@ -47,7 +47,7 @@ cp feeds.conf.untangle feeds.conf
 make defconfig
 
 # download
-make $MAKE_OPTIONS UNTANGLE_VERSION=${VERSION} download
+make $MAKE_OPTIONS MFW_VERSION=${VERSION} download
 
 # build
-make $MAKE_OPTIONS UNTANGLE_VERSION=${VERSION}
+make $MAKE_OPTIONS MFW_VERSION=${VERSION}

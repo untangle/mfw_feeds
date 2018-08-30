@@ -3,12 +3,12 @@ services:
   build:
     image: untangleinc/mfw:build
     volumes:
-      - ./:/home/untangle/openwrt
+      - ./:/home/mfw/openwrt
     command: musl
   build-local-container:
     build:
       context: .
       dockerfile: Dockerfile.build
     volumes:
-      - ./:/home/untangle/openwrt
+      - ./:/home/mfw/openwrt
     command: musl
