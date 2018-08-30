@@ -35,15 +35,15 @@ while getopts "d:l:v:h:m:" opt ; do
 done
 
 # add MFW feed definitions
-cp feeds.conf.untangle feeds.conf
+cp feeds.conf.mfw feeds.conf
 
 # install feeds
 ./scripts/feeds update -a
 ./scripts/feeds install -a -p packages
-./scripts/feeds install -a -p untangle
+./scripts/feeds install -a -p mfw
 
 # config
-./feeds/untangle/configs/generate.sh -d $DEVICE -l $LIBC >| .config
+./feeds/mfw/configs/generate.sh -d $DEVICE -l $LIBC >| .config
 make defconfig
 
 # download
