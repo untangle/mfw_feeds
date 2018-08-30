@@ -17,13 +17,13 @@ define Package/sync-settings
   SECTION:=lang
   CATEGORY:=Languages
   SUBMENU:=Python3
-  TITLE:=Library for manipulating Untangle system settings
+  TITLE:=Library for manipulating MFW system settings
   URL:=https://untangle.com
   DEPENDS:=+python3 +diffutils
 endef
 
 define Package/sync-settings/description
-	This module is a Library for manipulating Untangle system settings.
+	This module is a Library for manipulating MFW system settings.
 endef
 
 define Build/Compile

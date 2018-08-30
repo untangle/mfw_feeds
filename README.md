@@ -1,6 +1,6 @@
 -[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
-Building OpenWRT with the Untangle Feed
+Building OpenWRT with the MFW Feed
 =======================================
 
 The steps below describe building an OpenWRT x86 image with support for
@@ -14,7 +14,7 @@ disk.
 Building in Docker:
 -------------------
 
-Grab the Untangle-patched OpenWRT git repository:
+Grab the MFW-patched OpenWRT git repository:
 ```
 git clone https://github.com/untangle/openwrt.git
 cd openwrt
@@ -42,7 +42,7 @@ Install build dependencies:
 apt-get install build-essential curl file gawk gettext git libncurses5-dev libssl-dev python2.7 swig time unzip wget zlib1g-dev
 ```
 
-Grab the Untangle-patched OpenWRT git repository:
+Grab the MFW-patched OpenWRT git repository:
 ```
 git clone https://github.com/untangle/openwrt.git
 cd openwrt
