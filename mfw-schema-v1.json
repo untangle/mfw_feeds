@@ -500,14 +500,17 @@
 			     "SERVER_ADDRESS",
 			     "CLIENT_PORT",
 			     "SERVER_PORT",
-			     "CLIENT_INTERFACE",
-			     "SERVER_INTERFACE",
+			     "CLIENT_INTERFACE_ZONE",
+			     "SERVER_INTERFACE_ZONE",
 			     "SOURCE_ADDRESS",
 			     "DESTINATION_ADDRESS",
 			     "SOURCE_PORT",
 			     "DESTINATION_PORT",
-			     "SOURCE_INTERFACE",
-			     "DESTINATION_INTERFACE"]
+			     "SOURCE_INTERFACE_ZONE",
+			     "DESTINATION_INTERFACE_ZONE",
+			     "SOURCE_INTERFACE_NAME",
+			     "DESTINATION_INTERFACE_NAME",
+			    ]
 		},
 		"value": {
 		    "type": "string"
