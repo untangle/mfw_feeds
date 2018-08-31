@@ -496,7 +496,8 @@
 	    "properties": {
 		"type": {
 		    "type": "string",
-		    "enum": ["CLIENT_ADDRESS",
+		    "enum": ["IP_PROTOCOL",
+			     "CLIENT_ADDRESS",
 			     "SERVER_ADDRESS",
 			     "CLIENT_PORT",
 			     "SERVER_PORT",
@@ -509,8 +510,7 @@
 			     "SOURCE_INTERFACE_ZONE",
 			     "DESTINATION_INTERFACE_ZONE",
 			     "SOURCE_INTERFACE_NAME",
-			     "DESTINATION_INTERFACE_NAME",
-			    ]
+			     "DESTINATION_INTERFACE_NAME"]
 		},
 		"value": {
 		    "type": "string"
