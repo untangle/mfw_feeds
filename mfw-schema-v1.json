@@ -526,9 +526,9 @@
 	    "description": "A rule condition",
 	    "additionalProperties": true,
 	    "properties": {
-		"action": {
+		"type": {
 		    "type": "string",
-		    "enum": ["JUMP","GOTO","REJECT"]
+		    "enum": ["JUMP","GOTO","REJECT","ACCEPT"]
 		},
 		"chain": {
 		    "type": "string"
