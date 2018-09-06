@@ -25,7 +25,7 @@ define Package/sync-settings/description
 endef
 
 define Build/Compile
-	$(call Build/Compile/Py3Mod,$(PKG_NAME), \
+	$(call Build/Compile/Py3Mod,., \
 		install --prefix="/usr" --root="$(PKG_INSTALL_DIR)", )
 endef
 
