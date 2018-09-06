@@ -4,11 +4,9 @@ PKG_NAME:=sync-settings
 PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/untangle/ngfw_pkgs.git
+PKG_SOURCE_URL:=https://github.com/untangle/$(PKG_NAME).git
 
 include ../version.mk
-
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
 include ../../packages/lang/python/python3-package.mk
@@ -39,9 +37,9 @@ define Package/sync-settings/install
 		$(1)$(PYTHON3_PKG_DIR)/
 	$(CP) $(PKG_INSTALL_DIR)/usr/bin/* $(1)/usr/bin
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) files/sync-settings.init $(1)/etc/init.d/sync-settings
+	$(INSTALL_BIN) files/$(PKG_NAME).init $(1)/etc/init.d/$(PKG_NAME)
 	$(INSTALL_BIN) files/nftables-rules.init $(1)/etc/init.d/nftables-rules
 endef
 
-$(eval $(call Py3Package,sync-settings))
-$(eval $(call BuildPackage,sync-settings))
+$(eval $(call Py3Package,$(PKG_NAME)))
+$(eval $(call BuildPackage,$(PKG_NAME)))
