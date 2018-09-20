@@ -34,8 +34,10 @@ while getopts "d:l:v:h:m:" opt ; do
   esac
 done
 
-# add MFW feed definitions
-cp feeds.conf.mfw feeds.conf
+# add MFW feed definitions, and for each feed use the same branch
+# we're currently on
+CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
+perl -pe 's|$|;'${CURRENT_BRANCH}'|' feeds.conf.mfw >| feeds.conf
 
 # install feeds
 rm -fr {.,package}/feeds/untangle*
