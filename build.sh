@@ -36,8 +36,12 @@ done
 
 # add MFW feed definitions, and for each feed use the same branch
 # we're currently on
-CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
-perl -pe 's|$|;'${CURRENT_BRANCH}'|' feeds.conf.mfw >| feeds.conf
+CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2> /dev/null || true)
+if [ -n "$CURRENT_BRANCH" ] ; then
+  perl -pe 's|$|;'${CURRENT_BRANCH}'|' feeds.conf.mfw >| feeds.conf
+else
+  cp feeds.conf.mfw feeds.conf
+fi
 
 # install feeds
 rm -fr {.,package}/feeds/untangle*
