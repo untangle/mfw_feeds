@@ -9,6 +9,7 @@ start() {
 }
 
 stop() {
-	/usr/sbin/nft flush ruleset
+    # Not implemented
+    true
 }
 
