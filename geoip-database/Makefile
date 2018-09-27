@@ -5,7 +5,7 @@ PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
 PKG_VERSION:=latest
 PKG_SOURCE:=GeoLite2-Country.mmdb.gz
 PKG_SOURCE_URL:=http://geolite.maxmind.com/download/geoip/database
-PKG_HASH:=cc1a6646406ddf59fe1f70d89177ead9f8eb015260aee3d510699f9f38104422
+PKG_HASH:=299bf158d69f93afba3bdb95a1c204a37abb04c67a6574f54dc5e41243809879
 
 include $(INCLUDE_DIR)/package.mk
 
