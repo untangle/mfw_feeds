@@ -17,7 +17,7 @@ define Package/sync-settings
   SUBMENU:=Python3
   TITLE:=Library for manipulating MFW system settings
   URL:=https://untangle.com
-  DEPENDS:=+python3 +diffutils
+  DEPENDS:=+python3 +diffutils +tc +kmod-sched-core +kmod-sched-cake +kmod-ifb +kmod-sched-connmark
 endef
 
 define Package/sync-settings/description
