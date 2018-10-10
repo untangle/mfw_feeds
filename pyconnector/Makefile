@@ -3,6 +3,9 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=pyconnector
 PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
+PKG_SOURCE_PROTO:=git
+# FIXME: we really don't need *any* source from git right now
+PKG_SOURCE_URL:=https://github.com/untangle/sync-settings.git
 
 include ../version.mk
 
