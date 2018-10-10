@@ -29,6 +29,7 @@ define Build/Compile
 endef
 
 define Package/pyconnector/install
+	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) files/pyconnector $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) files/pyconnector.init $(1)/etc/init.d/pyconnector
