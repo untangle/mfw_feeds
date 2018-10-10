@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 sys.path.insert(0,'@PREFIX@/usr/lib/python%d.%d/' % sys.version_info[:2])
@@ -16,16 +16,12 @@ import re
 import traceback
 import ssl
 
-from uvm import Manager
-from uvm import Uvm
-
 UNTANGLE_CMD_PORTS   = [80,443,993,4443,587,995,8080,53,25]
 UNTANGLE_CMD_SERVERS = ["cmd.untangle.com", "cmd.metaloft.com"]
 RETRY_TIME_LONG = 10
 RETRY_TIME_SHORT = 5
 CERTS_FILE = '/tmp/pyconnector/certs.pem'
 
-uvm = None
 command_socket = None
 command_socket_file = None
 debug_level = 1
@@ -135,19 +131,11 @@ def connect():
 def run_cmd(cmd_str):
      debug("Command Received.")
      debug("Received: %s" % cmd_str.strip(), 2)
-     global uvm
-     if uvm == None:
-          try:
-               debug("Reinitializing UVM Connection...")
-               uvm = Uvm().getUvmContext( hostname="127.0.0.1", username=None, password=None, timeout=30 )
-          except Exception,e:
-               debug("Exception: %s" % repr(e))
-               uvm = None
+
      try:
           result = eval(cmd_str.strip())
           return str(result)
      except Exception,e:
-          uvm = None
           debug("Exception: %s" % traceback.print_exc(e))
           return "Error (%s)" % type(e)
 
