@@ -7,11 +7,11 @@ set -e
 export LC_ALL=${LC_ALL:-C}
 
 usage() {
-  echo "Usage: $0 [-d <device>] [-l <libc>] [-v (latest|<branch>|<tag>)]"
+  echo "Usage: $0 [-d <device>] [-l <libc>] [-v (latest|<branch>|<tag>)] [-c (0|1)]"
   echo "  -d <device>              : x86_64, wrt3200, wrt1900 (defaults to x86_64)"
   echo "  -l <libc>                : musl, glibc (defaults to musl)"
   echo "  -m <make options>        : pass those to OpenWRT's make \"as is\" (default is -j32)"
-  echo "  -c                       : start clean"
+  echo "  -c true|false            : start clean or not (default is false, meaning \"do not start clean\""
   echo "  -v latest|<branch>|<tag> : version to build from (defaults to master)"
   echo "                             - 'release' is a special keyword meaning 'most recent tag from each"
   echo "                               package's source repository'"
@@ -20,14 +20,14 @@ usage() {
   exit 1
 }
 
-START_CLEAN=""
+START_CLEAN="false"
 DEVICE="x86_64"
 LIBC="musl"
 VERSION="master"
 MAKE_OPTIONS="-j32"
-while getopts "cd:l:v:h:m:" opt ; do
+while getopts "c:d:l:v:h:m:" opt ; do
   case "$opt" in
-    c) START_CLEAN="y" ;;
+    c) START_CLEAN="$OPTARG" ;;
     d) DEVICE="$OPTARG" ;;
     l) LIBC="$OPTARG" ;;
     v) VERSION="$OPTARG"
@@ -38,7 +38,7 @@ while getopts "cd:l:v:h:m:" opt ; do
 done
 
 # start clean only if explicitely requested
-if [[ -n "$START_CLEAN" ]] ; then
+if [[ "$START_CLEAN" == "true" ]] ; then
   make $MAKE_OPTIONS clean
   rm -fr build_dir staging_dir
 fi
