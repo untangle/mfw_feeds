@@ -7,7 +7,7 @@ set -e
 export LC_ALL=${LC_ALL:-C}
 
 usage() {
-  echo "Usage: $0 [-d <device>] [-l <libc>] [-v (latest|<branch>|<tag>)] [-c (0|1)]"
+  echo "Usage: $0 [-d <device>] [-l <libc>] [-v (latest|<branch>|<tag>)] [-c (false|true)]"
   echo "  -d <device>              : x86_64, wrt3200, wrt1900 (defaults to x86_64)"
   echo "  -l <libc>                : musl, glibc (defaults to musl)"
   echo "  -m <make options>        : pass those to OpenWRT's make \"as is\" (default is -j32)"
