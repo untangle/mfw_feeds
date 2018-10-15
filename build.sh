@@ -39,8 +39,8 @@ done
 
 # start clean only if explicitely requested
 if [[ -n "$START_CLEAN" ]] ; then
-  rm -fr build_dir staging_dir target
   make $MAKE_OPTIONS clean
+  rm -fr build_dir staging_dir target
 fi
 
 # add MFW feed definitions, and for each feed use the same branch
