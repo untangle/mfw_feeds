@@ -37,6 +37,12 @@ while getopts "cd:l:v:h:m:" opt ; do
   esac
 done
 
+# start clean only if explicitely requested
+if [[ -n "$START_CLEAN" ]] ; then
+  rm -fr build_dir staging_dir target
+  make $MAKE_OPTIONS clean
+fi
+
 # add MFW feed definitions, and for each feed use the same branch
 # we're currently on
 CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2> /dev/null || true)
@@ -55,9 +61,6 @@ rm -fr {.,package}/feeds/untangle*
 # config
 ./feeds/mfw/configs/generate.sh -d $DEVICE -l $LIBC >| .config
 make defconfig
-
-# start clean ?
-[[ -z "$START_CLEAN" ]] || make $MAKE_OPTIONS clean
 
 # download
 make $MAKE_OPTIONS MFW_VERSION=${VERSION} download
