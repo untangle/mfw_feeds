@@ -8,15 +8,15 @@ export LC_ALL=${LC_ALL:-C}
 
 usage() {
   echo "Usage: $0 [-d <device>] [-l <libc>] [-v (latest|<branch>|<tag>)] [-c (false|true)]"
-  echo "  -d <device>              : x86_64, wrt3200, wrt1900 (defaults to x86_64)"
-  echo "  -l <libc>                : musl, glibc (defaults to musl)"
-  echo "  -m <make options>        : pass those to OpenWRT's make \"as is\" (default is -j32)"
-  echo "  -c true|false            : start clean or not (default is false, meaning \"do not start clean\""
-  echo "  -v latest|<branch>|<tag> : version to build from (defaults to master)"
-  echo "                             - 'release' is a special keyword meaning 'most recent tag from each"
-  echo "                               package's source repository'"
-  echo "                             - <branch> or <tag> can be any valid git object as long as it exists"
-  echo "                               in each package's source repository (mfw_admin, packetd, ngfw_pkgs, etc)"
+  echo "  -d <device>               : x86_64, omnia, wrt3200, wrt1900 (defaults to x86_64)"
+  echo "  -l <libc>                 : musl, glibc (defaults to musl)"
+  echo "  -m <make optio ns>        : pass those to OpenWRT's make \"as is\" (default is -j32)"
+  echo "  -c true|false             : start clean or not (default is false, meaning \"do not start clean\""
+  echo "  -v release|<branch>|<tag> : version to build from (defaults to master)"
+  echo "                              - 'release' is a special keyword meaning 'most recent tag from each"
+  echo "                                package's source repository'"
+  echo "                              - <branch> or <tag> can be any valid git object as long as it exists"
+  echo "                                in each package's source repository (mfw_admin, packetd, etc)"
   exit 1
 }
 
