@@ -11,6 +11,7 @@ usage() {
   echo "  -d <device>              : x86_64, wrt3200, wrt1900 (defaults to x86_64)"
   echo "  -l <libc>                : musl, glibc (defaults to musl)"
   echo "  -m <make options>        : pass those to OpenWRT's make \"as is\" (default is -j32)"
+  echo "  -c                       : start clean"
   echo "  -v latest|<branch>|<tag> : version to build from (defaults to master)"
   echo "                             - 'release' is a special keyword meaning 'most recent tag from each"
   echo "                               package's source repository'"
@@ -19,12 +20,14 @@ usage() {
   exit 1
 }
 
+START_CLEAN=""
 DEVICE="x86_64"
 LIBC="musl"
 VERSION="master"
 MAKE_OPTIONS="-j32"
-while getopts "d:l:v:h:m:" opt ; do
+while getopts "cd:l:v:h:m:" opt ; do
   case "$opt" in
+    c) START_CLEAN="y" ;;
     d) DEVICE="$OPTARG" ;;
     l) LIBC="$OPTARG" ;;
     v) VERSION="$OPTARG"
@@ -52,6 +55,9 @@ rm -fr {.,package}/feeds/untangle*
 # config
 ./feeds/mfw/configs/generate.sh -d $DEVICE -l $LIBC >| .config
 make defconfig
+
+# start clean ?
+[[ -z "$START_CLEAN" ]] || make $MAKE_OPTIONS clean
 
 # download
 make $MAKE_OPTIONS MFW_VERSION=${VERSION} download
