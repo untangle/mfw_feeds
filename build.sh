@@ -1,7 +1,7 @@
 #! /bin/bash
 
 set -e
-#set -x
+set -x
 
 # hides perl warning about locale
 export LC_ALL=${LC_ALL:-C}
