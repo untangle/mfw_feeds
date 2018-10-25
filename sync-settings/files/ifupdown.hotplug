@@ -1,0 +1,12 @@
+#!/bin/sh
+. /lib/functions/network.sh
+
+[ ifup = "$ACTION" ] && {
+	/bin/run-parts /etc/config/ifup.d --arg=$INTERFACE --arg=$DEVICE
+	exit 0
+}
+
+[ ifdown = "$ACTION" ] && {
+	/bin/run-parts /etc/config/ifdown.d --arg=$INTERFACE
+	exit 0
+}
