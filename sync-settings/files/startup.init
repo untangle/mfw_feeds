@@ -1,0 +1,11 @@
+#!/bin/sh /etc/rc.common
+
+# 15 is right after sync-settings (14)
+START=15
+STOP=15
+
+boot() {
+    if [ -d /etc/config/startup.d/ ] ; then
+       	run-parts /etc/config/startup.d/
+	fi
+}
