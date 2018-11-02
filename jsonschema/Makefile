@@ -20,7 +20,7 @@ define Package/jsonschema
   TITLE:=An implementation of JSON Schema validation for Python
   URL:=https://python-jsonschema.readthedocs.io/en/v2.6.0
   DEPENDS:=+python3
-  PKG_BUILD_DEPENDS:=python3-urllib3
+  PKG_BUILD_DEPENDS:=python3-vcversioner
 endef
 
 define Package/jsonschema/description
