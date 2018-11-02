@@ -1,14 +1,5 @@
 --- a/setup.py	2018-11-02 17:21:24.023564902 +0100
 +++ b/setup.py	2018-11-02 17:21:58.004425606 +0100
-@@ -1,7 +1,6 @@
- import os
- 
--from setuptools import setup
--
-+import os
- 
- with open(os.path.join(os.path.dirname(__file__), "README.rst")) as readme:
-     long_description = readme.read()
 @@ -29,7 +28,6 @@
      name="jsonschema",
      packages=["jsonschema", "jsonschema.tests"],
