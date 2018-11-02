@@ -18,7 +18,7 @@ define Package/sync-settings
   TITLE:=Library for manipulating MFW system settings
   URL:=https://github.com/untangle/sync-settings
   DEPENDS:=+python3 +diffutils +tc +kmod-sched-core +kmod-sched-cake +kmod-ifb +kmod-sched-connmark\
-	  +uuidgen
+	  +uuidgen +jsonschema
 endef
 
 define Package/sync-settings/description
@@ -41,6 +41,9 @@ define Package/sync-settings/install
 	$(INSTALL_BIN) files/$(PKG_NAME).init $(1)/etc/init.d/$(PKG_NAME)
 	$(INSTALL_BIN) files/nftables-rules.init $(1)/etc/init.d/nftables-rules
 	$(INSTALL_BIN) files/uid.init $(1)/etc/init.d/uid
+	$(INSTALL_BIN) files/startup.init $(1)/etc/init.d/startup
+	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
+	$(INSTALL_BIN) files/ifupdown.hotplug $(1)/etc/hotplug.d/iface/20-ifupdown
 endef
 
 $(eval $(call Py3Package,$(PKG_NAME)))
