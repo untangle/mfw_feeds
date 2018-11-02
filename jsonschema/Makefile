@@ -1,10 +1,3 @@
-#
-# Copyright (C) 2007-2017 OpenWrt.org
-#
-# This is free software, licensed under the GNU General Public License v2.
-# See /LICENSE for more information.
-#
-
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=jsonschema
@@ -13,7 +6,7 @@ PKG_RELEASE:=1
 PKG_LICENSE:=MIT
 
 PKG_SOURCE:=jsonschema-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://files.pythonhosted.org/packages/source/j/jsonschema
+PKG_SOURCE_URL:=https://pypi.python.org/packages/58/b9/171dbb07e18c6346090a37f03c7e74410a1a56123f847efed59af260a298/
 PKG_HASH:=6ff5f3180870836cae40f06fa10419f557208175f13ad7bc26caa77beb1f6e02
 
 include $(INCLUDE_DIR)/package.mk
@@ -34,14 +27,16 @@ define Package/jsonschema/description
 endef
 
 define Build/Compile
-	$(call Build/Compile/Py3Mod,,install --prefix=/usr --root=$(PKG_INSTALL_DIR))
+	$(call Build/Compile/Py3Mod,., \
+		install --prefix=/usr --root=$(PKG_INSTALL_DIR), )
 endef
 
 define Package/jsonschema/install
-	$(INSTALL_DIR) $(1)$(PYTHON_PKG_DIR)
+	$(INSTALL_DIR) $(1)$(PYTHON3_PKG_DIR)
 	$(CP) \
-	    $(PKG_INSTALL_DIR)$(PYTHON_PKG_DIR)/* \
-	    $(1)$(PYTHON_PKG_DIR)
+	    $(PKG_INSTALL_DIR)$(PYTHON3_PKG_DIR)/* \
+	    $(1)$(PYTHON3_PKG_DIR)
 endef
 
-$(eval $(call BuildPackage,jsonschema))
+$(eval $(call Py3Package,$(PKG_NAME)))
+$(eval $(call BuildPackage,$(PKG_NAME)))
