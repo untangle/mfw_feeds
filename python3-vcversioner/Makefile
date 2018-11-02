@@ -8,6 +8,7 @@ PKG_LICENSE:=ISC
 PKG_SOURCE:=vcversioner-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://pypi.python.org/packages/c5/cc/33162c0a7b28a4d8c83da07bc2b12cee58c120b4a9e8bba31c41c8d35a16
 PKG_HASH:=dae60c17a479781f44a4010701833f1829140b1eeccd258762a74974aa06e19b
+PKG_BUILD_DIR:=$(BUILD_DIR)/vcversioner-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
 include ../../packages/lang/python/python3-package.mk
