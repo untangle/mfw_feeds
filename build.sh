@@ -43,13 +43,14 @@ if [[ "$START_CLEAN" == "true" ]] ; then
   rm -fr build_dir staging_dir
 fi
 
-# add MFW feed definitions, and for each feed use the same branch
-# we're currently on
+# add MFW feed definitions
+cp feeds.conf.mfw feeds.conf
+
+# for each feed, use the same branch we're currently on, unless the
+# developer already forced a different one himself in feeds.conf.mfw
 CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2> /dev/null || true)
 if [ -n "$CURRENT_BRANCH" ] ; then
   perl -pe 's|$|;'${CURRENT_BRANCH}'| unless m/;/' feeds.conf.mfw >| feeds.conf
-else
-  cp feeds.conf.mfw feeds.conf
 fi
 
 # install feeds
