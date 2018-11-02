@@ -25,7 +25,7 @@ DEVICE="x86_64"
 LIBC="musl"
 VERSION="master"
 MAKE_OPTIONS="-j32"
-while getopts "c:d:l:v:h:m:" opt ; do
+while getopts "hc:d:l:v:m:" opt ; do
   case "$opt" in
     c) START_CLEAN="$OPTARG" ;;
     d) DEVICE="$OPTARG" ;;
