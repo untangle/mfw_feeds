@@ -1,30 +1,33 @@
 #! /bin/bash
 
 set -e
-#set -x
+set -x
 
 # hides perl warning about locale
 export LC_ALL=${LC_ALL:-C}
 
 usage() {
-  echo "Usage: $0 [-d <device>] [-l <libc>] [-v (latest|<branch>|<tag>)]"
-  echo "  -d <device>              : x86_64, wrt3200, wrt1900 (defaults to x86_64)"
-  echo "  -l <libc>                : musl, glibc (defaults to musl)"
-  echo "  -m <make options>        : pass those to OpenWRT's make \"as is\" (default is -j32)"
-  echo "  -v latest|<branch>|<tag> : version to build from (defaults to master)"
-  echo "                             - 'release' is a special keyword meaning 'most recent tag from each"
-  echo "                               package's source repository'"
-  echo "                             - <branch> or <tag> can be any valid git object as long as it exists"
-  echo "                               in each package's source repository (mfw_admin, packetd, ngfw_pkgs, etc)"
+  echo "Usage: $0 [-d <device>] [-l <libc>] [-v (latest|<branch>|<tag>)] [-c (false|true)]"
+  echo "  -d <device>               : x86_64, omnia, wrt3200, wrt1900 (defaults to x86_64)"
+  echo "  -l <libc>                 : musl, glibc (defaults to musl)"
+  echo "  -m <make optio ns>        : pass those to OpenWRT's make \"as is\" (default is -j32)"
+  echo "  -c true|false             : start clean or not (default is false, meaning \"do not start clean\""
+  echo "  -v release|<branch>|<tag> : version to build from (defaults to master)"
+  echo "                              - 'release' is a special keyword meaning 'most recent tag from each"
+  echo "                                package's source repository'"
+  echo "                              - <branch> or <tag> can be any valid git object as long as it exists"
+  echo "                                in each package's source repository (mfw_admin, packetd, etc)"
   exit 1
 }
 
+START_CLEAN="false"
 DEVICE="x86_64"
 LIBC="musl"
 VERSION="master"
 MAKE_OPTIONS="-j32"
-while getopts "d:l:v:h:m:" opt ; do
+while getopts "hc:d:l:v:m:" opt ; do
   case "$opt" in
+    c) START_CLEAN="$OPTARG" ;;
     d) DEVICE="$OPTARG" ;;
     l) LIBC="$OPTARG" ;;
     v) VERSION="$OPTARG"
@@ -34,10 +37,21 @@ while getopts "d:l:v:h:m:" opt ; do
   esac
 done
 
-# add MFW feed definitions, and for each feed use the same branch
-# we're currently on
-CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
-perl -pe 's|$|;'${CURRENT_BRANCH}'|' feeds.conf.mfw >| feeds.conf
+# start clean only if explicitely requested
+if [[ "$START_CLEAN" == "true" ]] ; then
+  make $MAKE_OPTIONS clean
+  rm -fr build_dir staging_dir
+fi
+
+# add MFW feed definitions
+cp feeds.conf.mfw feeds.conf
+
+# for each feed, use the same branch we're currently on, unless the
+# developer already forced a different one himself in feeds.conf.mfw
+CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2> /dev/null || true)
+if [ -n "$CURRENT_BRANCH" ] ; then
+  perl -pe 's|$|;'${CURRENT_BRANCH}'| unless m/;/' feeds.conf.mfw >| feeds.conf
+fi
 
 # install feeds
 rm -fr {.,package}/feeds/untangle*
