@@ -51,8 +51,8 @@ endef
 
 define Package/packetd/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(OUR_SRC_DIR)/packetd_rules $(1)/usr/bin/
-	$(INSTALL_BIN) $(OUR_SRC_DIR)/packetd $(1)/usr/bin/
+	$(INSTALL_BIN) $(OUR_SRC_DIR)/cmd/packetd/packetd_rules $(1)/usr/bin/
+	$(INSTALL_BIN) $(OUR_SRC_DIR)/cmd/packetd/packetd $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) files/packetd.init $(1)/etc/init.d/packetd
 endef

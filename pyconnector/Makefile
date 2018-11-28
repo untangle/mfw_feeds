@@ -17,7 +17,6 @@ define Package/pyconnector
   SUBMENU:=Cloud
   TITLE:=PyConnector for CMD
   URL:=https://www.github.com/untangle/pyconnector
-  URL:=https://untangle.com
   DEPENDS:=+python3
 endef
 
