@@ -16,6 +16,8 @@ define Package/classd
   SUBMENU:=Firewall
   TITLE:=Userspace classification daemon
   URL:=https://www.github.com/untangle/classd
+  PKG_BUILD_DEPENDS:=libstdcpp
+  DEPENDS:=+libstdcpp
 endef
 
 define Package/classd/description
