@@ -23,11 +23,11 @@ define Package/classd/description
 endef
 
 define Build/Compile
-	make -C $(PKG_BUILD_DIR)
+	make -C $(PKG_BUILD_DIR) MUSL=1
 endef
 
 define Package/classd/install
-	make -C $(PKG_BUILD_DIR) DESTDIR=$(1) install
+	make -C $(PKG_BUILD_DIR) MUSL=1 DESTDIR=$(1) install
 endef
 
 $(eval $(call BuildPackage,classd))
