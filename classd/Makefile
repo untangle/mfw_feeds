@@ -9,6 +9,7 @@ PKG_SOURCE_URL:=https://github.com/untangle/classd.git
 include ../version.mk
 
 include $(INCLUDE_DIR)/package.mk
+include $(INCLUDE_DIR)/cmake.mk
 
 define Package/classd
   SECTION:=ui
@@ -22,14 +23,6 @@ endef
 
 define Package/classd/description
   Userspace classification daemon
-endef
-
-define Build/Compile
-	make -C $(PKG_BUILD_DIR)
-endef
-
-define Package/classd/install
-	make -C $(PKG_BUILD_DIR) DESTDIR=$(1) install
 endef
 
 $(eval $(call BuildPackage,classd))
