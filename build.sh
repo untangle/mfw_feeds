@@ -37,6 +37,8 @@ while getopts "hc:d:l:v:m:" opt ; do
   esac
 done
 
+CURDIR=$(readlink -f $(dirname $0))
+
 # start clean only if explicitely requested
 case $START_CLEAN in
   false|0) : ;;
@@ -45,13 +47,14 @@ case $START_CLEAN in
 esac
 
 # add MFW feed definitions
-cp feeds.conf.mfw feeds.conf
+cp ${CURDIR}/feeds.conf.mfw feeds.conf
 
 # for each feed, use the same branch we're currently on, unless the
-# developer already forced a different one himself in feeds.conf.mfw
+# developer already forced a different one himself in
+# $(CURDIR)/feeds.conf.mfw
 CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2> /dev/null || true)
 if [ -n "$CURRENT_BRANCH" ] ; then
-  perl -pe 's|$|;'${CURRENT_BRANCH}'| unless m/;/' feeds.conf.mfw >| feeds.conf
+  perl -i -pe 's|$|;'${CURRENT_BRANCH}'| unless m/;/' feeds.conf
 fi
 
 # install feeds
