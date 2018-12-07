@@ -71,4 +71,6 @@ make defconfig
 make $MAKE_OPTIONS MFW_VERSION=${VERSION} download
 
 # build
-make $MAKE_OPTIONS MFW_VERSION=${VERSION}
+if ! make $MAKE_OPTIONS MFW_VERSION=${VERSION} ; then
+  make -j1 V=s MFW_VERSION=${VERSION}
+fi
