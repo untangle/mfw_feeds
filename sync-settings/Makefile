@@ -18,7 +18,7 @@ define Package/sync-settings
   TITLE:=Library for manipulating MFW system settings
   URL:=https://github.com/untangle/sync-settings
   DEPENDS:=+python3 +diffutils +tc +kmod-sched-core +kmod-sched-cake +kmod-ifb +kmod-sched-connmark\
-	  +uuidgen +jsonschema
+	  +uuidgen +jsonschema +kmod-nft-fib
 endef
 
 define Package/sync-settings/description
