@@ -11,7 +11,7 @@ pipeline {
   stages {
     stage('Build x86_64') {
       steps {
-        sh 'docker-compose -f mfw/docker-compose.build.yml run build -d ${device} -l ${lib} -c ${startClean} -m "${makeOptions}"'
+        sh 'docker-compose -f mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${lib} -c ${startClean} -m "${makeOptions}"'
       }
     }
   }
