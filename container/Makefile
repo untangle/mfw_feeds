@@ -17,6 +17,7 @@ define Package/container
   CATEGORY:=Virtualization
   SUBMENU:=Container
   TITLE:=Contains kernel options for docker/lxc
+  DEPENDS:=+libdevmapper +libltdl +libseccomp
   KCONFIG:=$(shell cat Config | xargs)
 endef
 
