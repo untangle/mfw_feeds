@@ -47,7 +47,7 @@ case $START_CLEAN in
 esac
 
 # add MFW feed definitions
-cp ${CURDIR}/mfw/feeds.conf.mfw feeds.conf
+cp ${CURDIR}/feeds.conf.mfw feeds.conf
 
 # for each feed, use the same branch we're currently on, unless the
 # developer already forced a different one himself in
