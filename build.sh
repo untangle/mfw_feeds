@@ -49,14 +49,6 @@ esac
 # add MFW feed definitions
 cp ${CURDIR}/feeds.conf.mfw feeds.conf
 
-# for each feed, use the same branch we're currently on, unless the
-# developer already forced a different one himself in
-# $(CURDIR)/feeds.conf.mfw
-CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2> /dev/null || true)
-if [ -n "$CURRENT_BRANCH" ] ; then
-  perl -i -pe 's|$|;'${CURRENT_BRANCH}'| unless m/;/' feeds.conf
-fi
-
 # install feeds
 rm -fr {.,package}/feeds/untangle*
 ./scripts/feeds update -a
