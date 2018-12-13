@@ -1,0 +1,23 @@
+include $(TOPDIR)/rules.mk
+
+PKG_NAME:=container
+PKG_LICENSE:=GPL-2.0
+PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
+PKG_SOURCE_PROTO:=git
+# FIXME
+PKG_SOURCE_URL:=https://github.com/untangle/packetd.git
+PKG_HASH:=skip
+
+include ../version.mk
+
+include $(INCLUDE_DIR)/package.mk
+
+define Package/container
+  SECTION:=admin
+  CATEGORY:=Virtualization
+  SUBMENU:=Container
+  TITLE:=Contains kernel options for docker/lxc
+  KCONFIG:=$(shell cat Config | xargs)
+endef
+
+$(eval $(call BuildPackage,container))
