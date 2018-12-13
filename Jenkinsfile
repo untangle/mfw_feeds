@@ -1,11 +1,13 @@
 pipeline {
-  agent any
+  agent { label 'mfw' }
+
   environment {
     device = 'x86_64'
     lib = 'musl'
     startClean = '0'
     makeOptions = '-j32'
   }
+
   stages {
     stage('Build x86_64') {
       steps {
