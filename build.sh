@@ -37,7 +37,7 @@ while getopts "hc:d:l:v:m:" opt ; do
   esac
 done
 
-CURDIR=$(readlink -f $(dirname $0))
+CURDIR=$(dirname $(readlink -f $0))
 
 # start clean only if explicitely requested
 case $START_CLEAN in
