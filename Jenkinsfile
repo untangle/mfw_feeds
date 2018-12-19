@@ -10,7 +10,7 @@ pipeline {
   stages {
     stage('Build') {
       parallel {
-        stage('Build x86_64')
+        stage('Build x86_64') {
           environment {
             device = 'x86_64'
           }
@@ -19,7 +19,7 @@ pipeline {
           }
         }
 
-        stage('Build wrt1900')
+        stage('Build wrt1900') {
           environment {
             device = 'wrt1900'
           }
@@ -28,7 +28,7 @@ pipeline {
           }
         }
 
-        stage('Build wrt3200')
+        stage('Build wrt3200') {
           environment {
             device = 'wrt3200'
           }
@@ -37,7 +37,7 @@ pipeline {
           }
         }
 
-        stage('Build omnia')
+        stage('Build omnia') {
           environment {
             device = 'omnia'
           }
