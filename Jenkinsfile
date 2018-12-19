@@ -3,7 +3,7 @@ pipeline {
 
   environment {
     lib = 'musl'
-    startClean = '1'
+    startClean = '0'
     makeOptions = '-j32'
   }
 
