@@ -11,12 +11,12 @@ pipeline {
     stage('Build') {
       parallel {
         stage('Build x86_64') {
-	  stages {
-            environment {
-              device = 'x86_64'
-              dir = 'tmp/mfw-x86_64'
-            }
+          environment {
+            device = 'x86_64'
+            dir = '/tmp/mfw-x86_64'
+          }
 
+	  stages {
             stage('Prepare workspace') {
               steps {
                 sh 'cp -r . $dir'
@@ -32,12 +32,12 @@ pipeline {
         }
 
         stage('Build wrt3200') {
-	  stages {
-            environment {
-              device = 'wrt3200'
-              dir = 'tmp/mfw-wrt3200'
-            }
+          environment {
+            device = 'wrt3200'
+            dir = '/tmp/mfw-wrt3200'
+          }
 
+	  stages {
             stage('Prepare workspace') {
               steps {
                 sh 'cp -r . $dir'
@@ -53,12 +53,12 @@ pipeline {
         }
 
         stage('Build wrt1900') {
-	  stages {
-            environment {
-              device = 'wrt1900'
-              dir = 'tmp/mfw-wrt1900'
-            }
+          environment {
+            device = 'wrt1900'
+            dir = '/tmp/mfw-wrt1900'
+          }
 
+	  stages {
             stage('Prepare workspace') {
               steps {
                 sh 'cp -r . $dir'
@@ -74,12 +74,12 @@ pipeline {
         }
 
         stage('Build omnia') {
-	  stages {
-            environment {
-              device = 'omnia'
-              dir = 'tmp/mfw-omnia'
-            }
+          environment {
+            device = 'omnia'
+            dir = '/tmp/mfw-omnia'
+          }
 
+	  stages {
             stage('Prepare workspace') {
               steps {
                 sh 'cp -r . $dir'
