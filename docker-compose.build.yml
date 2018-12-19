@@ -4,11 +4,14 @@ services:
     image: untangleinc/mfw:build
     volumes:
       - ../:/home/mfw/openwrt
-    command: musl
   build-local-container:
     build:
       context: .
       dockerfile: Dockerfile.build
     volumes:
       - ../:/home/mfw/openwrt
-    command: musl
+  build-no-volume:
+    build:
+      context: .
+      dockerfile: Dockerfile.build.novolume
+
