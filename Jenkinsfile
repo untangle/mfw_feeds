@@ -15,7 +15,7 @@ pipeline {
             device = 'x86_64'
           }
           steps {
-            buildMFW($device, $lib, $startClean, $makeOptions)
+            sh 'docker-compose -f mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${lib} -c ${startClean} -m "${makeOptions}"'
           }
         }
 
@@ -24,7 +24,7 @@ pipeline {
             device = 'wrt1900'
           }
           steps {
-            buildMFW($device, $lib, $startClean, $makeOptions)
+            sh 'docker-compose -f mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${lib} -c ${startClean} -m "${makeOptions}"'
           }
         }
 
@@ -33,7 +33,7 @@ pipeline {
             device = 'wrt3200'
           }
           steps {
-            buildMFW($device, $lib, $startClean, $makeOptions)
+            sh 'docker-compose -f mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${lib} -c ${startClean} -m "${makeOptions}"'
           }
         }
 
@@ -42,15 +42,11 @@ pipeline {
             device = 'omnia'
           }
           steps {
-            buildMFW($device, $lib, $startClean, $makeOptions)
+            sh 'docker-compose -f mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${lib} -c ${startClean} -m "${makeOptions}"'
           }
         }
 
       }
     }
   }
-}
-
-def buildMFW(String device, String lib, String startClean, String makeOptions) {
-  sh 'docker-compose -f mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${lib} -c ${startClean} -m "${makeOptions}"'
 }
