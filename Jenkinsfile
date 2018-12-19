@@ -4,7 +4,7 @@ pipeline {
   environment {
     device = 'x86_64'
     lib = 'musl'
-    startClean = '0'
+    startClean = '1'
     makeOptions = '-j32'
   }
 
