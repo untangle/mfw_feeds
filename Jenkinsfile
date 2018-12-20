@@ -22,7 +22,7 @@ pipeline {
 	  stages {
             stage('Prepare workspace') {
               steps {
-		dir($buildDir) {
+		dir(buildDir) {
 		  sh 'pwd'
                   checkout scm
                 // checkout([$class                           : 'GitSCM',
@@ -38,7 +38,7 @@ pipeline {
 
             stage('Build OpenWrt') {
               steps {
-                sh 'cd docker-compose -f $buildDir/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${params.libc} -c ${params.startClean} -m "${params.makeOptions}"'
+                sh 'cd docker-compose -f ${buildDir}/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${params.libc} -c ${params.startClean} -m "${params.makeOptions}"'
               }
             }
           }
