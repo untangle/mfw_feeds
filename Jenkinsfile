@@ -36,7 +36,7 @@ pipeline {
               }
             }
 
-            stage("Build OpenWrt ${env.device}") {
+            stage('Build OpenWrt x86_64') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
@@ -67,7 +67,7 @@ pipeline {
               }
             }
 
-            stage("Build OpenWrt ${env.device}") {d
+            stage('Build OpenWrt wrt3200') {d
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
