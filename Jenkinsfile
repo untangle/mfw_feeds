@@ -20,7 +20,7 @@ pipeline {
 
       parallel {
         stage('Build x86_64') {
-	  agent { label 'mfw' }
+	  node("mfw") {
 
           environment {
             device = 'x86_64'
@@ -28,7 +28,7 @@ pipeline {
           }
 
 	  stages {
-            stage('Prepare workspace x86_64') {
+            stage('Prep WS x86_64') {
               steps {
 		dir(buildDir) {
                   checkout scm
@@ -49,9 +49,10 @@ pipeline {
             }
           }
         }
+        }
 
         stage('Build wrt3200') {
-	  agent { label 'mfw' }
+	  node("mfw") {
 
           environment {
             device = 'wrt3200'
@@ -59,7 +60,7 @@ pipeline {
           }
 
 	  stages {
-            stage('Prepare workspace wrt3200') {
+            stage('Prep WS wrt3200') {
               steps {
 		dir(buildDir) {
                   checkout scm
@@ -81,7 +82,7 @@ pipeline {
           }
 
         }
-
+        }
       }
     }
   }
