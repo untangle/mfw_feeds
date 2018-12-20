@@ -1,3 +1,7 @@
+void buildMFW(String device, String libc, String startClean, String makeOptions, String buildDir) {
+  sh "docker-compose -f ${buildDir}/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${libc} -c ${startClean} -m '${makeOptions}'"
+}
+
 pipeline {
   agent none
 
@@ -16,14 +20,13 @@ pipeline {
 
           environment {
             device = 'x86_64'
-            buildDir = '/tmp/' + buildDir
+            buildDir = "/tmp/${env.device}"
           }
 
 	  stages {
             stage('Prepare workspace') {
               steps {
 		dir(buildDir) {
-		  sh 'pwd'
                   checkout scm
                 }
               }
@@ -42,14 +45,13 @@ pipeline {
 
           environment {
             device = 'wrt3200'
-            buildDir = '/tmp/' + buildDir
+            buildDir = "/tmp/${env.device}"
           }
 
 	  stages {
             stage('Prepare workspace') {
               steps {
 		dir(buildDir) {
-		  sh 'pwd'
                   checkout scm
                 }
               }
@@ -57,7 +59,7 @@ pipeline {
 
             stage('Build OpenWrt') {
               steps {
-                sh "docker-compose -f ${buildDir}/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${params.libc} -c ${params.startClean} -m '${params.makeOptions}'"
+                buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
             }
           }
