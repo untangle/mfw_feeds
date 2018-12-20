@@ -1,5 +1,5 @@
 pipeline {
-  agent { label 'mfw' }
+  agent none
 
   parameters {
     string(name:'libc', defaultValue: 'musl', description: 'lib to link against (musl or glibc)')
@@ -12,6 +12,8 @@ pipeline {
 
       parallel {
         stage('Build x86_64') {
+	  agent { label 'mfw' }
+
           environment {
             device = 'x86_64'
             buildDir = '/tmp/mfw-x86_64'
@@ -30,6 +32,7 @@ pipeline {
                 //                                                                [$class: 'CleanBeforeCheckout']],
                 //           submoduleCfg                     : [],
                 //           userRemoteConfigs                : scm.userRemoteConfigs])
+                }
               }
             }
 
@@ -40,7 +43,7 @@ pipeline {
             }
           }
         }
-      }
+
         // stage('Build wrt3200') {
         //   environment {
         //     device = 'wrt3200'
