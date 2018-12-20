@@ -25,10 +25,10 @@ define Package/packetd
   URL:=https://www.github.com/untangle/packetd
   PKG_BUILD_DEPENDS:=golang
   DEPENDS:=+libnetfilter-conntrack +libnetfilter-queue +libnetfilter-log +geoip-database \
-	  +iptables-mod-nfqueue
+	  +iptables-mod-nfqueue +kmod-nft-dict
   # FIXME: needed ?
   KCONFIG:=CONFIG_NETFILTER_NETLINK_GLUE_CT=y CONFIG_NF_CT_NETLINK_HELPER=y \
-	  CONFIG_NF_CONNTRACK_DICT=m CONFIG_NFT_QUEUE=m
+	  CONFIG_NFT_QUEUE=m
 endef
 
 define Package/packetd/description
