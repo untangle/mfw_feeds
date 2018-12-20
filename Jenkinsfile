@@ -1,5 +1,5 @@
 pipeline {
-  agent { any }
+  agent { label 'mfw' }
 
   parameters {
     string(name:'libc', defaultValue: 'musl', description: 'lib to link against (musl or glibc)')
@@ -9,7 +9,6 @@ pipeline {
 
   stages {
     stage('Build') {
-      agent { label 'mfw' }
 
       parallel {
         stage('Build x86_64') {
