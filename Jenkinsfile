@@ -24,7 +24,7 @@ pipeline {
           }
 
 	  stages {
-            stage('Prepare workspace') {
+            stage('Prepare workspace x86_64') {
               steps {
 		dir(buildDir) {
                   checkout scm
@@ -32,7 +32,7 @@ pipeline {
               }
             }
 
-            stage('Build OpenWrt') {
+            stage("Build OpenWrt ${env.device}") {
               steps {
                 sh "docker-compose -f ${buildDir}/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${params.libc} -c ${params.startClean} -m '${params.makeOptions}'"
               }
@@ -49,7 +49,7 @@ pipeline {
           }
 
 	  stages {
-            stage('Prepare workspace') {
+            stage('Prepare workspace wrt3200') {
               steps {
 		dir(buildDir) {
                   checkout scm
@@ -57,7 +57,7 @@ pipeline {
               }
             }
 
-            stage('Build OpenWrt') {
+            stage("Build OpenWrt ${env.device}") {d
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
