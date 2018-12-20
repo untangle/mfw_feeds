@@ -1,14 +1,15 @@
 pipeline {
   agent { label 'mfw' }
 
-  environment {
-    lib = 'musl'
-    startClean = '0'
-    makeOptions = '-j32'
+  parameters {
+    string(name:'libc', defaultValue: 'musl', description: 'lib to link against (musl or glibc)')
+    string(name:'startClean', defaultValue: '0', description: 'start clean or not (0 or 1)')
+    string(name:'makeOptions', defaultValue: '-j32', description: 'make options')
   }
 
   stages {
     stage('Build') {
+
       parallel {
         stage('Build x86_64') {
           environment {
@@ -25,7 +26,7 @@ pipeline {
 
             stage('Build OpenWrt') {
               steps {
-                sh 'cd docker-compose -f $dir/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${lib} -c ${startClean} -m "${makeOptions}"'
+                sh 'cd docker-compose -f $dir/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${params.libc} -c ${params.startClean} -m "${params.makeOptions}"'
               }
             }
           }
@@ -46,7 +47,7 @@ pipeline {
 
             stage('Build OpenWrt') {
               steps {
-                sh 'cd docker-compose -f $dir/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${lib} -c ${startClean} -m "${makeOptions}"'
+                sh 'cd docker-compose -f $dir/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${params.libc} -c ${params.startClean} -m "${params.makeOptions}"'
               }
             }
           }
@@ -67,7 +68,7 @@ pipeline {
 
             stage('Build OpenWrt') {
               steps {
-                sh 'cd docker-compose -f $dir/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${lib} -c ${startClean} -m "${makeOptions}"'
+                sh 'cd docker-compose -f $dir/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${params.libc} -c ${params.startClean} -m "${params.makeOptions}"'
               }
             }
           }
@@ -88,7 +89,7 @@ pipeline {
 
             stage('Build OpenWrt') {
               steps {
-                sh 'cd docker-compose -f $dir/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${lib} -c ${startClean} -m "${makeOptions}"'
+                sh 'cd docker-compose -f $dir/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${params.libc} -c ${params.startClean} -m "${params.makeOptions}"'
               }
             }
           }
