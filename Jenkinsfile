@@ -41,11 +41,11 @@ pipeline {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
             }
+          }
 
-            post {
-              success {
-	        archiveMFW(buildDir)
-              }
+          post {
+            success {
+              archiveMFW(buildDir)
             }
           }
         }
@@ -67,19 +67,19 @@ pipeline {
               }
             }
 
-            stage('Build OpenWrt wrt3200') {d
+            stage('Build OpenWrt wrt3200') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
             }
-
-            post {
-              success {
-                archiveMFW(buildDir)
-              }
-            }
-
           }
+
+          post {
+            success {
+              archiveMFW(buildDir)
+            }
+          }
+
         }
 
       }
