@@ -41,7 +41,7 @@ pipeline {
             }
           }
         }
-
+      }
         // stage('Build wrt3200') {
         //   environment {
         //     device = 'wrt3200'
@@ -109,3 +109,4 @@ pipeline {
     }
   }
 }
+
