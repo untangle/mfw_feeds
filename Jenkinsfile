@@ -20,7 +20,7 @@ pipeline {
 
       parallel {
         stage('Build x86_64') {
-	  node("mfw") {
+	  agent { label 'mfw' }
 
           environment {
             device = 'x86_64'
@@ -48,11 +48,11 @@ pipeline {
               archiveMFW(buildDir)
             }
           }
-        }
+
         }
 
         stage('Build wrt3200') {
-	  node("mfw") {
+	  agent { label 'mfw' }
 
           environment {
             device = 'wrt3200'
@@ -82,7 +82,39 @@ pipeline {
           }
 
         }
+
+        stage('Build wrt1900') {
+	  agent { label 'mfw' }
+
+          environment {
+            device = 'wrt1900'
+            buildDir = "./tmp-mfw-${env.device}"
+          }
+
+	  stages {
+            stage('Prep WS wrt1900') {
+              steps {
+		dir(buildDir) {
+                  checkout scm
+                }
+              }
+            }
+
+            stage('Build OpenWrt wrt1900') {
+              steps {
+                buildMFW(device, libc, startClean, makeOptions, buildDir)
+              }
+            }
+          }
+
+          post {
+            success {
+              archiveMFW(buildDir)
+            }
+          }
+
         }
+
       }
     }
   }
