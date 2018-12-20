@@ -2,6 +2,10 @@ void buildMFW(String device, String libc, String startClean, String makeOptions,
   sh "docker-compose -f ${buildDir}/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${libc} -c ${startClean} -m '${makeOptions}'"
 }
 
+void archiveMFW(String buildDir) {
+  archiveArtifacts artifacts: "${buildDir}/bin/targets/**/*.img.gz,${buildDir}/bin/targets/**/*.bin,${buildDir}/bin/targets/**/*.img,${buildDir}/bin/targets/**/*.tar.gz", fingerprint: true
+}
+
 pipeline {
   agent none
 
@@ -40,7 +44,7 @@ pipeline {
 
             post {
               success {
-                archiveArtifacts artifacts: "${env.buildDir}/bin/targets/**/*.img.gz,${env.buildDir}/bin/targets/**/*.bin,${env.buildDir}/bin/targets/**/*.img,${env.buildDir}/bin/targets/**/*.tar.gz", fingerprint: true
+	        archiveMFW(buildDir)
               }
             }
           }
@@ -71,7 +75,7 @@ pipeline {
 
             post {
               success {
-                archiveArtifacts artifacts: "${env.buildDir}/bin/targets/**/*.img.gz,${env.buildDir}/bin/targets/**/*.bin,${env.buildDir}/bin/targets/**/*.img,${env.buildDir}/bin/targets/**/*.tar.gz", fingerprint: true
+                archiveMFW(buildDir)
               }
             }
 
