@@ -34,7 +34,13 @@ pipeline {
 
             stage("Build OpenWrt ${env.device}") {
               steps {
-                sh "docker-compose -f ${buildDir}/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${params.libc} -c ${params.startClean} -m '${params.makeOptions}'"
+                buildMFW(device, libc, startClean, makeOptions, buildDir)
+              }
+            }
+
+            post {
+              success {
+                archiveArtifacts artifacts: "${env.buildDir}/bin/targets/**/*.img.gz,${env.buildDir}/bin/targets/**/*.bin,${env.buildDir}/bin/targets/**/*.img,${env.buildDir}/bin/targets/**/*.tar.gz", fingerprint: true
               }
             }
           }
@@ -62,6 +68,13 @@ pipeline {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
             }
+
+            post {
+              success {
+                archiveArtifacts artifacts: "${env.buildDir}/bin/targets/**/*.img.gz,${env.buildDir}/bin/targets/**/*.bin,${env.buildDir}/bin/targets/**/*.img,${env.buildDir}/bin/targets/**/*.tar.gz", fingerprint: true
+              }
+            }
+
           }
         }
 
