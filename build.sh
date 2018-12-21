@@ -53,7 +53,7 @@ cp ${CURDIR}/feeds.conf.mfw feeds.conf
 rm -fr {.,package}/feeds/untangle*
 ./scripts/feeds update -a
 ./scripts/feeds install -a -p packages
-./scripts/feeds install -a -p mfw
+./scripts/feeds install -a -f -p mfw
 
 # config
 ./feeds/mfw/configs/generate.sh -d $DEVICE -l $LIBC >| .config
