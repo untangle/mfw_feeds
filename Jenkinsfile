@@ -41,7 +41,7 @@ pipeline {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
                 mail(to: 'seb@untangle.com', subject: "Done ${env.JOB_NAME} [${env.BUILD_NUMBER}]", body: "${env.BUILD_URL}")
 		emailext(to: 'seb@untangle.com', subject: "Done ${env.JOB_NAME} [${env.BUILD_NUMBER}]", body: "${env.BUILD_URL}")
-                slackSend(channel: "#Seb", message: "Done : ${env.JOB_NAME} ${env.BUILD_NUMBER} ${env.BUILD_URL}")
+                slackSend(channel: "@Seb", message: "Done : ${env.JOB_NAME} ${env.BUILD_NUMBER} ${env.BUILD_URL}")
               }
             }
           }
