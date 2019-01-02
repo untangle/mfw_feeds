@@ -39,6 +39,7 @@ pipeline {
             stage('Build OpenWrt x86_64') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
+                mail(to: 'seb@untangle.com', subject: "Done ${env.JOB_NAME} [${env.BUILD_NUMBER}]", body: "${env.BUILD_URL}")
               }
             }
           }
