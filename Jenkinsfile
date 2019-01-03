@@ -35,6 +35,7 @@ pipeline {
             stage('Build OpenWrt x86_64') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
+                stash(name:"rootfs-${device}", includes:"${buildDir}/bin/targets/**/*generic-rootfs.tar.gz")
               }
             }
           }
@@ -95,18 +96,19 @@ pipeline {
         }
 
       }
-    }
 
-    post {
-      always {
-        script {
-          // set result before pipeline ends, so emailer sees it
-          currentBuild.result = currentBuild.currentResult
-        }
-        emailext(to:'seb@untangle.com', subject:"Done ${env.JOB_NAME} [${env.BUILD_NUMBER}]", body:"${env.BUILD_URL}")
-        slackSend(channel:"@Seb", message:"Done : ${env.JOB_NAME} ${env.BUILD_NUMBER} ${env.BUILD_URL}")
-        step($class:'Mailer', notifyEveryUnstableBuild:true, recipients:'seb@untangle.com')
+      post {
+	always {
+	  script {
+	    // set result before pipeline ends, so emailer sees it
+	    currentBuild.result = currentBuild.currentResult
+	  }
+	  emailext(to:'seb@untangle.com', subject:"Done ${env.JOB_NAME} [${env.BUILD_NUMBER}]", body:"${env.BUILD_URL}")
+	  slackSend(channel:"@Seb", message:"Done : ${env.JOB_NAME} ${env.BUILD_NUMBER} ${env.BUILD_URL}")
+	  step($class:'Mailer', notifyEveryUnstableBuild:true, recipients:'seb@untangle.com')
+	}
       }
+
     }
 
   }
