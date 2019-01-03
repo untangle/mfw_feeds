@@ -29,11 +29,7 @@ pipeline {
 
 	  stages {
             stage('Prep WS x86_64') {
-              steps {
-		dir(buildDir) {
-                  checkout scm
-                }
-              }
+              steps { dir(buildDir) { checkout scm } }
             }
 
             stage('Build OpenWrt x86_64') {
@@ -47,11 +43,8 @@ pipeline {
           }
 
           post {
-            success {
-              archiveMFW(buildDir)
-            }
+            success { archiveMFW(buildDir) }
           }
-
         }
 
         stage('Build wrt3200') {
@@ -64,11 +57,7 @@ pipeline {
 
 	  stages {
             stage('Prep WS wrt3200') {
-              steps {
-		dir(buildDir) {
-                  checkout scm
-                }
-              }
+              steps { dir(buildDir) { checkout scm } }
             }
 
             stage('Build OpenWrt wrt3200') {
@@ -79,11 +68,8 @@ pipeline {
           }
 
           post {
-            success {
-              archiveMFW(buildDir)
-            }
+            success { archiveMFW(buildDir) }
           }
-
         }
 
         stage('Build wrt1900') {
@@ -95,12 +81,8 @@ pipeline {
           }
 
 	  stages {
-            stage('Prep WS wrt1900') {
-              steps {
-		dir(buildDir) {
-                  checkout scm
-                }
-              }
+            stage('Prep WS wrt1900') { 
+              steps { dir(buildDir) { checkout scm } }
             }
 
             stage('Build OpenWrt wrt1900') {
@@ -110,12 +92,9 @@ pipeline {
             }
           }
 
-          post {
-            success {
-              archiveMFW(buildDir)
-            }
+          post { 
+            success { archiveMFW(buildDir) }
           }
-
         }
 
       }
