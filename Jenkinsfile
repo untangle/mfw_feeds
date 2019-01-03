@@ -103,9 +103,8 @@ pipeline {
 	    // set result before pipeline ends, so emailer sees it
 	    currentBuild.result = currentBuild.currentResult
 	  }
-	  emailext(to:'seb@untangle.com', subject:"Private ${env.JOB_NAME} [${env.BUILD_NUMBER}]")
-	  slackSend(channel:"@Seb", message:"Done : ${env.JOB_NAME} ${env.BUILD_NUMBER} ${env.BUILD_URL}")
-	  emailext(to:'seb@untangle.com', notifyEveryUnstableBuild:true)
+          emailext(to:'seb@untangle.com', subject:"Private ${env.JOB_NAME} [${env.BUILD_NUMBER}]")
+          slackSend(channel:"@Seb", message:"Done : ${env.JOB_NAME} ${env.BUILD_NUMBER} ${env.BUILD_URL}")
 	}
       }
 
