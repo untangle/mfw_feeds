@@ -24,7 +24,7 @@ pipeline {
 
           environment {
             device = 'x86_64'
-            buildDir = "tmp-mfw-${env.device}"
+            buildDir = "${env.HOME}/build-mfw-${env.BRANCH_NAME}-${device}"
           }
 
 	  stages {
@@ -50,7 +50,7 @@ pipeline {
 
           environment {
             device = 'wrt3200'
-            buildDir = "tmp-mfw-${env.device}"
+            buildDir = "${env.HOME}/build-mfw-${env.BRANCH_NAME}-${device}"
           }
 
 	  stages {
@@ -75,7 +75,7 @@ pipeline {
 
           environment {
             device = 'wrt1900'
-            buildDir = "tmp-mfw-${env.device}"
+            buildDir = "${env.HOME}/build-mfw-${env.BRANCH_NAME}-${device}"
           }
 
 	  stages {
@@ -118,7 +118,7 @@ pipeline {
 
           environment {
             device = 'x86_64'
-            buildDir = "tmp-mfw-${env.device}"
+            buildDir = "${env.HOME}/build-mfw-${env.BRANCH_NAME}-${device}"
           }
 
           steps {
