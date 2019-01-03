@@ -1,5 +1,6 @@
 void buildMFW(String device, String libc, String startClean, String makeOptions, String buildDir) {
   sh "docker-compose -f ${buildDir}/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${libc} -c ${startClean} -m '${makeOptions}'"
+  sh "find ${buildDir} -name '*.gz' -o -name '*.gz' | xargs cp {} ."
 }
 
 void archiveMFW() {
@@ -35,7 +36,6 @@ pipeline {
             stage('Build OpenWrt x86_64') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
-		sh "cp ${buildDir}/bin/targets/x86/64/*generic-rootfs.tar.gz ."
                 stash(name:"rootfs-${device}", includes:"*generic-rootfs.tar.gz")
               }
             }
