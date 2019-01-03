@@ -41,7 +41,7 @@ pipeline {
           }
 
           post {
-            success { archiveMFW(buildDir) }
+            success { archiveMFW() }
           }
         }
 
@@ -66,7 +66,7 @@ pipeline {
           }
 
           post {
-            success { archiveMFW(buildDir) }
+            success { archiveMFW() }
           }
         }
 
@@ -91,7 +91,7 @@ pipeline {
           }
 
           post { 
-            success { archiveMFW(buildDir) }
+            success { archiveMFW() }
           }
         }
 
