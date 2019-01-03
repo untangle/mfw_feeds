@@ -2,8 +2,8 @@ void buildMFW(String device, String libc, String startClean, String makeOptions,
   sh "docker-compose -f ${buildDir}/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${libc} -c ${startClean} -m '${makeOptions}'"
 }
 
-void archiveMFW(String buildDir) {
-  archiveArtifacts artifacts: "${buildDir}/bin/targets/**/*.img.gz,${buildDir}/bin/targets/**/*.bin,${buildDir}/bin/targets/**/*.img,${buildDir}/bin/targets/**/*.tar.gz", fingerprint: true
+void archiveMFW() {
+  archiveArtifacts artifacts: "bin/targets/**/*.img.gz,bin/targets/**/*.bin,bin/targets/**/*.img,bin/targets/**/*.tar.gz", fingerprint: true
 }
 
 pipeline {
@@ -35,7 +35,7 @@ pipeline {
             stage('Build OpenWrt x86_64') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
-                stash(name:"rootfs-${device}", includes:"${buildDir}/bin/targets/**/*generic-rootfs.tar.gz")
+                stash(name:"rootfs-${device}", includes:"bin/targets/**/*generic-rootfs.tar.gz")
               }
             }
           }
