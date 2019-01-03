@@ -41,10 +41,6 @@ pipeline {
 
           post {
             success { archiveMFW(buildDir) }
-            always {
-              emailext(to:'seb@untangle.com', subject:"Done ${env.JOB_NAME} [${env.BUILD_NUMBER}]", body:"${env.BUILD_URL}")
-              slackSend(channel:"@Seb", message:"Done : ${env.JOB_NAME} ${env.BUILD_NUMBER} ${env.BUILD_URL}")
-            }
           }
         }
 
@@ -100,6 +96,14 @@ pipeline {
 
       }
     }
+
+    post {
+      always {
+        emailext(to:'seb@untangle.com', subject:"Done ${env.JOB_NAME} [${env.BUILD_NUMBER}]", body:"${env.BUILD_URL}")
+        slackSend(channel:"@Seb", message:"Done : ${env.JOB_NAME} ${env.BUILD_NUMBER} ${env.BUILD_URL}")
+      }
+    }
+
+
   }
 }
-
