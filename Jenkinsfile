@@ -1,7 +1,7 @@
 void buildMFW(String device, String libc, String startClean, String makeOptions, String buildDir) {
   sh "docker-compose -f ${buildDir}/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${libc} -c ${startClean} -m '${makeOptions}'"
-  sh "rm -fr bin/target"
-  sh "cp -r ${buildDir}/bin/target bin/"
+  sh "rm -fr bin/targets"
+  sh "cp -r ${buildDir}/bin/targets bin/"
 }
 
 void archiveMFW() {
