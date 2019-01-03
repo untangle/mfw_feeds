@@ -111,5 +111,23 @@ pipeline {
 
     }
 
+    stage('Test') {
+      parallel {
+        stage('Test x86_64') {
+	  agent { label 'mfw' }
+
+          environment {
+            device = 'x86_64'
+            buildDir = "tmp-mfw-${env.device}"
+          }
+
+          steps {
+            unstash(name:"rootfs-${device}")
+	    shell("test -f bin/targets/x86/64/openwrt-x86-64-generic-rootfs.tar.gz")
+          }
+        }
+      }
+    }
+
   }
 }
