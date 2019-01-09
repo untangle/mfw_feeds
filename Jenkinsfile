@@ -71,6 +71,31 @@ pipeline {
           }
         }
 
+        stage('Build omnia') {
+	  agent { label 'mfw' }
+
+          environment {
+            device = 'omnia'
+            buildDir = "${env.HOME}/build-mfw-${env.BRANCH_NAME}-${device}"
+          }
+
+	  stages {
+            stage('Prep WS omnia') {
+              steps { dir(buildDir) { checkout scm } }
+            }
+
+            stage('Build OpenWrt omnia') {
+              steps {
+                buildMFW(device, libc, startClean, makeOptions, buildDir)
+              }
+            }
+          }
+
+          post {
+            success { archiveMFW() }
+          }
+        }
+
         stage('Build wrt1900') {
 	  agent { label 'mfw' }
 
