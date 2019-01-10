@@ -1,0 +1,15 @@
+FROM scratch
+
+ARG ROOTFS_TARBALL
+
+ADD $ROOTFS_TARBALL /
+
+USER root
+
+RUN mkdir -p /var/lock
+RUN mkdir -p /var/run
+RUN /etc/init.d/dropbear enable
+
+EXPOSE 22
+
+CMD ["/sbin/init"]
