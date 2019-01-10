@@ -10,8 +10,4 @@ services:
       dockerfile: Dockerfile.build
     volumes:
       - ../:/home/mfw/openwrt
-  build-no-volume:
-    build:
-      context: .
-      dockerfile: Dockerfile.build.novolume
 
