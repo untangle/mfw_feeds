@@ -36,7 +36,7 @@ pipeline {
             stage('Build OpenWrt x86_64') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
-                stash(name:"rootfs-${device}", includes:"*generic-rootfs.tar.gz")
+                stash(name:"rootfs-${device}", includes:"bin/targets/**/*generic-rootfs.tar.gz")
               }
             }
           }
