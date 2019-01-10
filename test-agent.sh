@@ -11,7 +11,7 @@ sleep 5
 nc $MFW_HOST 22
 
 # test classd connectivity
-nc $MFW_HOST 8080
+nc $MFW_HOST 8123
 
 # test webui connectivity
 curl http://$MFW_HOST
