@@ -145,15 +145,14 @@ pipeline {
             device = 'x86_64'
             buildDir = "${env.HOME}/build-mfw-${env.BRANCH_NAME}-${device}"
 	    rootfsTarball = 'bin/targets/x86/64/openwrt-x86-64-generic-rootfs.tar.gz'
-	    dockerfile = "build/docker-compose.test.yml"
+	    dockerfile = "mfw/docker-compose.test.yml"
           }
 
           steps {
             unstash(name:"rootfs-${device}")
             shell("test -f ${rootfsTarball}")
 	    shell("docker-compose -f ${dockerfile} build --build-arg ROOTFS_TARBALL= ${rootfsTarball} mfw")
-	    shell("docker-compose -f ${dockerfile} up -d")
-	    shell("docker-compose -f ${dockerfile} down")
+	    shell("docker-compose -f ${dockerfile} up --abort-on-container-exit --exit-code-from test")
           }
         }
       }
