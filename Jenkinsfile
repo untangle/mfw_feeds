@@ -129,8 +129,8 @@ pipeline {
 	    // set result before pipeline ends, so emailer sees it
 	    currentBuild.result = currentBuild.currentResult
 	  }
-          emailext(to:'seb@untangle.com', subject:"Private ${env.JOB_NAME} [${env.BUILD_NUMBER}]", body:"${env.BUILD_URL}")
-          slackSend(channel:"@Seb", message:"Done : ${env.JOB_NAME} ${env.BUILD_NUMBER} ${env.BUILD_URL}")
+          emailext(to:'seb@untangle.com', subject:"${env.JOB_NAME} #${env.BUILD_NUMBER}: ${currentBuild.result}", body:"${env.BUILD_URL}")
+          slackSend(channel:"@Seb", message:"${env.JOB_NAME} #${env.BUILD_NUMBER}: ${currentBuild.result} at ${env.BUILD_URL}")
 	}
       }
 
@@ -148,10 +148,17 @@ pipeline {
 
           steps {
             unstash(name:"rootfs-${device}")
-	    shell("test -f bin/targets/x86/64/openwrt-x86-64-generic-rootfs.tar.gz")
+            shell("test -f bin/targets/x86/64/openwrt-x86-64-generic-rootfs.tar.gz")
           }
         }
       }
+
+      post {
+        failure {
+          currentBuild.result = 'UNSTABLE'
+        }
+      }
+
     }
 
   }
