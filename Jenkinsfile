@@ -142,24 +142,22 @@ pipeline {
 	  agent { label 'mfw' }
 
           environment {
-            device = 'x86_64'
-            buildDir = "${env.HOME}/build-mfw-${env.BRANCH_NAME}-${device}"
 	    rootfsTarball = 'bin/targets/x86/64/openwrt-x86-64-generic-rootfs.tar.gz'
-	    dockerfile = "mfw/docker-compose.test.yml"
+	    dockerfile = 'mfw/docker-compose.test.yml'
           }
 
           stages {
             stage('Prep x86_64') {
               steps {
                 unstash(name:"rootfs-${device}")
-                shell("test -f ${rootfsTarball}")
-	        shell("docker-compose -f ${dockerfile} build --build-arg ROOTFS_TARBALL= ${rootfsTarball} mfw")
+                sh("test -f ${rootfsTarball}")
+	        sh("docker-compose -f ${dockerfile} build --build-arg ROOTFS_TARBALL= ${rootfsTarball} mfw")
               }
             }
 
             stage('TCP services') {
               steps {
-                shell("docker-compose -f ${dockerfile} up --abort-on-container-exit --exit-code-from test")
+                sh("docker-compose -f ${dockerfile} up --abort-on-container-exit --exit-code-from test")
               }
             }
           }
@@ -173,7 +171,6 @@ pipeline {
           }
         }
       }
-
     }
 
   }
