@@ -148,11 +148,20 @@ pipeline {
 	    dockerfile = "mfw/docker-compose.test.yml"
           }
 
-          steps {
-            unstash(name:"rootfs-${device}")
-            shell("test -f ${rootfsTarball}")
-	    shell("docker-compose -f ${dockerfile} build --build-arg ROOTFS_TARBALL= ${rootfsTarball} mfw")
-	    shell("docker-compose -f ${dockerfile} up --abort-on-container-exit --exit-code-from test")
+          stages {
+            stage('Prep x86_64') {
+              steps {
+                unstash(name:"rootfs-${device}")
+                shell("test -f ${rootfsTarball}")
+	        shell("docker-compose -f ${dockerfile} build --build-arg ROOTFS_TARBALL= ${rootfsTarball} mfw")
+              }
+            }
+
+            stage('TCP services') {
+              steps {
+                shell("docker-compose -f ${dockerfile} up --abort-on-container-exit --exit-code-from test")
+              }
+            }
           }
         }
       }
