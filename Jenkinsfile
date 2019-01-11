@@ -152,7 +152,7 @@ pipeline {
               steps {
                 unstash(name:"rootfs-${device}")
                 sh("test -f ${rootfsTarball}")
-	        sh("docker-compose -f ${dockerfile} build --build-arg ROOTFS_TARBALL= ${rootfsTarball} mfw")
+	        sh("docker-compose -f ${dockerfile} build --build-arg ROOTFS_TARBALL=${rootfsTarball} mfw")
               }
             }
 
