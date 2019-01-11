@@ -152,15 +152,15 @@ pipeline {
             stage('Prep x86_64') {
               steps {
                 unstash(name:"rootfs-${device}")
-                sh("test -f ${rootfsTarball}")
-		sh("mv -f ${rootfsTarball} mfw")
+                sh("test -f ${rootfsTarballPath}")
+		sh("mv -f ${rootfsTarballPath} mfw")
               }
             }
 
             stage('TCP services') {
               steps {
                 dir('mfw') {
-                  sh("docker-compose -f ${dockerfile} build --build-arg ROOTFS_TARBALL=${rootfsTarball} mfw")
+                  sh("docker-compose -f ${dockerfile} build --build-arg ROOTFS_TARBALL=${rootfsTarballName} mfw")
                   sh("docker-compose -f ${dockerfile} up --abort-on-container-exit --exit-code-from test")
                 }
               }
