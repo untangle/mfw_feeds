@@ -4,7 +4,7 @@ void buildMFW(String device, String libc, String startClean, String makeOptions,
 }
 
 void archiveMFW() {
-  archiveArtifacts artifacts: "bin/targets/**/*.img.gz,bin/targets/**/*.bin,bin/targets/**/*.img,bin/targets/**/*.tar.gz", fingerprint: true
+  archiveArtifacts artifacts: "bin/targets/**/*.img.gz,bin/targets/**/*.bin,bin/targets/**/*.img,bin/targets/**/*.tar.gz,bin/targets/**/kmod-mac80211-hwsim_*.ipk", fingerprint: true
 }
 
 pipeline {
