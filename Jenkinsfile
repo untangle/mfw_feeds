@@ -143,8 +143,9 @@ pipeline {
 
           environment {
             device = 'x86_64'
-	    rootfsTarball = 'bin/targets/x86/64/openwrt-x86-64-generic-rootfs.tar.gz'
-	    dockerfile = 'mfw/docker-compose.test.yml'
+	    rootfsTarballName = 'openwrt-x86-64-generic-rootfs.tar.gz'
+	    rootfsTarballPath = "bin/targets/x86/64/${rootfsTarballName}"
+	    dockerfile = 'docker-compose.test.yml'
           }
 
           stages {
@@ -152,13 +153,16 @@ pipeline {
               steps {
                 unstash(name:"rootfs-${device}")
                 sh("test -f ${rootfsTarball}")
-	        sh("docker-compose -f ${dockerfile} build --build-arg ROOTFS_TARBALL=${rootfsTarball} mfw")
+		sh("mv -f ${rootfsTarball} mfw")
               }
             }
 
             stage('TCP services') {
               steps {
-                sh("docker-compose -f ${dockerfile} up --abort-on-container-exit --exit-code-from test")
+                dir('mfw') {
+                  sh("docker-compose -f ${dockerfile} build --build-arg ROOTFS_TARBALL=${rootfsTarball} mfw")
+                  sh("docker-compose -f ${dockerfile} up --abort-on-container-exit --exit-code-from test")
+                }
               }
             }
           }
