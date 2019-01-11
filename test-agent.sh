@@ -1,6 +1,7 @@
 #! /bin/bash
 
 set -e
+set -x
 
 MFW_HOST="mfw"
 
@@ -8,10 +9,10 @@ MFW_HOST="mfw"
 sleep 5
 
 # test SSH connectivity
-nc $MFW_HOST 22
+nc -z $MFW_HOST 22
 
 # test classd connectivity
-nc $MFW_HOST 8123
+nc -z $MFW_HOST 8123
 
 # test webui connectivity
-curl http://$MFW_HOST
+echo foo | curl http://$MFW_HOST

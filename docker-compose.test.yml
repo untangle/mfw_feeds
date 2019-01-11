@@ -11,5 +11,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.test.agent
+    depends_on:
+      - mfw
     volumes:
       - ./:/home/mfw/test-agent
