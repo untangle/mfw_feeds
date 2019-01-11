@@ -142,6 +142,7 @@ pipeline {
 	  agent { label 'mfw' }
 
           environment {
+            device = 'x86_64'
 	    rootfsTarball = 'bin/targets/x86/64/openwrt-x86-64-generic-rootfs.tar.gz'
 	    dockerfile = 'mfw/docker-compose.test.yml'
           }
