@@ -10,7 +10,9 @@ start_service() {
     procd_open_instance packetd
 
     # command
-    procd_set_param command /usr/bin/packetd
+    # --no-timestamps disable timestamps in log
+    # as output goes to logd which will add timestamps
+    procd_set_param command /usr/bin/packetd --no-timestamps
     # restart indefinitely if crashed, 5 seconds between attempts
     procd_set_param respawn 3600 5 0
     # stdout to system log
