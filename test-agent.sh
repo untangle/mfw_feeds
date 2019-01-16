@@ -18,6 +18,3 @@ sleep 5
 # echo foo | curl http://$MFW_HOST
 
 ping -c 1 $MFW_HOST
-
-exit 1
-
