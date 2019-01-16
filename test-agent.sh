@@ -19,3 +19,5 @@ sleep 5
 
 ping -c 1 $MFW_HOST
 
+exit 1
+
