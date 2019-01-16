@@ -160,19 +160,17 @@ pipeline {
             stage('TCP services') {
               steps {
                 dir('mfw') {
-                  sh("docker-compose -f ${dockerfile} build --build-arg ROOTFS_TARBALL=${rootfsTarballName} mfw")
-                  sh("docker-compose -f ${dockerfile} up --abort-on-container-exit --exit-code-from test")
+                  script {
+                    try {
+                      sh("docker-compose -f ${dockerfile} build --build-arg ROOTFS_TARBALL=${rootfsTarballName} mfw")
+                      sh("docker-compose -f ${dockerfile} up --abort-on-container-exit --exit-code-from test")
+                    } catch (exc) {
+                      currentBuild.result = 'UNSTABLE'                      
+                    }
+                  }
                 }
               }
             }
-          }
-        }
-      }
-
-      post {
-        failure {
-          script {
-            currentBuild.result = 'UNSTABLE'
           }
         }
       }
