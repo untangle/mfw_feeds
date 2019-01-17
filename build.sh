@@ -20,6 +20,13 @@ usage() {
   exit 1
 }
 
+# cleanup
+VERSION_DATE_FILE="version.date"
+cleanup() {
+  rm -f ${VERSION_DATE_FILE}
+}
+
+# CLI options
 START_CLEAN="false"
 DEVICE="x86_64"
 LIBC="musl"
@@ -37,6 +44,8 @@ while getopts "hc:d:l:v:m:" opt ; do
   esac
 done
 
+# main
+trap cleanup ERR INT
 CURDIR=$(dirname $(readlink -f $0))
 
 # start clean only if explicitely requested
@@ -45,6 +54,10 @@ case $START_CLEAN in
   *) make $MAKE_OPTIONS clean
      rm -fr build_dir staging_dir ;;
 esac
+
+# set timestamp for files
+date +"%s" >| ${VERSION_DATE_FILE}
+export SOURCE_DATE_EPOCH=$(cat ${VERSION_DATE_FILE})
 
 # add MFW feed definitions
 cp ${CURDIR}/feeds.conf.mfw feeds.conf
@@ -66,3 +79,5 @@ make $MAKE_OPTIONS MFW_VERSION=${VERSION} download
 if ! make $MAKE_OPTIONS MFW_VERSION=${VERSION} ; then
   make -j1 V=s MFW_VERSION=${VERSION}
 fi
+
+cleanup
