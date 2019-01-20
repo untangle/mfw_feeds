@@ -3,6 +3,9 @@
 set -e
 #set -x
 
+echo "Build on *master* does not currently work - use openwrt-18.06 branch."
+exit 1
+
 # hides perl warning about locale
 export LC_ALL=${LC_ALL:-C}
 
