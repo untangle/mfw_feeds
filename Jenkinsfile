@@ -3,8 +3,11 @@ void buildMFW(String device, String libc, String startClean, String makeOptions,
   sh "rm -fr bin/targets && cp -r ${buildDir}/bin/targets bin/"
 }
 
-void archiveMFW() {
-  archiveArtifacts artifacts: "bin/targets/**/*.img.gz,bin/targets/**/*.bin,bin/targets/**/*.img,bin/targets/**/*.tar.gz,bin/targets/**/kmod-mac80211-hwsim_*.ipk", fingerprint: true
+void archiveMFW(String branch, String device, String libc) {
+  def outputDir="tmp/artifacts"
+  sh "./mfw/version-images.sh -b ${branch} -d ${device} -l ${libc} -o ${outputDir}"
+  archiveArtifacts artifacts: "${outputDir}/*", fingerprint: true
+  sh "rm -fr tmp/artifacts"
 }
 
 pipeline {
