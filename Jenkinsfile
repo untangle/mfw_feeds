@@ -7,7 +7,7 @@ void archiveMFW(String branch, String device, String libc) {
   def outputDir="tmp/artifacts"
   sh "./mfw/version-images.sh -b ${branch} -d ${device} -l ${libc} -o ${outputDir}"
   archiveArtifacts artifacts: "${outputDir}/*", fingerprint: true
-  sh "rm -fr tmp/artifacts"
+  sh "rm -fr ${outputDir}"
 }
 
 pipeline {
@@ -45,7 +45,7 @@ pipeline {
           }
 
           post {
-            success { archiveMFW() }
+            success { archiveMFW(${env.BRANCH_NAME}, ${device}, {$libc}) }
           }
         }
 
@@ -70,7 +70,7 @@ pipeline {
           }
 
           post {
-            success { archiveMFW() }
+            success { archiveMFW(${env.BRANCH_NAME}, ${device}, {$libc}) }
           }
         }
 
@@ -95,7 +95,7 @@ pipeline {
           }
 
           post {
-            success { archiveMFW() }
+            success { archiveMFW(${env.BRANCH_NAME}, ${device}, {$libc}) }
           }
         }
 
@@ -120,7 +120,7 @@ pipeline {
           }
 
           post { 
-            success { archiveMFW() }
+            success { archiveMFW(${env.BRANCH_NAME}, ${device}, {$libc}) }
           }
         }
 
