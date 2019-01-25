@@ -17,7 +17,6 @@ usage() {
   echo "                                package's source repository'"
   echo "                              - <branch> or <tag> can be any valid git object as long as it exists"
   echo "                                in each package's source repository (mfw_admin, packetd, etc)"
-  exit 1
 }
 
 # cleanup
