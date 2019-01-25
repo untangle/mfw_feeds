@@ -45,7 +45,7 @@ pipeline {
           }
 
           post {
-            success { archiveMFW(${env.BRANCH_NAME}, ${device}, {$libc}) }
+            success { archiveMFW(env.BRANCH_NAME, device, libc) }
           }
         }
 
@@ -70,7 +70,7 @@ pipeline {
           }
 
           post {
-            success { archiveMFW(${env.BRANCH_NAME}, ${device}, {$libc}) }
+            success { archiveMFW(env.BRANCH_NAME, device, libc) }
           }
         }
 
@@ -95,7 +95,7 @@ pipeline {
           }
 
           post {
-            success { archiveMFW(${env.BRANCH_NAME}, ${device}, {$libc}) }
+            success { archiveMFW(env.BRANCH_NAME, device, libc) }
           }
         }
 
@@ -120,7 +120,7 @@ pipeline {
           }
 
           post { 
-            success { archiveMFW(${env.BRANCH_NAME}, ${device}, {$libc}) }
+            success { archiveMFW(env.BRANCH_NAME, device, libc) }
           }
         }
 
