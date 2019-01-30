@@ -13,6 +13,11 @@ void archiveMFW(String branch, String device, String libc) {
 pipeline {
   agent none
 
+  triggers {
+    upstream(upstreamProjects: "packetd/master, sync-settings/master",
+             threshold: hudson.model.Result.SUCCESS)
+  }
+
   parameters {
     string(name:'libc', defaultValue: 'musl', description: 'lib to link against (musl or glibc)')
     string(name:'startClean', defaultValue: '0', description: 'start clean or not (0 or 1)')
