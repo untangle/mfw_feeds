@@ -1,9 +1,9 @@
 #!/bin/sh /etc/rc.common
 # Copyright (C) 2006-2011 OpenWrt.org
 
-# 18 is right before nftables-rules (19) and networking (20)
-START=18
-STOP=18
+# 21 is right after networking (20)
+START=21
+STOP=21
 
 USE_PROCD=1
 
