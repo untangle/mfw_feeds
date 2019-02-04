@@ -13,7 +13,7 @@ start_service() {
     # command
     # --no-timestamps disable timestamps in log
     # as output goes to logd which will add timestamps
-    procd_set_param command /usr/bin/packetd --no-timestamp
+    procd_set_param command /usr/bin/packetd --no-timestamp --cpuprofile /tmp/cpu.prof 
     # restart indefinitely if crashed, 5 seconds between attempts
     procd_set_param respawn 3600 5 0
     # stdout to system log
