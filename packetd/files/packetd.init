@@ -10,10 +10,13 @@ USE_PROCD=1
 start_service() {
     procd_open_instance packetd
 
+    # procd_set_param env GODEBUG=schedtrace=30000
+    # procd_set_param env GODEBUG=schedtrace=30000,scheddetail=1
+
     # command
     # --no-timestamps disable timestamps in log
+    # --logfile to specify a logfile manually
     # as output goes to logd which will add timestamps
-
     # procd_set_param command /usr/bin/packetd --no-timestamp
     procd_set_param command /usr/bin/packetd --logfile /tmp/log/packetd.log
 
