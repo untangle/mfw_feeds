@@ -28,7 +28,7 @@ define Package/packetd
 	  +iptables-mod-nfqueue +kmod-nft-dict
   # FIXME: needed ?
   KCONFIG:=CONFIG_NETFILTER_NETLINK_GLUE_CT=y CONFIG_NF_CT_NETLINK_HELPER=y \
-	  CONFIG_NFT_QUEUE=m
+	  CONFIG_NFT_QUEUE=m CONFIG_NF_CONNTRACK_TIMESTAMP=y
 endef
 
 define Package/packetd/description
