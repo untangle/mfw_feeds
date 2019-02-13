@@ -23,7 +23,7 @@ cd openwrt
 
 Build it for your intended device and libc targets:
 ```
-docker-compose -f mfw/Dockerfile-build.yml run build (-d x86_64|wrt1900|wrt3200|omnia, -l musl|glibc)
+docker-compose -f mfw/docker-compose.build.yml run build (-d x86_64|wrt1900|wrt3200|omnia, -l musl|glibc)
 ```
 
 The OpenWRT documentation warns that building with -jN can cause
@@ -32,7 +32,7 @@ with -j1. Adding V=s increases verbosity so that you'll have output to
 look at when/if something still fails to build:
 
 ```
-docker-compose -f mfw/Dockerfile-build.yml run build (-d x86_64|wrt1900|wrt3200|omnia, -l musl|glibc) -m "-j1 V=s"
+docker-compose -f mfw/docker-compose.build.yml run build (-d x86_64|wrt1900|wrt3200|omnia, -l musl|glibc) -m "-j1 V=s"
 ```
 
 Building directly on a Stretch host:
