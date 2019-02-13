@@ -1,7 +1,6 @@
-#! /bin/bash
+#! /bin/bash -x
 
 set -e
-set -x
 
 # hides perl warning about locale
 export LC_ALL=${LC_ALL:-C}
@@ -39,7 +38,7 @@ while getopts "hc:d:l:v:m:" opt ; do
     v) VERSION="$OPTARG"
        [[ $VERSION == "release" ]] && VERSION="" ;;
     m) MAKE_OPTIONS="$OPTARG" ;;
-    h) usage ;;
+    h) usage ; exit 0 ;;
   esac
 done
 
