@@ -24,6 +24,11 @@ cleanup() {
   git checkout -- ${VERSION_DATE_FILE}
 }
 
+config() {
+  ./feeds/mfw/configs/generate.sh -d $DEVICE -l $LIBC >| .config
+  make defconfig
+}
+
 # CLI options
 START_CLEAN="false"
 DEVICE="x86_64"
@@ -49,7 +54,8 @@ CURDIR=$(dirname $(readlink -f $0))
 # start clean only if explicitely requested
 case $START_CLEAN in
   false|0) : ;;
-  *) make $MAKE_OPTIONS clean
+  *) [ -f .config ] || config
+     make $MAKE_OPTIONS clean
      rm -fr build_dir staging_dir ;;
 esac
 
@@ -67,8 +73,7 @@ rm -fr {.,package}/feeds/untangle*
 ./scripts/feeds install -a -f -p mfw
 
 # config
-./feeds/mfw/configs/generate.sh -d $DEVICE -l $LIBC >| .config
-make defconfig
+config
 
 # download
 make $MAKE_OPTIONS MFW_VERSION=${VERSION} download
