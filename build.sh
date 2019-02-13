@@ -21,7 +21,7 @@ usage() {
 # cleanup
 VERSION_DATE_FILE="version.date"
 cleanup() {
-  rm -f ${VERSION_DATE_FILE}
+  git checkout -- ${VERSION_DATE_FILE}
 }
 
 # CLI options
