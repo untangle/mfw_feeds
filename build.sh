@@ -54,7 +54,7 @@ CURDIR=$(dirname $(readlink -f $0))
 # start clean only if explicitely requested
 case $START_CLEAN in
   false|0) : ;;
-  *) [ -f .config ] || config
+  *) config
      make $MAKE_OPTIONS clean
      rm -fr build_dir staging_dir ;;
 esac
