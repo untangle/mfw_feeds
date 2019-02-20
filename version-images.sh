@@ -42,7 +42,7 @@ fi
 # main
 mkdir -p $OUTPUT_DIR
 
-find bin/targets -iregex '.+\(gz\|img\|bin\|kmod-mac80211-hwsi.+ipk\)' | while read f ; do
+find bin/targets -iregex '.+\(gz\|img\|vdi\|vmdk\|bin\|kmod-mac80211-hwsi.+ipk\)' | while read f ; do
   b=$(basename "$f")
   cp $f ${OUTPUT_DIR}/${b/./_$(versionString).}
 done
