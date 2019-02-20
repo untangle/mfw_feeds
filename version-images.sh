@@ -36,7 +36,7 @@ fi
 # main
 mkdir -p $OUTPUT_DIR
 
-find bin/targets -iregex '.+\(gz\|img\|vdi\|vmdk\|bin\|kmod-mac80211-hwsi.+ipk\)' | while read f ; do
+find bin/targets -iregex '.+\(gz\|img\|vdi\|vmdk\|bin\|kmod-mac80211-hwsi.+ipk\)' | grep -v Packages.gz | while read f ; do
   b=$(basename "$f")
   newName=${b/./_$(versionString).}
   newName=${newName/-squashfs}
