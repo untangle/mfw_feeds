@@ -13,28 +13,22 @@ versionString() {
 
 # CLI options
 usage() {
-  echo "$0 -b <branch> -d <device> -o <outputDir> [-l <libc>]"
+  echo "$0 -b <branch>> -o <outputDir>"
   echo "  -b <branch>"
-  echo "  -d <device>               : x86_64, omnia, wrt3200, wrt1900"
-  echo "  -l <libc>                 : musl, glibc (defaults to musl)"
   echo "  -o <outputDir>"
 }
 
 BRANCH=""
-DEVICE=""
-LIBC="musl"
 OUTPUT_DIR=""
-while getopts "hb:d:l:o:" opt ; do
+while getopts "hb:o:" opt ; do
   case "$opt" in
     b) BRANCH="$OPTARG" ;;
-    d) DEVICE="$OPTARG" ;;
-    l) LIBC="$OPTARG" ;;
     o) OUTPUT_DIR="$OPTARG" ;;
     h) usage ; exit 0 ;;
   esac
 done
 
-if [ -z "$BRANCH" -o -z "$DEVICE" -o -z "$OUTPUT_DIR" ] ; then
+if [ -z "$BRANCH" -o -z "$OUTPUT_DIR" ] ; then
   usage
   exit 1
 fi
