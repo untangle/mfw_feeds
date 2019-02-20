@@ -38,5 +38,10 @@ mkdir -p $OUTPUT_DIR
 
 find bin/targets -iregex '.+\(gz\|img\|vdi\|vmdk\|bin\|kmod-mac80211-hwsi.+ipk\)' | while read f ; do
   b=$(basename "$f")
-  cp $f ${OUTPUT_DIR}/${b/./_$(versionString).}
+  newName=${b/./_$(versionString).}
+  newName=${newName/-squashfs}
+  newName=${newName/-mvebu-cortexa9}
+  newName=${newName/.bin/.img}
+  newName=${newName/openwrt-/sdwan-}
+  cp $f ${OUTPUT_DIR}/$newName
 done
