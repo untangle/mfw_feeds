@@ -8,7 +8,7 @@ export LC_ALL=${LC_ALL:-C}
 # functions
 versionString() {
   ts=$(date +"%Y%m%dT%H%M")
-  echo ${BRANCH}_${ts}
+  echo ${BRANCH/openwrt-}_${ts}
 }
 
 # CLI options
