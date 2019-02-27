@@ -129,6 +129,31 @@ pipeline {
           }
         }
 
+        stage('Build wrt32x') {
+	  agent { label 'mfw' }
+
+          environment {
+            device = 'wrt32x'
+            buildDir = "${env.HOME}/build-mfw-${env.BRANCH_NAME}-${device}"
+          }
+
+	  stages {
+            stage('Prep WS wrt32x') {
+              steps { dir(buildDir) { checkout scm } }
+            }
+
+            stage('Build OpenWrt wrt32x') {
+              steps {
+                buildMFW(device, libc, startClean, makeOptions, buildDir)
+              }
+            }
+          }
+
+          post {
+            success { archiveMFW(env.BRANCH_NAME, device, libc) }
+          }
+        }
+
       }
     }
 
