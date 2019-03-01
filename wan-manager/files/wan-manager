@@ -1,0 +1,427 @@
+#!/usr/bin/env python3
+import os
+import json
+import collections
+import filecmp
+import operator
+import shutil
+import subprocess
+import tempfile
+
+from sync import network_util
+
+SETTINGS_FILE = "/etc/config/wan_policy.json"
+STATS_FILE = "/etc/config/stats.json"
+NFT_FILE = "/tmp/wan_manager.nft"
+
+def disable_policy(policyId):
+    ruleset = []
+    ruleset.append('flush chain inet wan-routing route-to-policy-%d\n' % policyId)
+    ruleset.append('flush set inet wan-routing policy-%d-table\n' % policyId)
+    ruleset.append('add rule inet wan-routing route-to-policy-%d return comment \"policy disabled\"\n' % policyId)
+    return ''.join(ruleset)
+
+def jump_policy(policyId, interfaceId):
+    ruleset = []
+    ruleset.append('flush chain inet wan-routing route-to-policy-%d\n' % policyId)
+    ruleset.append('flush set inet wan-routing policy-%d-table\n' % policyId)
+    ruleset.append('add rule inet wan-routing route-to-policy-%d set update ip saddr . ip daddr timeout 1m @policy-%d-table\n' % (policyId, policyId))
+    ruleset.append('add rule inet wan-routing route-to-policy-%d set update ip daddr . ip saddr timeout 1m @policy-%d-table\n' % (policyId, policyId))
+    ruleset.append('add rule inet wan-routing route-to-policy-%d dict session ct id wan_policy long_string set policy-%d\n' % (policyId, policyId))
+    ruleset.append('add rule inet wan-routing route-to-policy-%d jump mark-for-wan-%d\n' % (policyId, interfaceId))
+    return ''.join(ruleset)
+
+def interface_is_up(interface):
+    """
+    returns true if the interface is up, false otherwise
+    """
+    process = subprocess.Popen("ifstatus %s | jsonfilter -e '@.up'" % interface, shell=True, stdout=subprocess.PIPE)
+    out, _ = process.communicate()
+
+    if process.returncode != 0:
+        return False
+
+    ret = out.decode('ascii').rstrip()
+
+    if ret == "true":
+        return True
+    else:
+        return False
+
+def read_json(filename):
+    """
+    read json from a file
+    """
+    if not os.path.isfile(filename):
+        print("%s does not exist" % filename)
+        return None
+
+    try:
+        json_file = open(filename, 'r')
+        json_data = json_file.read()
+        json_file.close()
+        json_data = json.loads(json_data, object_pairs_hook=collections.OrderedDict)
+        return json_data
+    except IOError as exc:
+        print("Unable to read json file.", exc)
+        traceback.print_exc()
+        cleanup(1)
+
+def generate_nftables_changeset(settings, stats):
+    """
+    generates an nft tables changset based on settings and stats
+    """
+    changeset = []
+
+    interfaces = settings.get('network').get('interfaces')
+    for intf in interfaces:
+        if enabled_wan(intf):
+            changeset.append('flush set inet wan-routing wan-%d-table\n' % intf.get('interfaceId'))
+
+    wan = settings['wan']
+    policies = wan.get('policies')
+    for policy in policies:
+        if policy.get('enabled'):
+            policyId = policy.get('policyId')
+            policy_interfaces = policy.get('interfaces')
+
+            if len(policy_interfaces) == 1 and policy_interfaces[0].get('interfaceId') == 0:
+                policy_interfaces = get_wan_list(settings)
+
+            valid_wan_list = []
+            for policy_interface in policy_interfaces:
+                interfaceId = policy_interface.get('interfaceId')
+                if interface_meets_policy_criteria(settings, stats, policy, interfaceId):
+                    intf = get_interface_by_id(settings, interfaceId)
+                    interface_name = network_util.get_interface_name(settings, intf)
+                    if interface_is_up(interface_name):
+                        valid_wan_list.append(policy_interface)
+
+            if len(valid_wan_list) == 0:
+                changeset.append(disable_policy(policyId))
+
+            elif policy.get('type') == "SPECIFIC_WAN" or len(valid_wan_list) == 1:
+                interfaceId = valid_wan_list[0].get('interfaceId')
+                changeset.append(jump_policy(policyId, interfaceId))
+
+            elif policy.get('type') == "BEST_OF":
+                if stats is None:
+                    changeset.append(disable_policy(policyId))
+                else:
+                    best_of = {}
+                    determine_best_of(stats, best_of)
+
+                    best_of_metric = policy.get('best_of_metric')
+                    stat_name = ""
+                    metric_name = ""
+                    reverse_list = False
+                    interfaceId = 0
+                    if best_of_metric == "LOWEST_LATENCY":
+                        stat_name = "latency"
+                        metric_name = "1_minute"
+                    elif best_of_metric == "LOWEST_JITTER":
+                        stat_name = "jitter"
+                        metric_name = "1_minute"
+                    elif best_of_metric == "HIGHEST_AVAILABLE_BANDWIDTH":
+                        stat_name = "available_bandwidth"
+                        metric_name = "1_minute"
+                        reverse_list = True
+                    elif best_of_metric == "LOWEST_PACKET_LOSS":
+                        stat_name = "packet_loss"
+                        metric_name = "1_minute"
+
+                    for stat in best_of.get('stats'):
+                        best_of_stat_name = stat.get('name')
+                        if best_of_stat_name == stat_name:
+                            for metric in stat.get('metrics'):
+                                best_of_metric_name = metric.get('name')
+                                if metric_name == best_of_metric_name:
+                                    if reverse_list:
+                                        interface_list = reversed(metric.get('interface_list'))
+                                    else:
+                                        interface_list = metric.get('interface_list')
+
+                                    for interface in interface_list:
+                                        for valid_wan in valid_wan_list:
+                                            if interface.get('interfaceId') == valid_wan.get('interfaceId'):
+                                                interfaceId = valid_wan.get('interfaceId')
+                                                break
+                                        else:
+                                            continue
+                                        break
+                                    break
+                            break
+
+                    if interfaceId != 0:
+                        changeset.append(jump_policy(policyId, interfaceId))
+                    else:
+                        changeset.append(disable_policy(policyId))
+
+            elif policy.get('type') == "BALANCE":
+                algorithm = policy.get('balance_algorithm')
+
+                if stats is None and algorithm != "WEIGHTED":
+                    changeset.append(disable_policy(policyId))
+                else:
+                    total_weight = 0
+                    range_end = 0
+                    balance_string = ""
+                    metric_total = 0
+                    stat_name = ""
+                    metric_name = ""
+                    if algorithm != "WEIGHTED":
+                        if algorithm == "LATENCY":
+                            stat_name = "latency"
+                            metric_name = "1_minute"
+                        elif algorithm == "JITTER":
+                            stat_name = "jitter"
+                            metric_name = "1_minute"
+                        elif algorithm == "AVAILABLE_BANDWIDTH":
+                            stat_name = "available_bandwidth"
+                            metric_name = "1_minute"
+                        elif algorithm == "PACKET_LOSS":
+                            stat_name = "packet_loss"
+                            metric_name = "1_minute"
+
+                        for interface in valid_wan_list:
+                            interfaceId = interface.get('interfaceId')
+                            current_metric = get_interface_metric(stats, interfaceId, stat_name, metric_name)
+                            metric_total += current_metric
+
+                    for interface in valid_wan_list:
+                        interfaceId = interface.get('interfaceId')
+                        if algorithm == "WEIGHTED":
+                            weight = interface.get('weight')
+                        elif algorithm == "AVAILABLE_BANDWIDTH":
+                            weight = get_interface_metric(stats, interfaceId, stat_name, metric_name)
+                        else:
+                            weight = metric_total - get_interface_metric(stats, interfaceId, stat_name, metric_name)
+
+                        if total_weight > 0:
+                            balance_string = balance_string + ", "
+
+                        range_end = weight + total_weight - 1
+                        if total_weight == range_end:
+                            balance_string = balance_string + "%d : jump mark-for-wan-%d" % (total_weight, interfaceId)
+                        else:
+                            balance_string = balance_string + "%d-%d : jump mark-for-wan-%d" % (total_weight, range_end, interfaceId)
+
+                        total_weight += weight
+
+                    changeset.append('flush chain inet wan-routing route-to-policy-%d\n' % policyId)
+                    changeset.append('flush set inet wan-routing policy-%d-table\n' % policyId)
+                    changeset.append('add rule inet wan-routing route-to-policy-%d set update ip saddr . ip daddr timeout 1m @policy-%d-table\n' % (policyId, policyId))
+                    changeset.append('add rule inet wan-routing route-to-policy-%d set update ip daddr . ip saddr timeout 1m @policy-%d-table\n' % (policyId, policyId))
+                    changeset.append('add rule inet wan-routing route-to-policy-%d dict session ct id wan_policy long_string set policy-%d\n' % (policyId, policyId))
+                    changeset.append('add inet wan-routing route-to-policy-%d numgen random mod %d vmap { %s }\n' % (policyId, total_weight, balance_string))
+        else:
+            policyId = policy.get('policyId')
+            changeset.append(disable_policy(policyId))
+
+    return ''.join(changeset)
+
+def apply_nftables_changeset(changeset):
+    """
+    reads SETTINGS_FILE and generates rules
+    """
+    temp = tempfile.NamedTemporaryFile()
+    temp.write(changeset.encode())
+    temp.flush()
+    if not os.path.isfile(NFT_FILE) or not filecmp.cmp(temp.name, NFT_FILE):
+        shutil.copy2(temp.name, NFT_FILE)
+        ret = subprocess.call("nft -f %s" % NFT_FILE, shell=True)
+        print("nft -f %s returned: %d!" % (NFT_FILE, ret))
+        if ret != 0:
+            subprocess.call("rm %s" % NFT_FILE, shell=True)
+    else:
+        print("new changeset matches old changeset")
+    temp.close()
+
+def sort_best_of(best_of):
+    for stat in best_of.get('stats'):
+        for metric in stat.get('metrics'):
+            metric.get('interface_list').sort(key=operator.itemgetter('value'))
+
+def print_best_of(best_of):
+    for stat in best_of.get('stats'):
+        stat_name = stat.get('name')
+        stat_unit = stat.get('unit')
+        print("stat: %s" % stat_name)
+        for metric in stat.get('metrics'):
+            metric_name = metric.get('name')
+            print("name: %s" % metric_name)
+            for interface in metric.get('interface_list'):
+                print("interface: %d value: %d %s" % ( interface.get('interfaceId'), \
+                                                       interface.get('value'), \
+                                                       stat_unit))
+            print("")
+
+def determine_best_of(stats, best_of):
+    interfaces = stats.get('interfaces')
+    best_of['stats'] = []
+
+    for stat in interfaces[0].get('stats'):
+        stat_name = stat.get('name')
+        best_of_stat = {}
+        best_of_stat['name'] = stat_name
+        best_of_stat['unit'] = stat.get('unit')
+        best_of_stat['metrics'] = []
+        for metric in stat.get('metrics'):
+            metric_name = metric.get('name')
+            best_of_metric = {}
+            best_of_metric['name'] = metric_name
+            best_of_metric['interface_list'] = []
+            interface = {}
+            interface['interfaceId'] = interfaces[0].get('interfaceId')
+            interface['value'] = metric.get('value')
+            best_of_metric['interface_list'].append(interface)
+            best_of_stat['metrics'].append(best_of_metric)
+
+        best_of['stats'].append(best_of_stat)
+
+    for interface in interfaces[1:]:
+        interfaceId = interface.get('interfaceId')
+        for stat in interface.get('stats'):
+            stat_name = stat.get('name')
+            for metric in stat.get('metrics'):
+                metric_name = metric.get('name')
+                for best_of_stat in best_of.get('stats'):
+                    best_of_stat_name = best_of_stat.get('name')
+                    if best_of_stat_name == stat_name:
+                        for best_of_metric in best_of_stat.get('metrics'):
+                            best_of_metric_name = best_of_metric.get('name')
+                            if best_of_metric_name == metric_name:
+                                interface = {}
+                                interface['interfaceId'] = interfaceId
+                                interface['value'] = metric.get('value')
+                                best_of_metric['interface_list'].append(interface)
+                                break
+                        break
+
+    sort_best_of(best_of)
+    #print_best_of(best_of)
+
+def get_interface_metric(stats, interfaceId, stat_name, metric_name):
+    """
+    returns the value of the specified stat metric
+    for the specified interface
+    """
+    if stats is None:
+        return None
+
+    for interface in stats.get('interfaces'):
+        if interfaceId == interface.get('interfaceId'):
+            for stat in interface.get('stats'):
+                if stat_name == stat.get('name'):
+                    for metric in stat.get('metrics'):
+                        if metric_name == metric.get('name'):
+                            return metric.get('value')
+    return None
+
+def enabled_wan(intf):
+    """returns true if the interface is an enabled wan"""
+    if intf is None:
+        return False
+
+    if intf.get('configType') != 'DISABLED' and intf.get('wan'):
+        return True
+    return False
+
+def get_interface_by_id(settings, interfaceId):
+    """ returns interface with the given interfaceId """
+    interfaces = settings.get('network').get('interfaces')
+    for intf in interfaces:
+        if intf.get('interfaceId') == interfaceId:
+            return intf
+    return None
+
+def interface_meets_policy_criteria(settings, stats, policy, interface):
+    """
+    returns true if the interface meets all criteria that can
+    be verified at creation time that are specified by the
+    wan policy
+    """
+    intf = get_interface_by_id(settings, interface)
+    if not enabled_wan(intf):
+        return False
+
+    criteria = policy.get('criteria')
+    if criteria is None:
+        return True
+
+    for criterion in criteria:
+        if criterion.get('type') == 'ATTRIBUTE':
+            if criterion.get('attribute') == 'VPN':
+                if intf.get('type') != 'OPENVPN' and intf.get('type') != 'WIREGUARD':
+                    return False
+            elif criterion.get('attribute') == 'NAME':
+                interface_name = network_util.get_interface_name(settings, intf)
+                if criterion.get('name_contains') not in interface_name:
+                    return False
+
+        elif criterion.get('type') == 'METRIC':
+            metric = criterion.get('metric')
+            stat_name = ""
+            metric_name = ""
+            if metric == 'LATENCY':
+                stat_name = "latency"
+                metric_name = "1_minute"
+            elif metric == 'AVAILABLE_BANDWIDTH':
+                stat_name = "available_bandwidth"
+                metric_name = "1_minute"
+            elif metric == 'JITTER':
+                stat_name = "jitter"
+                metric_name = "1_minute"
+            elif metric == 'PACKET_LOSS':
+                stat_name = "packet_loss"
+                metric_name = "1_minute"
+
+            metric_value = criterion.get('metric_value')
+            current_metric_value = get_interface_metric(stats, interface, stat_name, metric_name)
+            if current_metric_value is None:
+                continue
+
+            metric_op = criterion.get('metric_op')
+            if metric_op == "<":
+                if  current_metric_value >= metric_value:
+                    return False
+            elif metric_op == "<=":
+                if current_metric_value > metric_value:
+                    return False
+            elif metric_op == ">":
+                if current_metric_value <= metric_value:
+                    return False
+            elif metric_op == ">=":
+                if current_metric_value < metric_value:
+                    return False
+
+    return True
+
+def get_wan_list(settings):
+    """
+    returns a list of wan_interface's for all enabled wans
+    """
+    wan_list = []
+    interfaces = settings.get('network').get('interfaces')
+    for intf in interfaces:
+        if enabled_wan(intf):
+            wan = {
+                "interfaceId": intf.get('interfaceId'),
+                "weight": 1
+            }
+            wan_list.append(wan)
+
+    return wan_list
+
+def main():
+    """
+    main
+    """
+    settings = read_json(SETTINGS_FILE)
+    if settings is not None:
+        stats = read_json(STATS_FILE)
+        new_changeset = generate_nftables_changeset(settings, stats)
+
+        apply_nftables_changeset(new_changeset)
+
+main()
