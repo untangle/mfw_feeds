@@ -420,6 +420,8 @@ def main():
     settings = read_json(SETTINGS_FILE)
     if settings is not None:
         stats = read_json(STATS_FILE)
+        if stats.get('interfaces') is None:
+            stats = None
         new_changeset = generate_nftables_changeset(settings, stats)
 
         apply_nftables_changeset(new_changeset)
