@@ -11,7 +11,7 @@ import tempfile
 from sync import network_util
 
 SETTINGS_FILE = "/etc/config/wan_policy.json"
-STATS_FILE = "/etc/config/stats.json"
+STATS_FILE = "/tmp/stats.json"
 NFT_FILE = "/tmp/wan_manager.nft"
 
 def disable_policy(policyId):
