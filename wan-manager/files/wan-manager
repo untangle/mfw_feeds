@@ -193,9 +193,9 @@ def generate_nftables_changeset(settings, stats):
                         if algorithm == "WEIGHTED":
                             weight = interface.get('weight')
                         elif algorithm == "AVAILABLE_BANDWIDTH":
-                            weight = get_interface_metric(stats, interfaceId, stat_name, metric_name)
+                            weight = int(get_interface_metric(stats, interfaceId, stat_name, metric_name))
                         else:
-                            weight = metric_total - get_interface_metric(stats, interfaceId, stat_name, metric_name)
+                            weight = int(metric_total - get_interface_metric(stats, interfaceId, stat_name, metric_name))
 
                         if total_weight > 0:
                             balance_string = balance_string + ", "
