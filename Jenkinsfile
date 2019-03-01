@@ -28,7 +28,7 @@ pipeline {
     stage('Build') {
 
       parallel {
-        stage('Build x86_64') {
+        stage('x86_64') {
 	  agent { label 'mfw' }
 
           environment {
@@ -54,7 +54,7 @@ pipeline {
           }
         }
 
-        stage('Build wrt3200') {
+        stage('wrt3200') {
 	  agent { label 'mfw' }
 
           environment {
@@ -79,7 +79,7 @@ pipeline {
           }
         }
 
-        stage('Build omnia') {
+        stage('omnia') {
 	  agent { label 'mfw' }
 
           environment {
@@ -104,7 +104,7 @@ pipeline {
           }
         }
 
-        stage('Build wrt1900') {
+        stage('wrt1900') {
 	  agent { label 'mfw' }
 
           environment {
@@ -129,7 +129,7 @@ pipeline {
           }
         }
 
-        stage('Build wrt32x') {
+        stage('wrt32x') {
 	  agent { label 'mfw' }
 
           environment {
