@@ -20,8 +20,9 @@ usage() {
 
 # cleanup
 VERSION_DATE_FILE="version.date"
+VERSION_FILE="version"
 cleanup() {
-  git checkout -- ${VERSION_DATE_FILE}
+  git checkout -- ${VERSION_FILE} ${VERSION_DATE_FILE}
 }
 
 # CLI options
@@ -70,6 +71,27 @@ rm -fr {.,package}/feeds/untangle*
 # config
 ./feeds/mfw/configs/generate.sh -d $DEVICE -l $LIBC >| .config
 make defconfig
+
+## versioning
+# static
+# FIXME: move those to feeds' config once stable and agreed upon
+cat >> .config <<EOF
+CONFIG_VERSION_REPO="https://github.com/untangle/mfw_openwrt"
+CONFIG_VERSION_DIST="MFW"
+CONFIG_VERSION_MANUFACTURER="Untangle"
+CONFIG_VERSION_MANUFACTURER_URL="https://untangle.com"
+CONFIG_VERSION_BUG_URL="https://jira.untangle.com/projects/MFW/"
+CONFIG_VERSION_HOME_URL="https://github.com/untangle/mfw_openwrt"
+CONFIG_VERSION_SUPPORT_URL="https://forums.untangle.com"
+CONFIG_VERSION_PRODUCT="MFW"
+EOF
+
+# dynamic
+openwrtVersion="$(git describe --abbrev=0 --match 'v[0-9][0-9].[0-9][0-9]*' | sed -e 's/^v//')"
+mfwVersion="$(git describe --always --long)"
+echo CONFIG_VERSION_CODE="$openwrtVersion" >> .config
+echo CONFIG_VERSION_NUMBER="$mfwVersion" >> .config
+echo $mfwVersion >| $VERSION_FILE
 
 # download
 make $MAKE_OPTIONS MFW_VERSION=${VERSION} download
