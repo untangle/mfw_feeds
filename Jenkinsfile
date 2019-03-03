@@ -164,7 +164,7 @@ pipeline {
 
           environment {
             device = 'x86_64'
-	    rootfsTarballName = 'openwrt-x86-64-generic-rootfs.tar.gz'
+	    rootfsTarballName = 'mfw-x86-64-generic-rootfs.tar.gz'
 	    rootfsTarballPath = "bin/targets/x86/64/${rootfsTarballName}"
 	    dockerfile = 'docker-compose.test.yml'
           }
