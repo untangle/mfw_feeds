@@ -27,7 +27,7 @@ def jump_policy(policyId, interfaceId):
     ruleset.append('flush set inet wan-routing policy-%d-table\n' % policyId)
     ruleset.append('add rule inet wan-routing route-to-policy-%d set update ip saddr . ip daddr timeout 1m @policy-%d-table\n' % (policyId, policyId))
     ruleset.append('add rule inet wan-routing route-to-policy-%d set update ip daddr . ip saddr timeout 1m @policy-%d-table\n' % (policyId, policyId))
-    ruleset.append('add rule inet wan-routing route-to-policy-%d dict session ct id wan_policy long_string set policy-%d\n' % (policyId, policyId))
+    ruleset.append('add rule inet wan-routing route-to-policy-%d dict sessions ct id wan_policy long_string set policy-%d\n' % (policyId, policyId))
     ruleset.append('add rule inet wan-routing route-to-policy-%d jump mark-for-wan-%d\n' % (policyId, interfaceId))
     return ''.join(ruleset)
 
@@ -212,7 +212,7 @@ def generate_nftables_changeset(settings, stats):
                     changeset.append('flush set inet wan-routing policy-%d-table\n' % policyId)
                     changeset.append('add rule inet wan-routing route-to-policy-%d set update ip saddr . ip daddr timeout 1m @policy-%d-table\n' % (policyId, policyId))
                     changeset.append('add rule inet wan-routing route-to-policy-%d set update ip daddr . ip saddr timeout 1m @policy-%d-table\n' % (policyId, policyId))
-                    changeset.append('add rule inet wan-routing route-to-policy-%d dict session ct id wan_policy long_string set policy-%d\n' % (policyId, policyId))
+                    changeset.append('add rule inet wan-routing route-to-policy-%d dict sessions ct id wan_policy long_string set policy-%d\n' % (policyId, policyId))
                     changeset.append('add inet wan-routing route-to-policy-%d numgen random mod %d vmap { %s }\n' % (policyId, total_weight, balance_string))
         else:
             policyId = policy.get('policyId')
