@@ -14,7 +14,7 @@ pipeline {
   agent none
 
   triggers {
-    upstream(upstreamProjects: "packetd/master, sync-settings/master, classd/master",
+    upstream(upstreamProjects: "packetd/master, sync-settings/master, classd/master, feeds/master",
              threshold: hudson.model.Result.SUCCESS)
   }
 
