@@ -14,7 +14,7 @@ pipeline {
   agent none
 
   triggers {
-    upstream(upstreamProjects: "packetd/master, sync-settings/master, classd/master, feeds/master",
+    upstream(upstreamProjects: "packetd/master, sync-settings/master, classd/master, feeds/openwrt-18.06",
              threshold: hudson.model.Result.SUCCESS)
   }
 
