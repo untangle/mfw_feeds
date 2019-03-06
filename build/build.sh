@@ -1,7 +1,6 @@
-#! /bin/bash
+#! /bin/bash -x
 
 set -e
-set -x
 
 # hides perl warning about locale
 export LC_ALL=${LC_ALL:-C}
@@ -17,9 +16,16 @@ usage() {
   echo "                                package's source repository'"
   echo "                              - <branch> or <tag> can be any valid git object as long as it exists"
   echo "                                in each package's source repository (mfw_admin, packetd, etc)"
-  exit 1
 }
 
+# cleanup
+VERSION_DATE_FILE="version.date"
+VERSION_FILE="version"
+cleanup() {
+  git checkout -- ${VERSION_FILE} ${VERSION_DATE_FILE}
+}
+
+# CLI options
 START_CLEAN="false"
 DEVICE="x86_64"
 LIBC="musl"
@@ -33,39 +39,59 @@ while getopts "hc:d:l:v:m:" opt ; do
     v) VERSION="$OPTARG"
        [[ $VERSION == "release" ]] && VERSION="" ;;
     m) MAKE_OPTIONS="$OPTARG" ;;
-    h) usage ;;
+    h) usage ; exit 0 ;;
   esac
 done
 
+# main
+trap cleanup ERR INT
 CURDIR=$(dirname $(readlink -f $0))
 
 # start clean only if explicitely requested
 case $START_CLEAN in
   false|0) : ;;
-  *) make $MAKE_OPTIONS clean
+  *) [ -f .config ] || make defconfig
+     make $MAKE_OPTIONS clean
      rm -fr build_dir staging_dir ;;
 esac
 
+# set timestamp for files
+date +"%s" >| ${VERSION_DATE_FILE}
+export SOURCE_DATE_EPOCH=$(cat ${VERSION_DATE_FILE})
+
 # add MFW feed definitions
 cp ${CURDIR}/feeds.conf.mfw feeds.conf
-
-# for each feed, use the same branch we're currently on, unless the
-# developer already forced a different one himself in
-# $(CURDIR)/feeds.conf.mfw
-CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2> /dev/null || true)
-if [ -n "$CURRENT_BRANCH" ] ; then
-  perl -i -pe 's|$|;'${CURRENT_BRANCH}'| unless m/;/' feeds.conf
-fi
 
 # install feeds
 rm -fr {.,package}/feeds/untangle*
 ./scripts/feeds update -a
 ./scripts/feeds install -a -p packages
-./scripts/feeds install -a -p mfw
+./scripts/feeds install -a -f -p mfw
 
 # config
 ./feeds/mfw/configs/generate.sh -d $DEVICE -l $LIBC >| .config
 make defconfig
+
+## versioning
+# static
+# FIXME: move those to feeds' config once stable and agreed upon
+cat >> .config <<EOF
+CONFIG_VERSION_REPO="https://github.com/untangle/mfw_openwrt"
+CONFIG_VERSION_DIST="MFW"
+CONFIG_VERSION_MANUFACTURER="Untangle"
+CONFIG_VERSION_MANUFACTURER_URL="https://untangle.com"
+CONFIG_VERSION_BUG_URL="https://jira.untangle.com/projects/MFW/"
+CONFIG_VERSION_HOME_URL="https://github.com/untangle/mfw_openwrt"
+CONFIG_VERSION_SUPPORT_URL="https://forums.untangle.com"
+CONFIG_VERSION_PRODUCT="MFW"
+EOF
+
+# dynamic
+openwrtVersion="$(git describe --abbrev=0 --match 'v[0-9][0-9].[0-9][0-9]*' | sed -e 's/^v//')"
+mfwVersion="$(git describe --always --long)"
+echo CONFIG_VERSION_CODE="$openwrtVersion" >> .config
+echo CONFIG_VERSION_NUMBER="$mfwVersion" >> .config
+echo $mfwVersion >| $VERSION_FILE
 
 # download
 make $MAKE_OPTIONS MFW_VERSION=${VERSION} download
@@ -74,3 +100,5 @@ make $MAKE_OPTIONS MFW_VERSION=${VERSION} download
 if ! make $MAKE_OPTIONS MFW_VERSION=${VERSION} ; then
   make -j1 V=s MFW_VERSION=${VERSION}
 fi
+
+cleanup
