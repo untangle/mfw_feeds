@@ -41,7 +41,7 @@ pipeline {
               steps { dir(buildDir) { checkout scm } }
             }
 
-            stage('Build OpenWrt x86_64') {
+            stage('Build x86_64') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
                 stash(name:"rootfs-${device}", includes:"bin/targets/**/*generic-rootfs.tar.gz")
@@ -67,7 +67,7 @@ pipeline {
               steps { dir(buildDir) { checkout scm } }
             }
 
-            stage('Build OpenWrt wrt3200') {
+            stage('Build wrt3200') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
@@ -92,7 +92,7 @@ pipeline {
               steps { dir(buildDir) { checkout scm } }
             }
 
-            stage('Build OpenWrt omnia') {
+            stage('Build omnia') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
@@ -117,7 +117,7 @@ pipeline {
               steps { dir(buildDir) { checkout scm } }
             }
 
-            stage('Build OpenWrt wrt1900') {
+            stage('Build wrt1900') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
@@ -142,7 +142,7 @@ pipeline {
               steps { dir(buildDir) { checkout scm } }
             }
 
-            stage('Build OpenWrt wrt32x') {
+            stage('Build wrt32x') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
