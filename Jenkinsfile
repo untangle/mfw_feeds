@@ -37,11 +37,11 @@ pipeline {
           }
 
 	  stages {
-            stage('Prep WS') {
+            stage('Prep WS x86_64') {
               steps { dir(buildDir) { checkout scm } }
             }
 
-            stage('Build') {
+            stage('Build x86_64') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
                 stash(name:"rootfs-${device}", includes:"bin/targets/**/*generic-rootfs.tar.gz")
@@ -63,11 +63,11 @@ pipeline {
           }
 
 	  stages {
-            stage('Prep WS') {
+            stage('Prep WS wrt3200') {
               steps { dir(buildDir) { checkout scm } }
             }
 
-            stage('Build') {
+            stage('Build wrt3200') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
@@ -88,11 +88,11 @@ pipeline {
           }
 
 	  stages {
-            stage('Prep WS') {
+            stage('Prep WS omnia') {
               steps { dir(buildDir) { checkout scm } }
             }
 
-            stage('Build') {
+            stage('Build omnia') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
@@ -113,11 +113,11 @@ pipeline {
           }
 
 	  stages {
-            stage('Prep WS') { 
+            stage('Prep WS wrt1900') { 
               steps { dir(buildDir) { checkout scm } }
             }
 
-            stage('Build') {
+            stage('Build wrt1900') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
@@ -138,11 +138,11 @@ pipeline {
           }
 
 	  stages {
-            stage('Prep WS') {
+            stage('Prep WS wrt32x') {
               steps { dir(buildDir) { checkout scm } }
             }
 
-            stage('Build') {
+            stage('Build wrt32x') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
@@ -159,7 +159,7 @@ pipeline {
 
     stage('Test') {
       parallel {
-        stage('x86_64') {
+        stage('Test x86_64') {
 	  agent { label 'mfw' }
 
           environment {
@@ -170,7 +170,7 @@ pipeline {
           }
 
           stages {
-            stage('Prep') {
+            stage('Prep x86_64') {
               steps {
                 unstash(name:"rootfs-${device}")
                 sh("test -f ${rootfsTarballPath}")
