@@ -5,7 +5,7 @@ void buildMFW(String device, String libc, String startClean, String makeOptions,
 
 void archiveMFW(String device) {
   def outputDir="tmp/artifacts"
-  sh "./mfw/version-images.sh -d ${device} -o ${outputDir}"
+  sh "./mfw/version-images.sh -d ${device} -o ${outputDir} -c"
   archiveArtifacts artifacts: "${outputDir}/*", fingerprint: true
   sh "rm -fr ${outputDir}"
 }

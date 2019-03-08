@@ -11,15 +11,18 @@ VERSION_STRING="$(git describe --always --long)_${TS}"
 
 # CLI options
 usage() {
-  echo "$0 -d <device> -o <outputDir>"
+  echo "$0 -d <device> -o <outputDir> [-c]"
+  echo "  -c             : start by cleaning output directory"
   echo "  -d <device>    : which device"
   echo "  -o <outputDir> : where store the renamed images "
 }
 
 DEVICE=""
 OUTPUT_DIR=""
-while getopts "hd:o:" opt ; do
+START_CLEAN=""
+while getopts "hcd:o:" opt ; do
   case "$opt" in
+    c) START_CLEAN=1 ;;
     d) DEVICE="$OPTARG" ;;
     o) OUTPUT_DIR="$OPTARG" ;;
     h) usage ; exit 0 ;;
@@ -32,6 +35,7 @@ if [ -z "$OUTPUT_DIR" ] || [ -z "$DEVICE" ] ; then
 fi
 
 # main
+[[ -z "$START_CLEAN" ]] || rm -fr $OUTPUT_DIR
 mkdir -p $OUTPUT_DIR
 
 find bin/targets -iregex '.+\(gz\|img\|vdi\|vmdk\|bin\|kmod-mac80211-hwsi.+ipk\)' | grep -v Packages.gz | while read f ; do
