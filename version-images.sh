@@ -43,6 +43,8 @@ find bin/targets -iregex '.+\(gz\|img\|vdi\|vmdk\|bin\|kmod-mac80211-hwsi.+ipk\)
   newName=${b/./_${VERSION_STRING}.}
   newName=${newName/-squashfs}
   newName=${newName/-mvebu-cortexa9}
+  newName=${newName/-linksys}
+  newName=${newName/-turris}
   newName=${newName/.bin/.img}
   newName=${newName/mfw-/sdwan-}
   cp $f ${OUTPUT_DIR}/$newName
