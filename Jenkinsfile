@@ -3,9 +3,9 @@ void buildMFW(String device, String libc, String startClean, String makeOptions,
   sh "rm -fr bin/targets && cp -r ${buildDir}/bin/targets bin/"
 }
 
-void archiveMFW(String device, String libc) {
+void archiveMFW(String device) {
   def outputDir="tmp/artifacts"
-  sh "./mfw/version-images.sh -o ${outputDir}"
+  sh "./mfw/version-images.sh -d ${device} -o ${outputDir}"
   archiveArtifacts artifacts: "${outputDir}/*", fingerprint: true
   sh "rm -fr ${outputDir}"
 }
@@ -50,7 +50,7 @@ pipeline {
           }
 
           post {
-            success { archiveMFW(device, libc) }
+            success { archiveMFW(device) }
           }
         }
 
@@ -75,7 +75,7 @@ pipeline {
           }
 
           post {
-            success { archiveMFW(device, libc) }
+            success { archiveMFW(device) }
           }
         }
 
@@ -100,7 +100,7 @@ pipeline {
           }
 
           post {
-            success { archiveMFW(device, libc) }
+            success { archiveMFW(device) }
           }
         }
 
@@ -125,7 +125,7 @@ pipeline {
           }
 
           post { 
-            success { archiveMFW(device, libc) }
+            success { archiveMFW(device) }
           }
         }
 
@@ -150,7 +150,7 @@ pipeline {
           }
 
           post {
-            success { archiveMFW(device, libc) }
+            success { archiveMFW(device) }
           }
         }
 
