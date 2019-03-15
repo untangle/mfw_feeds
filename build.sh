@@ -91,7 +91,7 @@ mfwVersion="$(git describe --always --long)"
 echo CONFIG_VERSION_CODE="$openwrtVersion" >> .config
 echo CONFIG_VERSION_NUMBER="$mfwVersion" >> .config
 echo $mfwVersion >| $VERSION_FILE
-echo CONFIG_VERSION_MANUFACTURER_URL="${BUILD_URL:-developer build" >> .config
+echo CONFIG_VERSION_MANUFACTURER_URL="${BUILD_URL:-developer build}" >> .config
 
 # download
 make $MAKE_OPTIONS MFW_VERSION=${VERSION} download
