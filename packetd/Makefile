@@ -15,7 +15,7 @@ include $(INCLUDE_DIR)/package.mk
 # FIXME: standardize on OpenWRT+golang macros, ideally we wouldn't
 # have to define anything special in neither Build/Compile nor
 # Package/packetd/install
-include $(INCLUDE_DIR)/../feeds/packages/lang/golang/golang-package.mk
+include $(INCLUDE_DIR)/../feeds/mfw/golang/golang-package.mk
 
 define Package/packetd
   SECTION:=net
