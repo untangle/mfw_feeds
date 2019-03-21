@@ -157,3 +157,14 @@ To run it in the foreground where you can see debugging output just run:
 packetd
 ```
 
+Developer info: maintaining untangleinc/mfw:x86-64 in DockerHub
+===============================================================
+
+Using a build from 2019-03-20 as an example:
+
+```
+cd build
+docker build -f Dockerfile.test.mfw --build-arg ROOTFS_TARBALL=sdwan-x86-64-generic-rootfs_v0.1.0beta1-44-g1003464fea_20190321T0728.tar.gz -t untangleinc/mfw:x86-64_20190320 .
+docker tag untangleinc/mfw:x86-64_20190320 untangleinc/mfw:x86-64 
+docker push untangleinc/mfw:x86-64 
+```
