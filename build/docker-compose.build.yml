@@ -2,6 +2,8 @@ version: '2'
 services:
   build:
     image: untangleinc/mfw:build
+    environment:
+      BUILD_URL:
     volumes:
       - ../:/home/mfw/openwrt
   build-local-container:

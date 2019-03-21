@@ -1,11 +1,13 @@
 void buildMFW(String device, String libc, String startClean, String makeOptions, String buildDir) {
   sh "docker-compose -f ${buildDir}/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${libc} -c ${startClean} -m '${makeOptions}'"
-  sh "rm -fr bin/targets && cp -r ${buildDir}/bin/targets bin/"
+  sh "rm -fr bin/targets bin/packages"
+  sh "mkdir -p bin"
+  sh "cp -r ${buildDir}/bin/targets ${buildDir}/bin/packages  bin/"
 }
 
-void archiveMFW(String device, String libc) {
+void archiveMFW(String device) {
   def outputDir="tmp/artifacts"
-  sh "./mfw/version-images.sh -o ${outputDir}"
+  sh "./mfw/version-images.sh -d ${device} -o ${outputDir} -c"
   archiveArtifacts artifacts: "${outputDir}/*", fingerprint: true
   sh "rm -fr ${outputDir}"
 }
@@ -14,7 +16,7 @@ pipeline {
   agent none
 
   triggers {
-    upstream(upstreamProjects: "packetd/master, sync-settings/master, classd/master, feeds/master",
+    upstream(upstreamProjects: "packetd/master, sync-settings/master, classd/master, feeds/openwrt-18.06, admin/master",
              threshold: hudson.model.Result.SUCCESS)
   }
 
@@ -41,7 +43,7 @@ pipeline {
               steps { dir(buildDir) { checkout scm } }
             }
 
-            stage('Build OpenWrt x86_64') {
+            stage('Build x86_64') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
                 stash(name:"rootfs-${device}", includes:"bin/targets/**/*generic-rootfs.tar.gz")
@@ -50,7 +52,7 @@ pipeline {
           }
 
           post {
-            success { archiveMFW(device, libc) }
+            success { archiveMFW(device) }
           }
         }
 
@@ -67,7 +69,7 @@ pipeline {
               steps { dir(buildDir) { checkout scm } }
             }
 
-            stage('Build OpenWrt wrt3200') {
+            stage('Build wrt3200') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
@@ -75,7 +77,7 @@ pipeline {
           }
 
           post {
-            success { archiveMFW(device, libc) }
+            success { archiveMFW(device) }
           }
         }
 
@@ -92,7 +94,7 @@ pipeline {
               steps { dir(buildDir) { checkout scm } }
             }
 
-            stage('Build OpenWrt omnia') {
+            stage('Build omnia') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
@@ -100,7 +102,7 @@ pipeline {
           }
 
           post {
-            success { archiveMFW(device, libc) }
+            success { archiveMFW(device) }
           }
         }
 
@@ -117,7 +119,7 @@ pipeline {
               steps { dir(buildDir) { checkout scm } }
             }
 
-            stage('Build OpenWrt wrt1900') {
+            stage('Build wrt1900') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
@@ -125,7 +127,7 @@ pipeline {
           }
 
           post { 
-            success { archiveMFW(device, libc) }
+            success { archiveMFW(device) }
           }
         }
 
@@ -142,7 +144,7 @@ pipeline {
               steps { dir(buildDir) { checkout scm } }
             }
 
-            stage('Build OpenWrt wrt32x') {
+            stage('Build wrt32x') {
               steps {
                 buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
@@ -150,7 +152,7 @@ pipeline {
           }
 
           post {
-            success { archiveMFW(device, libc) }
+            success { archiveMFW(device) }
           }
         }
 

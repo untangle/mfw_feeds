@@ -13,7 +13,7 @@ before_install:
 - docker pull untangleinc/mfw:build
 
 script:
-- docker-compose -f mfw/docker-compose.build.yml -p mfw_${device} run build -d x86_64 -l musl
+- docker-compose -f mfw/docker-compose.build.yml -p mfw_${device} run build -d x86_64 -l musl -m "-j32 V=s"
 
 notifications:
   email: false

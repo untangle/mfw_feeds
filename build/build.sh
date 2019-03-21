@@ -7,7 +7,7 @@ export LC_ALL=${LC_ALL:-C}
 
 usage() {
   echo "Usage: $0 [-d <device>] [-l <libc>] [-v (latest|<branch>|<tag>)] [-c (false|true)]"
-  echo "  -d <device>               : x86_64, omnia, wrt3200, wrt1900 (defaults to x86_64)"
+  echo "  -d <device>               : x86_64, omnia, wrt3200, wrt1900, wrt32x (defaults to x86_64)"
   echo "  -l <libc>                 : musl, glibc (defaults to musl)"
   echo "  -m <make options>         : pass those to OpenWRT's make \"as is\" (default is -j32)"
   echo "  -c true|false             : start clean or not (default is false, meaning \"do not start clean\""
@@ -66,6 +66,12 @@ cp ${CURDIR}/feeds.conf.mfw feeds.conf
 rm -fr {.,package}/feeds/untangle*
 ./scripts/feeds update -a
 ./scripts/feeds install -a -p packages
+if [ -d ./feeds/mfw/golang ] ; then
+  # prioritize golang from mfw over official OpenWrt packages
+  for pkg in golang golang-doc golang-src ; do
+    ./scripts/feeds uninstall $pkg
+  done
+fi
 ./scripts/feeds install -a -f -p mfw
 
 # config
@@ -79,7 +85,6 @@ cat >> .config <<EOF
 CONFIG_VERSION_REPO="https://github.com/untangle/mfw_openwrt"
 CONFIG_VERSION_DIST="MFW"
 CONFIG_VERSION_MANUFACTURER="Untangle"
-CONFIG_VERSION_MANUFACTURER_URL="https://untangle.com"
 CONFIG_VERSION_BUG_URL="https://jira.untangle.com/projects/MFW/"
 CONFIG_VERSION_HOME_URL="https://github.com/untangle/mfw_openwrt"
 CONFIG_VERSION_SUPPORT_URL="https://forums.untangle.com"
@@ -92,6 +97,7 @@ mfwVersion="$(git describe --always --long)"
 echo CONFIG_VERSION_CODE="$openwrtVersion" >> .config
 echo CONFIG_VERSION_NUMBER="$mfwVersion" >> .config
 echo $mfwVersion >| $VERSION_FILE
+echo CONFIG_VERSION_MANUFACTURER_URL="${BUILD_URL:-developer build}" >> .config
 
 # download
 make $MAKE_OPTIONS MFW_VERSION=${VERSION} download
