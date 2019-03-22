@@ -10,7 +10,7 @@ start_service() {
     CLOUD=`jsonfilter -i /etc/config/current.json -e '@["system"]["cloud"]'`
     # If there are no cloud settings, just enable cloud access
     # This is for backward compatibility
-    if [ -z "$CLOUD"] ; then
+    if [ -z "$CLOUD" ] ; then
         ENABLED="true"
     else
         ENABLED=`jsonfilter -i /etc/config/current.json -e '@["system"]["cloud"]["enabled"]'`
@@ -18,7 +18,7 @@ start_service() {
 
     if [ $ENABLED = "true" ] ; then
         SERVERS=`jsonfilter -i /etc/config/current.json -e '@["system"]["cloud"]["cloudServers"]' | tr -d ',"[]'`
-        echo $SERVERS | while read server ; do 
+        for server in $SERVERS ; do
             procd_open_instance
 	        procd_set_param command /usr/bin/pyconnector -s $server
 	        procd_set_param stdout 1
