@@ -305,7 +305,8 @@ if __name__ == "__main__":
     write_status_file(False)
     make_tmpdirs()
     parse_args()
-    check_pid_file()
+    # Commented out to allow multiple pyconnectors
+    # check_pid_file()
 
     while True:
         debug("")
