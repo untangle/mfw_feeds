@@ -14,6 +14,7 @@ proto_openvpn_init_config() {
 	no_device=1
 	proto_config_add_string "ifname"
 	proto_config_add_string "config"
+	proto_config_add_string "authfile"
 	proto_config_add_defaults
 }
 
@@ -33,8 +34,8 @@ proto_openvpn_setup() {
 
 	local dev_type opts
 
-	local ifname config $PROTO_DEFAULT_OPTIONS
-	json_get_vars ifname config $PROTO_DEFAULT_OPTIONS
+	local ifname config authfile $PROTO_DEFAULT_OPTIONS
+	json_get_vars ifname config authfile $PROTO_DEFAULT_OPTIONS
 
 	[ -n "$ifname" ] || get_config_param ifname "$config" dev
 	[ -z "$ifname" ] && {
@@ -58,6 +59,10 @@ proto_openvpn_setup() {
 	[ "$peerdns" = 1 ] && append opts "--setenv PEERDNS 1"
 
 	[ "$defaultroute" = 1 ] && append opts "--setenv DEFAULTROUTE 1"
+
+	[ -n "$authfile" ] && {
+		append opts "--auth-user-pass $authfile"
+	}
 
 	proto_run_command "$cfg" /usr/sbin/openvpn \
 		--syslog "openvpn($cfg)" \
