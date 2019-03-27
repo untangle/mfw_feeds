@@ -5,7 +5,7 @@ PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
 PKG_SOURCE_PROTO:=git
 # FIXME
-PKG_SOURCE_URL:=https://github.com/untangle/packetd.git
+PKG_SOURCE_URL:=https://github.com/untangle/sync-settings.git
 PKG_HASH:=skip
 
 include ../version.mk
