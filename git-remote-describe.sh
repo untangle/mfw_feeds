@@ -1,14 +1,16 @@
 #! /bin/bash
 
+set -x
+
 REPO=$1
-BRANCH=$2
+COMMITISH=$2
 
 tmpDir=$(mktemp -d)
 
-git clone -q -b $BRANCH $REPO ${tmpDir}/foo
+git clone -q $REPO ${tmpDir}/foo
 
 pushd ${tmpDir}/foo > /dev/null
-git describe --always --long
+git describe --always $COMMITISH
 popd > /dev/null
 
 rm -fr ${tmpDir}
