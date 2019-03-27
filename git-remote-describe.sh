@@ -7,9 +7,9 @@ COMMITISH=$2
 
 tmpDir=$(mktemp -d)
 
-git clone -q $REPO ${tmpDir}/foo
+git clone -q $REPO ${tmpDir}
 
-pushd ${tmpDir}/foo > /dev/null
+pushd ${tmpDir} > /dev/null
 git describe --always $COMMITISH
 popd > /dev/null
 
