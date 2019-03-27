@@ -5,6 +5,10 @@ set -e
 # hides perl warning about locale
 export LC_ALL=${LC_ALL:-C}
 
+# make sure the time conversion from epoch format to human-readable
+# one uses HQ timezone
+export TZ="America/Los_Angeles"
+
 usage() {
   echo "Usage: $0 [-d <device>] [-l <libc>] [-v (latest|<branch>|<tag>)] [-c (false|true)]"
   echo "  -d <device>               : x86_64, omnia, wrt3200, wrt1900, wrt32x (defaults to x86_64)"
