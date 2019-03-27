@@ -56,12 +56,13 @@ case $START_CLEAN in
 esac
 
 # set timestamp for files
-export SOURCE_DATE_EPOCH=$(date +"%s")
+SOURCE_DATE_EPOCH=$(date +"%s")
 echo $SOURCE_DATE_EPOCH >| ${VERSION_DATE_FILE}
-# also save it in a file that won't be cleaned up once the build is
-# finished, so post-build process like artifact archiving, etc can
-# still get our timestamp
-date -d @$SOURCE_DATE_EPOCH +%Y%m%dT%H%M >| tmp/${VERSION_DATE_FILE}
+# also save it, as a readable format, in a file that won't be cleaned
+# up once the build is finished, so post-build process like artifact
+# archiving, etc can still access it
+SOURCE_DATE=$(date -d @$SOURCE_DATE_EPOCH +%Y%m%dT%H%M)
+echo $SOURCE_DATE >| tmp/${VERSION_DATE_FILE}
 
 # add MFW feed definitions
 cp ${CURDIR}/feeds.conf.mfw feeds.conf
@@ -101,9 +102,8 @@ echo CONFIG_VERSION_CODE="$openwrtVersion" >> .config
 echo CONFIG_VERSION_NUMBER="$mfwVersion" >> .config
 echo $mfwVersion >| $VERSION_FILE
 if [ -n "$BUILD_URL" ] ; then
-  ts=$(date -d @$(cat $VERSION_DATE_FILE) +%Y%m%dT%H%M)
-  packagesList="sdwan-${DEVICE}-Packages_${mfwVersion}_${ts}.txt"
-  echo CONFIG_VERSION_MANUFACTURER_URL="${BUILD_URL}/artifact/tmp/artifacts/${packagesList}" >> .config
+  packagesList="sdwan-${DEVICE}-Packages_${mfwVersion}_${SOURCE_DATE}.txt"
+  echo CONFIG_VERSION_MANUFACTURER_URL="${BUILD_URL}artifact/tmp/artifacts/${packagesList}" >> .config
 else
   echo CONFIG_VERSION_MANUFACTURER_URL="developer build" >> .config
 fi
