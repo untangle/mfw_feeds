@@ -61,7 +61,7 @@ echo $SOURCE_DATE_EPOCH >| ${VERSION_DATE_FILE}
 # also save it in a file that won't be cleaned up once the build is
 # finished, so post-build process like artifact archiving, etc can
 # still get our timestamp
-echo $SOURCE_DATE_EPOCH >| tmp/${VERSION_DATE_FILE}
+date -d @$SOURCE_DATE_EPOCH +%Y%m%dT%H%M >| tmp/${VERSION_DATE_FILE}
 
 # add MFW feed definitions
 cp ${CURDIR}/feeds.conf.mfw feeds.conf
