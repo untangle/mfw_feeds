@@ -39,6 +39,8 @@ define Package/sync-settings/install
 	$(CP) $(PKG_INSTALL_DIR)/usr/bin/* $(1)/usr/bin
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) files/$(PKG_NAME).init $(1)/etc/init.d/$(PKG_NAME)
+	$(INSTALL_DIR) $(1)/etc/config/startup.d
+	$(INSTALL_BIN) files/020-sshd-config $(1)/etc/config/startup.d
 	$(INSTALL_BIN) files/nftables-rules.init $(1)/etc/init.d/nftables-rules
 	$(INSTALL_BIN) files/uid.init $(1)/etc/init.d/uid
 	$(INSTALL_BIN) files/startup.init $(1)/etc/init.d/startup
