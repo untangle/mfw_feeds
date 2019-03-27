@@ -82,7 +82,6 @@ make defconfig
 # static
 # FIXME: move those to feeds' config once stable and agreed upon
 cat >> .config <<EOF
-CONFIG_VERSION_REPO="https://github.com/untangle/mfw_openwrt"
 CONFIG_VERSION_DIST="MFW"
 CONFIG_VERSION_MANUFACTURER="Untangle"
 CONFIG_VERSION_BUG_URL="https://jira.untangle.com/projects/MFW/"
