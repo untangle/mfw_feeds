@@ -56,8 +56,8 @@ case $START_CLEAN in
 esac
 
 # set timestamp for files
-date +"%s" >| ${VERSION_DATE_FILE}
-export SOURCE_DATE_EPOCH=$(cat ${VERSION_DATE_FILE})
+export SOURCE_DATE_EPOCH=$(date +"%s")
+echo $SOURCE_DATE_EPOCH >| ${VERSION_DATE_FILE}
 
 # add MFW feed definitions
 cp ${CURDIR}/feeds.conf.mfw feeds.conf
@@ -96,7 +96,13 @@ mfwVersion="$(git describe --always --long)"
 echo CONFIG_VERSION_CODE="$openwrtVersion" >> .config
 echo CONFIG_VERSION_NUMBER="$mfwVersion" >> .config
 echo $mfwVersion >| $VERSION_FILE
-echo CONFIG_VERSION_MANUFACTURER_URL="${BUILD_URL:-developer build}" >> .config
+if [ -n "$BUILD_URL" ] ; then
+  ts=$(date -d @$(cat $VERSION_DATE_FILE) +%Y%m%dT%H%M)
+  packagesList="sdwan-${DEVICE}-Packages_${mfwVersion}_${ts}.txt"
+  echo CONFIG_VERSION_MANUFACTURER_URL="${BUILD_URL}/artifact/tmp/artifacts/${packagesList}" >> .config
+else
+  echo CONFIG_VERSION_MANUFACTURER_URL="developer build" >> .config
+fi
 
 # download
 make $MAKE_OPTIONS MFW_VERSION=${VERSION} download
