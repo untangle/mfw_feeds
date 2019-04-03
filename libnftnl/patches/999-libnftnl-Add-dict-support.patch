@@ -1,4 +1,4 @@
-From 06ff2b4980e2c7d75ef29576d1e6682a9ed0cfe1 Mon Sep 17 00:00:00 2001
+From 87fff0b0097f46b3aa520722bfffbb218b2fa817 Mon Sep 17 00:00:00 2001
 From: Brett Mastbergen <bmastbergen@untangle.com>
 Date: Thu, 17 May 2018 15:41:18 -0400
 Subject: [PATCH] libnftnl: Add dict support (w/ ct id)
@@ -7,10 +7,11 @@ Subject: [PATCH] libnftnl: Add dict support (w/ ct id)
  include/libnftnl/expr.h             |  17 ++
  include/linux/netfilter/nf_tables.h |  25 ++
  src/Makefile.am                     |   2 +
+ src/expr/cmp.c                      |  13 +
  src/expr/ctid.c                     | 192 +++++++++++++++
  src/expr/dict.c                     | 465 ++++++++++++++++++++++++++++++++++++
- src/expr_ops.c                      |   4 +
- 6 files changed, 705 insertions(+)
+ src/expr_ops.c                      |   6 +
+ 7 files changed, 720 insertions(+)
  create mode 100644 src/expr/ctid.c
  create mode 100644 src/expr/dict.c
 
@@ -89,6 +90,27 @@ index 578b7d3..9ee27a5 100644
  		      expr/lookup.c	\
  		      expr/dynset.c	\
  		      expr/immediate.c	\
+diff --git a/src/expr/cmp.c b/src/expr/cmp.c
+index b26d0eb..985fffc 100644
+--- a/src/expr/cmp.c
++++ b/src/expr/cmp.c
+@@ -287,3 +287,16 @@ struct expr_ops expr_ops_cmp = {
+ 	.snprintf	= nftnl_expr_cmp_snprintf,
+ 	.json_parse	= nftnl_expr_cmp_json_parse,
+ };
++
++struct expr_ops expr_ops_scmp = {
++	.name		= "scmp",
++	.alloc_len	= sizeof(struct nftnl_expr_cmp),
++	.max_attr	= NFTA_CMP_MAX,
++	.cmp		= nftnl_expr_cmp_cmp,
++	.set		= nftnl_expr_cmp_set,
++	.get		= nftnl_expr_cmp_get,
++	.parse		= nftnl_expr_cmp_parse,
++	.build		= nftnl_expr_cmp_build,
++	.snprintf	= nftnl_expr_cmp_snprintf,
++	.json_parse	= nftnl_expr_cmp_json_parse,
++};
 diff --git a/src/expr/ctid.c b/src/expr/ctid.c
 new file mode 100644
 index 0000000..a44cad7
@@ -759,24 +781,26 @@ index 0000000..4b041ee
 +	.json_parse	= nftnl_expr_dict_json_parse,
 +};
 diff --git a/src/expr_ops.c b/src/expr_ops.c
-index 041bd35..ddac685 100644
+index 041bd35..719ff5b 100644
 --- a/src/expr_ops.c
 +++ b/src/expr_ops.c
-@@ -34,6 +34,8 @@ extern struct expr_ops expr_ops_dynset;
+@@ -34,6 +34,9 @@ extern struct expr_ops expr_ops_dynset;
  extern struct expr_ops expr_ops_hash;
  extern struct expr_ops expr_ops_fib;
  extern struct expr_ops expr_ops_flow;
 +extern struct expr_ops expr_ops_dict;
 +extern struct expr_ops expr_ops_ctid;
++extern struct expr_ops expr_ops_scmp;
  
  static struct expr_ops expr_ops_notrack = {
  	.name	= "notrack",
-@@ -71,6 +73,8 @@ static struct expr_ops *expr_ops[] = {
+@@ -71,6 +74,9 @@ static struct expr_ops *expr_ops[] = {
  	&expr_ops_fib,
  	&expr_ops_objref,
  	&expr_ops_flow,
 +	&expr_ops_dict,
 +	&expr_ops_ctid,
++	&expr_ops_scmp,
  	NULL,
  };
  
