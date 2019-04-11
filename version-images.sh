@@ -35,6 +35,7 @@ fi
 
 # main
 VERSION_STRING="$(git describe --always --long)_${TS}"
+PACKAGES_FILE="sdwan-${DEVICE}-Packages_${VERSION_STRING}.txt"
 
 [[ -z "$START_CLEAN" ]] || rm -fr $OUTPUT_DIR
 mkdir -p $OUTPUT_DIR
@@ -52,4 +53,8 @@ find bin/targets -iregex '.+\(gz\|img\|vdi\|vmdk\|bin\|kmod-mac80211-hwsi.+ipk\)
 done
 
 # add a list of MFW packages, with their versions
-cp bin/packages/*/mfw/Packages ${OUTPUT_DIR}/sdwan-${DEVICE}-Packages_${VERSION_STRING}.txt
+cp bin/packages/*/mfw/Packages ${OUTPUT_DIR}/${PACKAGES_FILE}
+
+# also push that list to s3 (Jenkins should have the necessary AWS_*
+# environment variables)
+s3cmd push bin/packages/*/mfw/Packages s3://download.untangle.com/sdwan/manifest/${PACKAGES_FILE}
