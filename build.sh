@@ -105,9 +105,9 @@ mfwVersion="$(git describe --always --long)"
 echo CONFIG_VERSION_CODE="$openwrtVersion" >> .config
 echo CONFIG_VERSION_NUMBER="$mfwVersion" >> .config
 echo $mfwVersion >| $VERSION_FILE
-if [ -n "$BUILD_URL" ] ; then
+if [ -n "$BUILD_URL" ] ; then # Jenkins build
   packagesList="sdwan-${DEVICE}-Packages_${mfwVersion}_${SOURCE_DATE}.txt"
-  echo CONFIG_VERSION_MANUFACTURER_URL="${BUILD_URL}artifact/tmp/artifacts/${packagesList}" >> .config
+  echo CONFIG_VERSION_MANUFACTURER_URL="https://download.untangle.com/sdwan/manifest/${packagesList}" >> .config
 else
   echo CONFIG_VERSION_MANUFACTURER_URL="developer build" >> .config
 fi
