@@ -1,0 +1,15 @@
+#!/bin/sh /etc/rc.common
+
+# 19 is right before networking (20)
+START=19
+STOP=19
+
+start() {
+	/bin/run-parts /etc/config/qos.d
+}
+
+stop() {
+    # Not implemented
+    true
+}
+

@@ -42,6 +42,7 @@ define Package/sync-settings/install
 	$(INSTALL_DIR) $(1)/etc/config/startup.d
 	$(INSTALL_BIN) files/020-sshd-config $(1)/etc/config/startup.d
 	$(INSTALL_BIN) files/nftables-rules.init $(1)/etc/init.d/nftables-rules
+	$(INSTALL_BIN) files/qos.init $(1)/etc/init.d/qos
 	$(INSTALL_BIN) files/uid.init $(1)/etc/init.d/uid
 	$(INSTALL_BIN) files/startup.init $(1)/etc/init.d/startup
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
