@@ -47,6 +47,7 @@ define Package/sync-settings/install
 	$(INSTALL_BIN) files/startup.init $(1)/etc/init.d/startup
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
 	$(INSTALL_BIN) files/ifupdown.hotplug $(1)/etc/hotplug.d/iface/20-ifupdown
+	$(INSTALL_BIN) files/speedtest.sh $(1)/usr/bin
 endef
 
 $(eval $(call Py3Package,$(PKG_NAME)))
