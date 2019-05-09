@@ -40,8 +40,7 @@ while getopts "hc:d:l:v:m:" opt ; do
     c) START_CLEAN="$OPTARG" ;;
     d) DEVICE="$OPTARG" ;;
     l) LIBC="$OPTARG" ;;
-    v) VERSION="$OPTARG"
-       [[ $VERSION == "release" ]] && VERSION="" ;;
+    v) VERSION="$OPTARG" ;;
     m) MAKE_OPTIONS="$OPTARG" ;;
     h) usage ; exit 0 ;;
   esac
@@ -50,6 +49,14 @@ done
 # main
 trap cleanup ERR INT
 CURDIR=$(dirname $(readlink -f $0))
+
+# set MFW_VERSION, or not; this looks convoluted, but ?= in Makefiles
+# doesn't work if the variable is defined but empty
+if [[ $VERSION == "release" ]] ; then
+  VERSION_ASSIGN=""
+else
+  VERSION_ASSIGN="MFW_VERSION=${VERSION}"
+fi
 
 # start clean only if explicitely requested
 case $START_CLEAN in
@@ -113,11 +120,11 @@ else
 fi
 
 # download
-make $MAKE_OPTIONS MFW_VERSION=${VERSION} download
+make $MAKE_OPTIONS $VERSION_ASSIGN download
 
 # build
-if ! make $MAKE_OPTIONS MFW_VERSION=${VERSION} ; then
-  make -j1 V=s MFW_VERSION=${VERSION}
+if ! make $MAKE_OPTIONS $VERSION_ASSIGN ; then
+  make -j1 V=s $VERSION_ASSIGN
 fi
 
 cleanup
