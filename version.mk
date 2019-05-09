@@ -1,4 +1,4 @@
-MFW_VERSION ?= $(shell git ls-remote --refs --tags $(1) | awk -F/ '!/\^\{\}$$/ {a=$$3} END {print a}')
+MFW_VERSION ?= $(shell ../build/git-remote-find-tag.sh $(1))
 MFW_COMMIT = $(shell ../build/git-remote-describe.sh $(1) $(2))
 
 PKG_SOURCE_VERSION := $(call MFW_VERSION,$(PKG_SOURCE_URL))
