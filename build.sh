@@ -53,9 +53,9 @@ CURDIR=$(dirname $(readlink -f $0))
 # set MFW_VERSION, or not; this looks convoluted, but ?= in Makefiles
 # doesn't work if the variable is defined but empty
 if [[ $VERSION == "release" ]] ; then
-  VERSION_ASSIGN="MFW_VERSION=${VERSION}"
-else
   VERSION_ASSIGN=""
+else
+  VERSION_ASSIGN="MFW_VERSION=${VERSION}"
 fi
 
 # start clean only if explicitely requested
