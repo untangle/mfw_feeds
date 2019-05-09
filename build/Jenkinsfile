@@ -1,13 +1,14 @@
 void buildMFW(String device, String libc, String startClean, String makeOptions, String buildDir) {
   sh "docker-compose -f ${buildDir}/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${libc} -c ${startClean} -m '${makeOptions}'"
-  sh "rm -fr bin/targets bin/packages"
-  sh "mkdir -p bin"
-  sh "cp -r ${buildDir}/bin/targets ${buildDir}/bin/packages  bin/"
+  sh "rm -fr bin/targets bin/packages tmp/version.date"
+  sh "mkdir -p bin tmp"
+  sh "cp -r ${buildDir}/bin/targets ${buildDir}/bin/packages bin/"
+  sh "cp -r ${buildDir}/tmp/version.date tmp/"
 }
 
 void archiveMFW(String device) {
   def outputDir="tmp/artifacts"
-  sh "./mfw/version-images.sh -d ${device} -o ${outputDir} -c"
+  sh "./mfw/version-images.sh -d ${device} -o ${outputDir} -c -t \$(cat tmp/version.date)"
   archiveArtifacts artifacts: "${outputDir}/*", fingerprint: true
   sh "rm -fr ${outputDir}"
 }
@@ -155,8 +156,19 @@ pipeline {
             success { archiveMFW(device) }
           }
         }
-
       }
+
+      post {
+	changed {
+	  script {
+	    // set result before pipeline ends, so emailer sees it
+	    currentBuild.result = currentBuild.currentResult
+          }
+          emailext(to:'nfgw-engineering@untangle.com', subject:"${env.JOB_NAME} #${env.BUILD_NUMBER}: ${currentBuild.result}", body:"${env.BUILD_URL}")
+          slackSend(channel:"#engineering", message:"${env.JOB_NAME} #${env.BUILD_NUMBER}: ${currentBuild.result} at ${env.BUILD_URL}")
+	}
+      }
+
     }
 
     stage('Test') {

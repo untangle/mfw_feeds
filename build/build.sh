@@ -5,6 +5,10 @@ set -e
 # hides perl warning about locale
 export LC_ALL=${LC_ALL:-C}
 
+# make sure the time conversion from epoch format to human-readable
+# one uses HQ timezone
+export TZ="America/Los_Angeles"
+
 usage() {
   echo "Usage: $0 [-d <device>] [-l <libc>] [-v (latest|<branch>|<tag>)] [-c (false|true)]"
   echo "  -d <device>               : x86_64, omnia, wrt3200, wrt1900, wrt32x (defaults to x86_64)"
@@ -56,8 +60,13 @@ case $START_CLEAN in
 esac
 
 # set timestamp for files
-date +"%s" >| ${VERSION_DATE_FILE}
-export SOURCE_DATE_EPOCH=$(cat ${VERSION_DATE_FILE})
+SOURCE_DATE_EPOCH=$(date +"%s")
+echo $SOURCE_DATE_EPOCH >| ${VERSION_DATE_FILE}
+# also save it, as a readable format, in a file that won't be cleaned
+# up once the build is finished, so post-build process like artifact
+# archiving, etc can still access it
+SOURCE_DATE=$(date -d @$SOURCE_DATE_EPOCH +%Y%m%dT%H%M)
+echo $SOURCE_DATE >| tmp/${VERSION_DATE_FILE}
 
 # add MFW feed definitions
 cp ${CURDIR}/feeds.conf.mfw feeds.conf
@@ -96,7 +105,12 @@ mfwVersion="$(git describe --always --long)"
 echo CONFIG_VERSION_CODE="$openwrtVersion" >> .config
 echo CONFIG_VERSION_NUMBER="$mfwVersion" >> .config
 echo $mfwVersion >| $VERSION_FILE
-echo CONFIG_VERSION_MANUFACTURER_URL="${BUILD_URL:-developer build}" >> .config
+if [ -n "$BUILD_URL" ] ; then # Jenkins build
+  packagesList="sdwan-${DEVICE}-Packages_${mfwVersion}_${SOURCE_DATE}.txt"
+  echo CONFIG_VERSION_MANUFACTURER_URL="http://download.untangle.com/sdwan/manifest/${packagesList}" >> .config
+else
+  echo CONFIG_VERSION_MANUFACTURER_URL="developer build" >> .config
+fi
 
 # download
 make $MAKE_OPTIONS MFW_VERSION=${VERSION} download

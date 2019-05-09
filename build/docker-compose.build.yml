@@ -4,6 +4,8 @@ services:
     image: untangleinc/mfw:build
     environment:
       BUILD_URL:
+      AWS_ACCESS_KEY_ID:
+      AWS_SECRET_ACCESS_KEY:
     volumes:
       - ../:/home/mfw/openwrt
   build-local-container:
