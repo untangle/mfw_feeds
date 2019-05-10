@@ -34,7 +34,7 @@ if [ -z "$OUTPUT_DIR" ] || [ -z "$DEVICE" ] ; then
 fi
 
 # main
-VERSION_STRING="$(git describe --always --long)_${TS}"
+VERSION_STRING="$(git describe --always --long --tags)_${TS}"
 PACKAGES_FILE="sdwan-${DEVICE}-Packages_${VERSION_STRING}.txt"
 
 [[ -z "$START_CLEAN" ]] || rm -fr $OUTPUT_DIR
