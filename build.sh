@@ -107,8 +107,8 @@ CONFIG_VERSION_PRODUCT="MFW"
 EOF
 
 # dynamic
-openwrtVersion="$(git describe --abbrev=0 --match 'v[0-9][0-9].[0-9][0-9]*' | sed -e 's/^v//')"
-mfwVersion="$(git describe --always --long)"
+openwrtVersion="$(git describe --abbrev=0 --tags --match 'v[0-9][0-9].[0-9][0-9]*' | sed -e 's/^v//')"
+mfwVersion="$(git describe --always --long --tags)"
 echo CONFIG_VERSION_CODE="$openwrtVersion" >> .config
 echo CONFIG_VERSION_NUMBER="$mfwVersion" >> .config
 echo $mfwVersion >| $VERSION_FILE
