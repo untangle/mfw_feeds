@@ -73,6 +73,7 @@ echo $SOURCE_DATE_EPOCH >| ${VERSION_DATE_FILE}
 # up once the build is finished, so post-build process like artifact
 # archiving, etc can still access it
 SOURCE_DATE=$(date -d @$SOURCE_DATE_EPOCH +%Y%m%dT%H%M)
+mkdir -p tmp
 echo $SOURCE_DATE >| tmp/${VERSION_DATE_FILE}
 
 # add MFW feed definitions
