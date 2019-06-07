@@ -15,6 +15,7 @@ proto_openvpn_init_config() {
 	proto_config_add_string "ifname"
 	proto_config_add_string "config"
 	proto_config_add_string "authfile"
+	proto_config_add_string "wanif"
 	proto_config_add_defaults
 }
 
@@ -34,8 +35,8 @@ proto_openvpn_setup() {
 
 	local dev_type opts
 
-	local ifname config authfile $PROTO_DEFAULT_OPTIONS
-	json_get_vars ifname config authfile $PROTO_DEFAULT_OPTIONS
+	local ifname config authfile wanif $PROTO_DEFAULT_OPTIONS
+	json_get_vars ifname config authfile wanif $PROTO_DEFAULT_OPTIONS
 
 	[ -n "$ifname" ] || get_config_param ifname "$config" dev
 	[ -z "$ifname" ] && {
@@ -62,6 +63,19 @@ proto_openvpn_setup() {
 
 	[ -n "$authfile" ] && {
 		append opts "--auth-user-pass $authfile"
+	}
+
+	[ -z "$wanif" ] && {
+		append opts "--nobind"
+	}
+
+	[ -n "$wanif" ] && {
+		local ipaddr
+		if ! network_get_ipaddr ipaddr "$wanif"; then
+			proto_notify_error "$cfg" "NO_WAN_LINK"
+			exit
+		fi
+		append opts "--bind --local $ipaddr"
 	}
 
 	proto_run_command "$cfg" /usr/sbin/openvpn \
