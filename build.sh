@@ -11,7 +11,7 @@ export TZ="America/Los_Angeles"
 
 usage() {
   echo "Usage: $0 [-d <device>] [-l <libc>] [-v (latest|<branch>|<tag>)] [-c (false|true)]"
-  echo "  -d <device>               : x86_64, omnia, wrt3200, wrt1900, wrt32x (defaults to x86_64)"
+  echo "  -d <device>               : x86_64, omnia, wrt3200, wrt1900, wrt32x, espressobin (defaults to x86_64)"
   echo "  -l <libc>                 : musl, glibc (defaults to musl)"
   echo "  -m <make options>         : pass those to OpenWRT's make \"as is\" (default is -j32)"
   echo "  -c true|false             : start clean or not (default is false, meaning \"do not start clean\""
