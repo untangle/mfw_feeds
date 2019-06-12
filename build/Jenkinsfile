@@ -153,6 +153,31 @@ pipeline {
             }
           }
 
+          post { 
+            success { archiveMFW(device) }
+          }
+        }
+
+        stage('espressobin') {
+	  agent { label 'mfw' }
+
+          environment {
+            device = 'espressobin'
+            buildDir = "${env.HOME}/build-mfw-${env.BRANCH_NAME}-${device}"
+          }
+
+	  stages {
+            stage('Prep WS espressobin') {
+              steps { dir(buildDir) { checkout scm } }
+            }
+
+            stage('Build espressobin') {
+              steps {
+                buildMFW(device, libc, startClean, makeOptions, version, buildDir)
+              }
+            }
+          }
+
           post {
             success { archiveMFW(device) }
           }
