@@ -48,10 +48,14 @@ find bin/targets -iregex '.+\(gz\|img\|vdi\|vmdk\|bin\|kmod-mac80211-hwsi.+ipk\)
   newName=${newName/-mvebu-cortexa53}
   newName=${newName/-linksys}
   newName=${newName/-turris}
+  newName=${newName/_turris}
   newName=${newName/-globalscale}
+  newName=${newName/-cznic}
   newName=${newName/-sdcard}
+  newName=${newName/-v7-emmc}
   newName=${newName/.bin/.img}
   newName=${newName/mfw-/sdwan-}
+  newName=${newName/mfw_/sdwan-}
   cp $f ${OUTPUT_DIR}/$newName
 done
 
