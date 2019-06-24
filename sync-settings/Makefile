@@ -49,6 +49,7 @@ define Package/sync-settings/install
 	$(INSTALL_BIN) files/ifupdown.hotplug $(1)/etc/hotplug.d/iface/20-ifupdown
 	$(INSTALL_BIN) files/speedtest.sh $(1)/usr/bin
 	$(INSTALL_BIN) files/nft_debug $(1)/usr/bin
+	$(INSTALL_BIN) files/check-for-usb-reset.sh $(1)/usr/bin
 endef
 
 $(eval $(call Py3Package,$(PKG_NAME)))
