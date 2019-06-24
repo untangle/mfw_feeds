@@ -95,10 +95,10 @@ run_ping_test() {
 	SPEEDTEST_ADDRESS="speedtest.mikrotec.com"
 	case "$ip_addr" in
 	*:*)
-		ping6 -I $ip_addr -q -c 5 $SPEEDTEST_ADDRESS | grep round | cut -d '/' -f 4 | cut -d '.' -f 1
+		ping6 -I $ip_addr -q -c 1 $SPEEDTEST_ADDRESS | grep round | cut -d '/' -f 4 | cut -d '.' -f 1
 		;;
 	*)
-		ping -I $ip_addr -q -c 5 $SPEEDTEST_ADDRESS | grep round | cut -d '/' -f 4 | cut -d '.' -f 1
+		ping -I $ip_addr -q -c 1 $SPEEDTEST_ADDRESS | grep round | cut -d '/' -f 4 | cut -d '.' -f 1
 		;;
 	esac
 }
