@@ -78,6 +78,7 @@ run_test() {
 
 	for i in `pgrep -P $$ `
 	do
+		kill -9 $i
 		wait $i
 	done
 
