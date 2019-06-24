@@ -67,7 +67,7 @@ run_test() {
 	fi
 
 	before=$(get_timestamp)
-	sleep 10
+	sleep 4
 
 	if [ "$direction" = "download" ] ; then
 		after_bytes=$(get_rx_bytes $intf)
