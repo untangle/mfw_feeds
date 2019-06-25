@@ -11,7 +11,7 @@ drives=`ls /dev/sd[a-z][1-99]`
 mkdir /tmp/thumb
 for drive in $drives ; do
 	mount -o ro $drive /tmp/thumb
-	find . -name "$trigger_name" -print | grep -q $trigger_name
+	find /tmp/thumb -name "$trigger_name" -print -o -name "$trigger_name.txt" -print | grep -q $trigger_name
 	found=$?
 	umount /tmp/thumb
 	if [ $found -eq 0 ] ; then
