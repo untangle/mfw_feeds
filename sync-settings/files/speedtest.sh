@@ -56,7 +56,7 @@ run_test() {
 			wget --bind-address $ip_addr -q --timeout=60 -O /dev/null $SPEEDTEST_URL &
 		else
 			SPEEDTEST_URL="http://$SERVER/speedtest/upload.php"
-			wget --bind-address $ip_addr -q --timeout=60 --body-file=/tmp/5MB.zip --method=put -O /dev/null $SPEEDTEST_URL &
+			wget --bind-address $ip_addr -q --timeout=60 --body-file=/tmp/$intf.5MB.zip --method=put -O /dev/null $SPEEDTEST_URL &
 		fi
 	done
 
@@ -139,8 +139,8 @@ fi
 
 disable_qos $interface
 run_test dl_result "download" $interface $ip_address
-dd if=/dev/zero of=/tmp/5MB.zip bs=1M count=5 2> /dev/null
+dd if=/dev/zero of=/tmp/$interface.5MB.zip bs=1M count=5 2> /dev/null
 run_test ul_result "upload" $interface $ip_address
 enable_qos $interface
-rm /tmp/5MB.zip
+rm /tmp/$interface.5MB.zip
 echo "{\"ping\":$ping_result,\"download\":$dl_result,\"upload\":$ul_result}"
