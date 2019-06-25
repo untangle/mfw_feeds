@@ -17,7 +17,7 @@ define Package/container
   CATEGORY:=Virtualization
   SUBMENU:=Container
   TITLE:=Contains kernel options for docker/lxc
-  DEPENDS:=+libdevmapper +libltdl +libseccomp @!TARGET_mvebu_cortexa9_DEVICE_linksys-wrt32x
+  DEPENDS:=+libdevmapper +libltdl +libseccomp @!TARGET_mvebu_cortexa9_DEVICE_linksys_wrt32x
   KCONFIG:=$(shell cat Config | xargs)
 endef
 
