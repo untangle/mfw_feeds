@@ -35,6 +35,13 @@ fi
 
 # main
 VERSION_STRING="$(git describe --always --long --tags)_${TS}"
+
+case $DEVICE in
+  wrt1900) DEVICE=wrt1900acs ;;
+  wrt3200) DEVICE=wrt3200acm ;;
+  x86_64) DEVICE=x86-64 ;;
+esac
+
 PACKAGES_FILE="sdwan-${DEVICE}-Packages_${VERSION_STRING}.txt"
 
 [[ -z "$START_CLEAN" ]] || rm -fr $OUTPUT_DIR
