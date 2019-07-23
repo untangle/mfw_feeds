@@ -30,7 +30,6 @@ endef
 define Package/upgrade-scripts/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) files/upgrade.sh $(1)/usr/bin/
-	$(INSTALL_BIN) files/upgrade-available.sh $(1)/usr/bin/
 endef
 
 $(eval $(call BuildPackage,upgrade-scripts))
