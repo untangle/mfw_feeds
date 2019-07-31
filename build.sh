@@ -114,6 +114,12 @@ echo CONFIG_VERSION_CODE="$openwrtVersion" >> .config
 echo CONFIG_VERSION_NUMBER="$mfwVersion" >> .config
 echo $mfwVersion >| $VERSION_FILE
 if [ -n "$BUILD_URL" ] ; then # Jenkins build
+  # adjust device name to match exact OpenWrt specification
+  case $DEVICE in
+    wrt1900) DEVICE=wrt1900acs ;;
+    wrt3200) DEVICE=wrt3200acm ;;
+    x86_64) DEVICE=x86-64 ;;
+  esac
   packagesList="sdwan-${DEVICE}-Packages_${mfwVersion}_${SOURCE_DATE}.txt"
   echo CONFIG_VERSION_MANUFACTURER_URL="http://download.untangle.com/sdwan/manifest/${packagesList}" >> .config
 else
