@@ -10,11 +10,13 @@ import yaml
 # constants
 SUBTREES = yaml.load(open("subtrees.yaml"))['subtrees']
 
+
 # functions
 def run(cmd, simulate=False):
     print('... running {}'.format(cmd))
     if not simulate:
         subprocess.call(cmd, shell=True)
+
 
 # CL args
 parser = argparse.ArgumentParser(description="Update subtrees, and optionally push result back to origin")
