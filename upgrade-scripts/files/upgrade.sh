@@ -41,41 +41,41 @@ echo "Checking for new releases... "
 
 rm -f $OUTPUT
 
-#wget -t 5 --timeout=30 -q -O $OUTPUT $URL
-#if [ $? != 0 ] ; then
-#    echo "Failed to reach upgrade server."
-#    exit 1
-#fi
+wget -t 5 --timeout=30 -q -O $OUTPUT $URL
+if [ $? != 0 ] ; then
+    echo "Failed to reach upgrade server."
+    exit 1
+fi
 
-# FIXME Temporary fake response
-cat> $OUTPUT <<EOF
-{
-  "filename": "foobar123",
-  "version": "v0.1.0beta0-200-aaaaaaaaa",
-  "device": "linksys,shelby",
-  "url": "http://metaloft.com/fav.ico",
-  "timestamp": "1234124",
-  "images": [
-    {
-      "filename": "foobar",
-      "format": "foobar",
-      "type": "foobar",
-      "url": "http://metaloft.com/fav.ico",
-      "preferred": true,
-      "timestamp": "string",
-      "version": "string"
-    }
-  ],
-  "packages": [
-    {
-      "name": "string",
-      "version": "string",
-      "device": "string",
-      "description": "string"
-    }
-  ]
-}
-EOF
+# Fake response
+# cat> $OUTPUT <<EOF
+# {
+#   "filename": "foobar123",
+#   "version": "v0.1.0beta0-200-aaaaaaaaa",
+#   "device": "linksys,shelby",
+#   "url": "http://metaloft.com/fav.ico",
+#   "timestamp": "1234124",
+#   "images": [
+#     {
+#       "filename": "foobar",
+#       "format": "foobar",
+#       "type": "foobar",
+#       "url": "http://metaloft.com/fav.ico",
+#       "preferred": true,
+#       "timestamp": "string",
+#       "version": "string"
+#     }
+#   ],
+#   "packages": [
+#     {
+#       "name": "string",
+#       "version": "string",
+#       "device": "string",
+#       "description": "string"
+#     }
+#   ]
+# }
+# EOF
 
 json_init
 json_load_file $OUTPUT
@@ -92,8 +92,8 @@ if [ -z "$IMAGEURL" ] ; then
 fi
 
 echo
-echo "Newest  version: ${NEWVER}"
 echo "Current version: ${VERSION}"
+echo "Newest  version: ${NEWVER}"
 echo
 
 if [ "${VERSION}" == "${NEWVER}" ] ; then
