@@ -5,11 +5,14 @@ interface-kbps gets the download/upload rate for the specified interface
 
 # pylint: disable=global-statement
 # pylint: disable=broad-except
+# pylint: disable=too-many-instance-attributes
 
 import sys
 import getopt
 import json
 import collections
+import time
+import os
 
 opts = None
 
@@ -17,76 +20,55 @@ class Options():
     """Options parses the command line arguments"""
 
     def __init__(self):
-        self.settings_filename = '/etc/config/current.json'
         self.licenses_filename = '/etc/config/licenses.json'
         self.device = None
         self.direction = None
-        self.default_kbps = None
-        self.settings = None
+        self.desired_kbps = None
         self.licenses = None
-
-    def set_settings_filename(self, arg):
-        """Set filename argument"""
-        self.settings_filename = arg
+        self.boardname = None
 
     def set_licenses_filename(self, arg):
         """Set filename argument"""
         self.licenses_filename = arg
 
+    def set_boardname(self, arg):
+        """Set boardname argument"""
+        self.boardname = arg
+
     def parse_args(self):
         """Parse command line arguments"""
         handlers = {
-            '-f': self.set_settings_filename,
             '-l': self.set_licenses_filename,
+            '-b': self.set_boardname,
         }
 
         try:
-            (optlist, args) = getopt.getopt(sys.argv[1:], 'f:l:')
+            (optlist, args) = getopt.getopt(sys.argv[1:], 'l:b:')
             for opt in optlist:
                 handlers[opt[0]](opt[1])
-            if len(args) != 3:
+            if len(args) != 1:
                 print("Missing required arguments")
                 print_usage(1)
-            self.device = args[0]
-            self.direction = args[1]
-            self.default_kbps = args[2]
-            if self.direction != "up" and self.direction != "down":
-                print("Invalid direction: %s" % self.direction)
-                print_usage(1)
+            self.desired_kbps = int(args[0])
             return
         except getopt.GetoptError as exc:
             print(exc)
             print_usage(1)
 
-def cleanup(code):
+def errexit():
     """Cleanup and exit with specified code"""
     global opts
-    print(opts.default_kbps)
-    exit(code)
+    print(opts.desired_kbps)
+    exit(1)
 
 def print_usage(exit_code):
     """Print usage"""
     sys.stderr.write("""\
-%s Usage: %s <device> <up/down> <default>
+%s Usage: %s <desired_kbps>
   optional args:
-    -f <file>   : settings filename (default: /etc/config/current.json)
     -l <file>   : licenses filename (default: /etc/config/licenses.json)
 """ % (sys.argv[0], sys.argv[0]))
     exit(exit_code)
-
-def read_settings():
-    """
-    Read and parse the settings file
-    """
-    global opts
-    try:
-        settings_file = open(opts.settings_filename, 'r')
-        settings_data = settings_file.read()
-        settings_file.close()
-        opts.settings = json.loads(settings_data, object_pairs_hook=collections.OrderedDict)
-    except IOError as exc:
-        print("Unable to read settings file.", exc, file=sys.stderr, flush=True)
-        cleanup(1)
 
 def read_licenses():
     """
@@ -100,35 +82,7 @@ def read_licenses():
         opts.licenses = json.loads(licenses_data, object_pairs_hook=collections.OrderedDict)
     except IOError as exc:
         print("Unable to read licenses file.", exc, file=sys.stderr, flush=True)
-        cleanup(1)
-
-def find_interface(settings, device):
-    """
-    find the interface settings for specified device
-    """
-    if settings.get("network") is None:
-        print("Missing network settings.", file=sys.stderr, flush=True)
-        cleanup(1)
-    if settings.get("network").get("interfaces") is None:
-        print("Missing interface settings.", file=sys.stderr, flush=True)
-        cleanup(1)
-    for intf in settings.get("network").get("interfaces"):
-        if intf.get("device") == device:
-            return intf
-    return None
-
-
-def get_kbps(intf, direction, default_kbps):
-    """
-    get the kbps for the specified interface
-    """
-    if direction == "up":
-        speed = intf.get('uploadKbps')
-    else:
-        speed = intf.get('downloadKbps')
-    if speed is None:
-        return default_kbps
-    return speed
+        errexit()
 
 def get_entitlement_speed(licenses):
     """
@@ -137,7 +91,7 @@ def get_entitlement_speed(licenses):
     liclist = licenses.get("list")
     if liclist is None:
         print("Failed to parse licenses", file=sys.stderr, flush=True)
-        cleanup(1)
+        errexit()
     try:
         for lic in liclist:
             if lic.get("name") == "untangle-node-throughput":
@@ -146,24 +100,48 @@ def get_entitlement_speed(licenses):
         print("Unable to parse licenses.", exc, file=sys.stderr, flush=True)
     return None
 
+def get_board_name():
+    """
+    read the board name
+    """
+    global opts
+    try:
+        boardname_file = open('/tmp/sysinfo/board_name', 'r')
+        opts.boardname = licenses_file.read().decode('ascii')
+        boardname_file.close()
+    except IOError as exc:
+        print("Unable to read boardname file.", exc, file=sys.stderr, flush=True)
+        errexit()
+
 def main():
     """main"""
     global opts
     opts = Options()
     opts.parse_args()
 
-    read_settings()
     read_licenses()
-
-    intf = find_interface(opts.settings, opts.device)
-    if intf is None:
-        print("Failed to find interface. (device=%s)" % opts.device, file=sys.stderr, flush=True)
-        cleanup(1)
-
-    speed = get_kbps(intf, opts.direction, opts.default_kbps)
     entitlement = get_entitlement_speed(opts.licenses)
 
-    print(speed)
-    print(entitlement)
+    # linksys exempt
+    if "linksys" in opts.boardname:
+        print(opts.desired_kbps)
+        exit(0)
+
+    # if no entitlement found
+    # If the appliances is not a Linksys Router, and no licensing is found, then the desired limit is 100 Mbps for a new appliance
+    # If the appliance should have a license and it doesn't, then all features will work and the Limit is set to 10 Mbps
+    if entitlement is None:
+        now = time.time()
+        creation = os.path.getctime("/etc/config/uid")
+        if (now - creation) // (24 * 3600) >= 14:
+            entitlement = 10*1024 #10*1024 Kbps = 10Mbit
+        else:
+            entitlement = 10*1024 #100*1024 Kbps = 100Mbit
+
+    if opts.desired_kbps < entitlement:
+        print(opts.desired_kbps)
+    else:
+        print(entitlement)
+    exit(0)
 
 main()
