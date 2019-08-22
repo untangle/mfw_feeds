@@ -30,6 +30,7 @@ endef
 define Package/license-scripts/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) files/fetch-licenses.sh $(1)/usr/bin/
+	$(INSTALL_BIN) files/licensecron $(1)/etc/crontabs/
 endef
 
 $(eval $(call BuildPackage,license-scripts))
