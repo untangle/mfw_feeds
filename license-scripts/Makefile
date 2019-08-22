@@ -29,6 +29,7 @@ endef
 
 define Package/license-scripts/install
 	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_DIR) $(1)/etc/crontabs
 	$(INSTALL_BIN) files/fetch-licenses.sh $(1)/usr/bin/
 	$(INSTALL_BIN) files/interface-kbps $(1)/usr/bin/
 	$(INSTALL_BIN) files/licensecron $(1)/etc/crontabs/
