@@ -1,1 +1,0 @@
-0 */12 * * * /usr/bin/fetch-licenses.sh >/dev/null 2>&1
