@@ -119,6 +119,8 @@ def main():
     opts = Options()
     opts.parse_args()
 
+    get_board_name()
+
     read_licenses()
     entitlement = get_entitlement_speed(opts.licenses)
 
