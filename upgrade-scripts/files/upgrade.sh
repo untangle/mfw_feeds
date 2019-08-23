@@ -21,7 +21,7 @@ DEVICE="`cat /tmp/sysinfo/board_name | tr -d '[ \t\r\n]'`"
 UID="`cat /etc/config/uid | tr -d '[ \t\r\n]'`"
 
 ARGS="version=${VERSION}&device=${BOARD}&uid=${UID}"
-URL="https://updates.untangle.com/mfw/v1/releases/${DEVICE}/latest?${ARGS}"
+URL="https://updates.untangle.com/api/v1/releases/${DEVICE}/latest?${ARGS}"
 OUTPUT="/tmp/upgrade.json"
 SIMULATE=0
 
