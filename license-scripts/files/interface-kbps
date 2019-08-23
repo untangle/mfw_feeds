@@ -107,7 +107,7 @@ def get_board_name():
     global opts
     try:
         boardname_file = open('/tmp/sysinfo/board_name', 'r')
-        opts.boardname = licenses_file.read().decode('ascii')
+        opts.boardname = boardname_file.read().decode('ascii')
         boardname_file.close()
     except IOError as exc:
         print("Unable to read boardname file.", exc, file=sys.stderr, flush=True)
