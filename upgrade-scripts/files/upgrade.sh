@@ -77,6 +77,11 @@ fi
 # }
 # EOF
 
+if [ -z "$OUTPUT" ] ; then
+    # no upgrade available
+    exit 1
+fi
+
 json_init
 json_load_file $OUTPUT
 json_get_var NEWVER version
