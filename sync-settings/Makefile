@@ -48,6 +48,7 @@ define Package/sync-settings/install
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
 	$(INSTALL_BIN) files/ifupdown.hotplug $(1)/etc/hotplug.d/iface/20-ifupdown
 	$(INSTALL_BIN) files/speedtest.sh $(1)/usr/bin
+	$(INSTALL_BIN) files/wwan_status.sh $(1)/usr/bin
 	$(INSTALL_BIN) files/nft_debug $(1)/usr/bin
 	$(INSTALL_BIN) files/check-for-usb-reset.sh $(1)/usr/bin
 endef
