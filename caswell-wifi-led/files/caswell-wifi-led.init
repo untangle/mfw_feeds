@@ -7,7 +7,7 @@ STOP=99
 USE_PROCD=1
 
 boot() {
-    grep -q caswell-caf-0262 /tmp/sysinfo/board_name
+    grep -q -e caswell-caf-0262 -e untangle-inc-default-string /tmp/sysinfo/board_name
     if [ $? -eq 0 ] ; then
         echo netdev > /sys/class/leds/caswell:green:wifi/trigger
         echo wlan0 > /sys/class/leds/caswell:green:wifi/device_name
