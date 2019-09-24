@@ -121,7 +121,7 @@ if [ -n "$BUILD_URL" ] ; then # Jenkins build
     x86_64) DEVICE=x86-64 ;;
   esac
   packagesList="sdwan-${DEVICE}-Packages_${mfwVersion}_${SOURCE_DATE}.txt"
-  echo CONFIG_VERSION_MANUFACTURER_URL="https://download.untangle.com/sdwan/manifest/${packagesList}" >> .config
+  echo CONFIG_VERSION_MANUFACTURER_URL="https://downloads.untangle.com/public/sdwan/manifest/${packagesList}" >> .config
 else
   echo CONFIG_VERSION_MANUFACTURER_URL="developer build" >> .config
 fi
