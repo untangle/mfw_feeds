@@ -26,7 +26,7 @@ The mfw-cli requires:
 
 ## Install
 
-[**Download mfw-cli (mfw.py)**](https://github.com/dhadarau/mfw-cli/raw/master/mfw.py)
+[**Download mfw-cli (mfw.py)**](https://github.com/untangle/mfw_build/raw/master/sdwan-vbox-helper/mfw.py)
 
 The mfw-cli is not actually installed, you just have the run the python script (`mfw.py`). To run it just type:
 ```
