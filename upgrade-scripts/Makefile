@@ -16,7 +16,7 @@ define Package/upgrade-scripts
   CATEGORY:=Network
   SUBMENU:=Cloud
   TITLE:=Upgrade scripts for MFW
-  URL:=https://www.github.com/untangle/mfw_feeds
+  URL:=https://github.com/untangle/mfw_feeds
   DEPENDS:=
 endef
 

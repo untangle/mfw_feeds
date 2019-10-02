@@ -16,7 +16,7 @@ define Package/license-scripts
   CATEGORY:=Network
   SUBMENU:=Cloud
   TITLE:=License scripts for MFW
-  URL:=https://www.github.com/untangle/mfw_feeds
+  URL:=https://github.com/untangle/mfw_feeds
   DEPENDS:=
 endef
 
