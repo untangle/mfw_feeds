@@ -5,7 +5,7 @@ PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=Dirk Morris <dmorris@untangle.com>
 PKG_SOURCE_PROTO:=git
 # FIXME: we really don't need *any* source from git right now
-PKG_SOURCE_URL:=https://github.com/untangle/mfw_openwrt.git
+PKG_SOURCE_URL:=https://github.com/untangle/mfw_feeds.git
 
 include ../version.mk
 
@@ -16,7 +16,7 @@ define Package/license-scripts
   CATEGORY:=Network
   SUBMENU:=Cloud
   TITLE:=License scripts for MFW
-  URL:=https://www.github.com/untangle/mfw_openwrt
+  URL:=https://www.github.com/untangle/mfw_feeds
   DEPENDS:=
 endef
 
