@@ -102,7 +102,7 @@ cat >> .config <<EOF
 CONFIG_VERSION_DIST="MFW"
 CONFIG_VERSION_MANUFACTURER="Untangle"
 CONFIG_VERSION_BUG_URL="https://jira.untangle.com/projects/MFW/"
-CONFIG_VERSION_HOME_URL="https://github.com/untangle/mfw_openwrt"
+CONFIG_VERSION_HOME_URL="https://github.com/untangle/mfw_feeds"
 CONFIG_VERSION_SUPPORT_URL="https://forums.untangle.com"
 CONFIG_VERSION_PRODUCT="MFW"
 EOF
