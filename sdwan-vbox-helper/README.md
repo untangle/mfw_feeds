@@ -20,7 +20,7 @@ It provides following features:
 The mfw-cli requires:
 * **python3** (`#!/usr/bin/env python3`)
 * **VirtualBox 6** (`vboxmanage`), the version used while developed (it might work with other versions too)
-* other system packages: **wget**, **ip**, **grep**, **awk**, **sed**
+* other system packages: **wget**, **ip**, **grep**, **awk**
 
 > Untangle VPN connection required, otherwise Jenkins APIs are not accessible
 
@@ -97,21 +97,20 @@ Running `mfw` without arguments will show, by default, the status for the last 1
 MFW » openwrt-18.06
 
 Build stability: 3 out of the last 5 builds failed.
-Last successful build: 873
+Last successful build: 883
 
 no. | status  | timestamp      | dur.    | vdi file name
 -----------------------------------------------------------
-873 | SUCCESS | Sep 30 08:59PM | 0:17:20 | sdwan-x86-64-combined_v1.1-2-g6930f76cfe_20190930T1059.vdi
-872 | FAILURE | Sep 30 06:25PM | 0:25:55 | None
-871 | FAILURE | Sep 30 06:05PM | 0:18:35 | None
-870 | ABORTED | Sep 28 03:55PM | 2 days, 2:04:49 | sdwan-x86-64-combined_v1.1-0-g4586f511df_20190928T0556.vdi
-869 | FAILURE | Sep 27 10:31PM | 0:17:32 | None
-868 | SUCCESS | Sep 27 09:47PM | 0:18:10 | sdwan-x86-64-combined_v1.1-0-g4586f511df_20190927T1147.vdi
-867 | SUCCESS | Sep 27 05:40PM | 0:19:54 | sdwan-x86-64-combined_v1.1-0-g4586f511df_20190927T0740.vdi
-866 | SUCCESS | Sep 27 04:54PM | 0:17:01 | sdwan-x86-64-combined_v1.1-0-g4586f511df_20190927T0654.vdi
-865 | SUCCESS | Sep 27 04:11PM | 0:19:21 | sdwan-x86-64-combined_v1.1-0-g4586f511df_20190927T0611.vdi
-864 | FAILURE | Sep 27 03:27PM | 0:14:03 | None
------------------------------------------------------------
+883 | SUCCESS | Oct 02 02:47PM | 0:23:37 | sdwan-x86-64-combined_v1.1-9-g6e953de52a_20191002T0448.vdi
+882 | FAILURE | Oct 02 02:28PM | 0:25:49 | sdwan-x86-64-combined_v1.1-9-g6e953de52a_20191002T0432.vdi
+881 | FAILURE | Oct 02 12:19PM | 2:15:06 | sdwan-x86-64-combined_v1.1-9-g6e953de52a_20191002T0359.vdi
+880 | FAILURE | Oct 02 12:18PM | 2:09:31 | None
+879 | SUCCESS | Oct 02 12:13PM | 2:17:31 | sdwan-x86-64-combined_v1.1-9-g6e953de52a_20191002T0308.vdi
+878 | SUCCESS | Oct 02 12:02PM | 2:27:47 | sdwan-x86-64-combined_v1.1-9-g6e953de52a_20191002T0241.vdi
+877 | SUCCESS | Oct 02 12:00PM | 2:28:05 | sdwan-x86-64-combined_v1.1-7-g5ce74334aa_20191002T0212.vdi
+876 | FAILURE | Oct 02 09:46AM | 2:25:16 | None
+875 | FAILURE | Oct 02 09:43AM | 0:30:26 | None
+874 | FAILURE | Oct 01 05:16PM | 0:29:22 | None
 ```
 
 It can be set a limit on how many builds to show, by running `mfw -l <limit_number>`
@@ -122,14 +121,13 @@ It can be set a limit on how many builds to show, by running `mfw -l <limit_numb
 MFW » openwrt-18.06
 
 Build stability: 3 out of the last 5 builds failed.
-Last successful build: 873
+Last successful build: 883
 
 no. | status  | timestamp      | dur.    | vdi file name
 -----------------------------------------------------------
-873 | SUCCESS | Sep 30 08:59PM | 0:17:20 | sdwan-x86-64-combined_v1.1-2-g6930f76cfe_20190930T1059.vdi
-872 | FAILURE | Sep 30 06:25PM | 0:25:55 | None
-871 | FAILURE | Sep 30 06:05PM | 0:18:35 | None
------------------------------------------------------------
+883 | SUCCESS | Oct 02 02:47PM | 0:23:37 | sdwan-x86-64-combined_v1.1-9-g6e953de52a_20191002T0448.vdi
+882 | FAILURE | Oct 02 02:28PM | 0:25:49 | sdwan-x86-64-combined_v1.1-9-g6e953de52a_20191002T0432.vdi
+881 | FAILURE | Oct 02 12:19PM | 2:15:06 | sdwan-x86-64-combined_v1.1-9-g6e953de52a_20191002T0359.vdi
 ```
 
 ### Downloads
@@ -138,54 +136,56 @@ Download option is interactive. The files (artifacts) are categorized based on a
 To download files from a specific build run `mfw -d <build_number>`
 
 ```
-~$ mfw -d 873
+~$ mfw -d 883
 
-MFW » openwrt-18.06 #873
+MFW » openwrt-18.06 #883
 ------------------------
-Build number:  873
+Build number:  883
 Is building:   False
 Build result:  SUCCESS
-Timestamp:     Sep 30 08:59PM
-Duration:      0:17:20
-Est. duration: 0:20:29
+Timestamp:     Oct 02 02:47PM
+Duration:      0:23:37
+Est. duration: 1:42:58
 ------------------------
+Select appliance
 
-1: x86-64
-2: wrt1900acs
-3: wrt3200acm
-4: wrt32x
-5: espressobin
-6: omnia
-7: others
+1) sdwan-x86-64
+2) sdwan-wrt1900acs
+3) sdwan-wrt3200acm
+4) sdwan-wrt32x
+5) sdwan-espressobin
+6) sdwan-omnia
+7) openwrt-x86-64
+8) openwrt-wrt3200acm
+9) ALL
 
-Type "q" to quit
+Type "x" to exit
 
-Select category: _
+Choose: _
 ```
 
-Selecting option 3 from categories will list available files for wrt3200acm
+Selecting option 5 from categories will list available files for espressobin
 
 ```
-Select category: 3
+Select artifact
 
-1: sdwan-wrt3200acm-factory_v1.1-2-g6930f76cfe_20190930T1059.img
-2: sdwan-wrt3200acm-initramfs-kernel_v1.1-2-g6930f76cfe_20190930T1059.img
-3: sdwan-wrt3200acm-Packages_v1.1-2-g6930f76cfe_20190930T1059.txt
-4: sdwan-wrt3200acm-sysupgrade_v1.1-2-g6930f76cfe_20190930T1059.img
+1) sdwan-espressobin-ext4_v1.1-9-g6e953de52a_20191002T0454.img.gz
+2) sdwan-espressobin-initramfs-kernel_v1.1-9-g6e953de52a_20191002T0454.img
+3) sdwan-espressobin-Packages_v1.1-9-g6e953de52a_20191002T0454.txt
+4) sdwan-espressobin_v1.1-9-g6e953de52a_20191002T0454.img.gz
 
-Type "b" to go back or "q" to quit
+Type "x" to exit
 
-Select file: _
+Choose: _
 ```
 
-Selecting the 4th option will start download the wrt3200acm sysupgrade image
+Selecting the 4th option will start download the sdwan-espressobin_v1.1-9 image
 
 ```
-Select file: 4
+Choose: 4
+Downloading to /home/dan/untangle/mfw_build/sdwan-vbox-helper ...
 
-Downloading to /home/dan/untangle/mfw-cli ...
-
-sdwan-wrt3200acm-sysupgrade_v1.1- 100%[==================================>]  25.22M  1.80MB/s    in 29s
+sdwan-espressobin_v1.1-9-g6e95350 100%[==================================>]  26.84M  4.74MB/s    in 15s
 ```
 > **Important!** Files are downloaded in the current folder.<br/>
 > There is no option yet to choose where to save them.
@@ -200,45 +200,44 @@ To download and create the box instance for a specific build, run `mfw -i <build
 
 
 ```
-~$ mfw -i 873
+~$ mfw -i 883
 
-MFW » openwrt-18.06 #873
+MFW » openwrt-18.06 #883
 ------------------------
-Build number:  873
+Build number:  883
 Is building:   False
 Build result:  SUCCESS
-Timestamp:     Sep 30 08:59PM
-Duration:      0:17:20
-Est. duration: 0:20:29
+Timestamp:     Oct 02 02:47PM
+Duration:      0:23:37
+Est. duration: 1:42:58
 ------------------------
+Downloading as "sdwan-883.vdi" to /home/dan/untangle/mfw_build/sdwan-vbox-helper ...
 
-
-Downloading as "sdwan-873.vdi" to /home/dan/untangle/mfw-cli ...
-
-sdwan-873.vdi                     100%[==================================>]  31.00M   430KB/s    in 57s
+sdwan-883.vdi                     100%[==================================>]  31.00M  5.38MB/s    in 16s
 ```
 
 Before creating the machine, you must choose the interface for the box bridged adapter<br/>
-from a list provided by querying the system. In below case was option 2 (wlp2s0)
-
+from a list provided by querying the system. In below case was option 2 (enp0s31f6)
 
 ```
-Select interface for the "sdwan-873" box bridged adapter:
-1: enp0s31f6
-2: wlp2s0
-3: vboxnet0
+Select interface (device) for the "sdwan-883" box bridged adapter:
+1) lo -> 127.0.0.1/8
+2) enp0s31f6 -> 192.168.101.206/24
+3) tun0 -> 172.17.0.46
+4) or enter manually ...
 
-Choose: _
+Choose (1,2,3,4): _
 ```
 
 Then virtual box named `sdwan-<build_number>` is created,<br/>
 having attached the media storage with the same name, which was previously downloaded.
 ```
-Virtual machine 'sdwan-873' is created and registered.
-UUID: 07f38434-46ab-4ad8-b404-9958eb533a9e
-Settings file: '/home/dan/VirtualBox VMs/sdwan-873/sdwan-873.vbox'
-Waiting for VM "sdwan-873" to power on...
-VM "sdwan-873" has been successfully started.
+Choose (1,2,3,4): 2
+Virtual machine 'sdwan-883' is created and registered.
+UUID: 61e1dc74-c0a8-463a-9ddc-c42a87661631
+Settings file: '/home/dan/VirtualBox VMs/sdwan-883/sdwan-883.vbox'
+Waiting for VM "sdwan-883" to power on...
+VM "sdwan-883" has been successfully started.
 ```
 
 

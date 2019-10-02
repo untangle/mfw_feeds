@@ -34,6 +34,21 @@ def c_green(str): return ("\033[92m{}\033[00m".format(str))
 def c_yellow(str): return "\033[93m{}\033[00m".format(str)
 def c_gray(str): return "\033[90m{}\033[00m".format(str)
 
+
+def api_request(url):
+    # requests data from Jenkins API
+    try:
+        response = requests.get(url)
+        if response.status_code != 200:
+            print(str(response.status_code) + ' ' + response.reason)
+            sys.exit(1)
+        data = json.loads(response.text)
+    except requests.exceptions.RequestException:
+        print(c_red('Unable to connect to Jenkins. Is untangle VPN connected?') + '\n')
+        sys.exit(1)
+    return data
+
+
 def find_vdi_artifact(artifacts):
     # Find the x86-64 vdi artifact required for the VirtualBox
     files = [art for art in artifacts
@@ -55,6 +70,35 @@ def color_build_status(argument):
     return switcher.get(argument)
 
 
+def create_menu(collection, info, label):
+    os.system('clear')
+    print(info) # displays info at the top
+    print(label)
+    print()
+
+    if not collection:
+        return None
+
+    menu = {}
+    for idx, item in enumerate(collection, start=1):
+        menu[str(idx)] = item
+
+    for key in menu.keys():
+        print(key + ') ' + menu[key])
+
+    print('\nType "x" to exit')
+
+    sel = input('\nChoose: ')
+    if sel is 'x':
+        return False
+    if sel in menu.keys():
+        return menu[sel]
+    else:
+        # redisplay this menu if selection does not match
+        return create_menu(collection, info, label)
+
+
+
 def list(limit):
     # queries jenkins for the last <limit> number of builds
     print('Querying Jenkins for the last ' + str(limit) + ' OpenWrt builds ...\n')
@@ -62,13 +106,7 @@ def list(limit):
     # applies a limit to the query
     range = '{0,' + str(limit) + '}'
 
-    try:
-        response = requests.get(OPENWRT_BASE_URL + OPENWRT_LIST_QUERY + range)
-        data = json.loads(response.text)
-    except requests.exceptions.RequestException:
-        print(c_red('Unable to reach Jenkins. Is untangle VPN connected?') + '\n')
-        sys.exit(1)
-
+    data = api_request(OPENWRT_BASE_URL + OPENWRT_LIST_QUERY + range)
     os.system('clear')
 
     print(
@@ -108,42 +146,15 @@ def list(limit):
 def download(build_no, vbox=False):
     # download a file frrom a specific OpenWrt build
     # or downlaods the vdi file for virtual box if vbox=True
-    try:
-        print('Getting build ' + str(build_no) + ' details and artifacts ... ')
-        response = requests.get(OPENWRT_BASE_URL + str(build_no) + '/api/json')
-        if response.status_code != 200:
-            print('No such build with number ' + str(build_no))
-            sys.exit(1)
-        data = json.loads(response.text)
+    print('Getting build ' + str(build_no) + ' details and artifacts ... ')
 
-    except requests.exceptions.RequestException:
-        print(c_red('Unable to reach Jenkins. Is untangle VPN connected?') + '\n')
-        sys.exit(1)
+    data = api_request(OPENWRT_BASE_URL + str(build_no) + '/api/json')
 
     # with open("details.json") as json_file:
     #     data = json.load(json_file)
 
-    # create a tree of artifacts
-    categories = {
-        'x86-64': [],
-        'wrt1900acs': [],
-        'wrt3200acm': [],
-        'wrt32x': [],
-        'espressobin': [],
-        'omnia': [],
-        'others': [] # todo: populate it
-    }
-
-    for artifact in data['artifacts']:
-        for category in categories:
-            if category in artifact['fileName']:
-                categories[category].append(artifact)
-
     # displays the build info
-    def info():
-        os.system('clear')
-        print(
-            c_green(data['fullDisplayName']) + '\n' +
+    info = str(c_green(data['fullDisplayName']) + '\n' +
             c_gray('------------------------') + '\n' +
             c_green('Build number:  ') + str(data['number']) + '\n' +
             c_green('Is building:   ') + str(data['building']) + '\n' +
@@ -151,11 +162,10 @@ def download(build_no, vbox=False):
             c_green('Timestamp:     ') + str(datetime.datetime.fromtimestamp(data['timestamp']/1000).strftime('%b %d %I:%M%p')) + '\n' +
             c_green('Duration:      ') + str(datetime.timedelta(seconds=int(data['duration']/1000))) + '\n' +
             c_green('Est. duration: ') + str(datetime.timedelta(seconds=int(data['estimatedDuration']/1000))) + '\n' +
-            c_gray('------------------------') + '\n'
-        )
+            c_gray('------------------------'))
 
-    def download(rPath):
-        file_url = OPENWRT_BASE_URL + str(build_no) + '/artifact/' + rPath
+    def download_file(artifact_path):
+        file_url = OPENWRT_BASE_URL + str(build_no) + '/artifact/' + artifact_path
         file_name = 'sdwan-' + str(build_no) + '.vdi'
 
         if vbox:
@@ -172,62 +182,58 @@ def download(build_no, vbox=False):
             print(c_red('Unable to download file') + '\n')
             sys.exit(1)
 
+    def show_menu():
+        # split artifacts by appliance
+        categories = [
+            'sdwan-x86-64',
+            'sdwan-wrt1900acs',
+            'sdwan-wrt3200acm',
+            'sdwan-wrt32x',
+            'sdwan-espressobin',
+            'sdwan-omnia',
+            'openwrt-x86-64',
+            'openwrt-wrt3200acm',
+            'ALL'
+        ]
+        category = create_menu(categories, info, 'Select appliance')
+        if category is False or category is None:
+            sys.exit(1)
+
+        artifacts = []
+        for artf in data['artifacts']:
+            if category == 'ALL':
+                artifacts.append(artf['relativePath'].replace('tmp/artifacts/',''))
+            else:
+                if category in artf['fileName']:
+                    artifacts.append(artf['relativePath'].replace('tmp/artifacts/',''))
+
+        artifact = create_menu(artifacts, info, 'Select artifact')
+        if artifact is False:
+            show_menu()
+        else:
+            if artifact is None:
+                print('Nothing to download ...\n')
+                time.sleep(1)
+                show_menu()
+            else:
+                download_file('tmp/artifacts/' + artifact)
+
     if data['result'] != 'SUCCESS':
         print('Build ' + str(build_no) + ' was not successful. No downloads available')
         sys.exit(1)
 
-    def categories_menu():
-        # show appliances categories menu
-        info()
-        menu = {}
-        for idx, category in enumerate(categories, start=1):
-            menu[str(idx)] = category
-
-        for key in menu.keys():
-            print(key + ': ' + menu[key])
-
-        print('\nType "q" to quit')
-
-        sel = input('\nSelect category: ')
-        if sel is 'q':
-            sys.exit(1)
-        if sel in menu.keys():
-            artifacts_menu(categories[menu[sel]])
-        else:
-            categories_menu()
-
-    def artifacts_menu(artifacts):
-        # show artifacts
-        info()
-        menu = {}
-        for idx, artifact in enumerate(artifacts, start=1):
-            menu[str(idx)] = artifact
-
-        for key in menu.keys():
-            print(key + ': ' + menu[key]['fileName'])
-
-        print('\nType "b" to go back or "q" to quit')
-
-        sel = input('\nSelect file: ')
-        if sel is 'q':
-            sys.exit(1)
-        if sel is 'b':
-            categories_menu()
-        if sel in menu.keys():
-            download(menu[sel]['relativePath'])
-
     if vbox:
         vdi_artifact = find_vdi_artifact(data['artifacts'])
         if vdi_artifact:
-            info()
-            download(vdi_artifact['relativePath'])
+            os.system('clear')
+            print(info)
+            download_file(vdi_artifact['relativePath'])
             return
         else:
             print('Unable to download vdi')
             sys.exit(1)
 
-    categories_menu()
-
+    show_menu()
 
 def clean(build_no):
     box_name = 'sdwan-' + str(build_no)
@@ -261,27 +267,39 @@ def clean(build_no):
 def create_vbox(build_no):
     box_name = 'sdwan-' + str(build_no)
     box_file = box_name + '.vdi'
-    bridget_intf = None
+    bridged_intf = ''
 
     clean(build_no)
     download(build_no, True)
 
     # create interfaces menu for box bridged adapter
-    interfaces = os.popen('ip -o link | grep ether | awk \'{print $2}\' | sed -r \'s/://\'').read().rstrip()
+    # interfaces = os.popen('ip -o link | grep ether | awk \'{print $2}\' | sed -r \'s/://\'').read().rstrip()
+    interfaces = os.popen('ip -o addr | grep inet | grep -v inet6 | awk \'{print $2 " -> " $4}\'').read().rstrip()
 
     menu = {}
     for idx, intf in enumerate(interfaces.split('\n'), start=1):
-        menu[str(idx)] = intf
+        menu[str(idx)] = {
+            'display': intf,
+            'name': intf.split(' ')[0]
+        }
 
-    print('Select interface for the "' + box_name + '" box bridged adapter:')
+    menu[str(len(menu) + 1)] = {
+        'display': 'or enter manually ...',
+        'name': None
+    }
+
+    print('Select interface (device) for the "' + box_name + '" box bridged adapter:')
     for key in menu.keys():
-        print(key + ': ' + menu[key])
+        print(str(key) + ') ' + menu[key]['display'])
 
-    sel = input('\nChoose: ')
+    sel = input('\nChoose (' + ','.join(menu.keys()) + '): ')
     if sel in menu.keys():
-        bridget_intf = menu[sel]
+        bridged_intf = menu[sel]['name']
     else:
-        print('Warning! The Virtual Box bridged adapter interface is missing')
+        print('Warning! Virtual Box bridged adapter device must be set and valid')
+
+    while not bridged_intf:
+        bridged_intf = input('Enter device name: ')
 
     # create the sdwan box
     create_cmd = 'vboxmanage createvm \
@@ -298,7 +316,7 @@ def create_vbox(build_no):
         --nic1 intnet \
         --nic2 bridged \
         --intnet1 "sdwan" \
-        --bridgeadapter2 "' + bridget_intf + '"'
+        --bridgeadapter2 "' + bridged_intf + '"'
 
     # add storage controller
     storage_cmd1 = 'vboxmanage storagectl "' + box_name + '" \
