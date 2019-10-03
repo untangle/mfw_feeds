@@ -13,19 +13,18 @@ for f in /etc/os-release /tmp/sysinfo/board_name /etc/config/uid ; do
     fi
 done
 
-source /etc/os-release
-source /usr/share/libubox/jshn.sh
-
-DEVICE="`cat /tmp/sysinfo/board_name | tr -d '[ \t\r\n]'`"
+VERSION="`/usr/bin/pyregex-findall.py -p 'VERSION_ID=\"v(\d{1,2}\.\d{1,2}).*' -c 0`"
+BOARD="`cat /tmp/sysinfo/board_name | tr -d '[ \t\r\n]'`"
 UID="`cat /etc/config/uid | tr -d '[ \t\r\n]'`"
+DEVICE="`/usr/bin/pyregex-findall.py -p 'URL=\".*sdwan-(.*?)-Packages.*\n' -c 0`"
 
-ARGS="version=${VERSION}&device=${BOARD}&uid=${UID}"
+ARGS="version=${VERSION}&device=${DEVICE}&uid=${UID}"
 URL="https://license.untangle.com/license.php?action=getLicenses&${ARGS}"
 OUTPUT="/tmp/licenses.json"
 SIMULATE=0
 FILE="/etc/config/licenses.json"
 
-echo "Downloading licenses... "
+echo "Downloading licenses from $URL... "
 rm -f $OUTPUT
 
 wget -t 5 --timeout=30 -q -O $OUTPUT $URL
