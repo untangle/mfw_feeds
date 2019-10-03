@@ -1,6 +1,5 @@
 #! /bin/bash
 
-set -x
 set -e
 
 # hides perl warning about locale
