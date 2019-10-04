@@ -17,10 +17,10 @@ done
 source /etc/os-release
 source /usr/share/libubox/jshn.sh
 
-VERSION="`/usr/bin/pyregex-findall.py -p 'VERSION_ID=\"v(\d{1,2}\.\d{1,2}).*' -c 0`"
+VERSION="`grep VERSION_ID /etc/os-release | sed -rn 's/.*(\d{1,2}\.\d{1,2}\.\d{1,2}).*/\1/p'`"
 BOARD="`cat /tmp/sysinfo/board_name | tr -d '[ \t\r\n]'`"
 UID="`cat /etc/config/uid | tr -d '[ \t\r\n]'`"
-DEVICE="`/usr/bin/pyregex-findall.py -p 'URL=\".*sdwan-(.*?)-Packages.*\n' -c 0`"
+DEVICE="`grep LEDE_DEVICE_MANUFACTURER_URL /etc/os-release | sed -rn 's/.*sdwan-(.*?)-Packages.*/\1/p'`"
 
 ARGS="version=${VERSION}&board=${BOARD}&uid=${UID}"
 URL="https://updates.untangle.com/api/v1/releases/${DEVICE}/latest?${ARGS}"
