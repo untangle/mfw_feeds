@@ -15,6 +15,11 @@ done
 
 VERSION="`grep VERSION_ID /etc/os-release | sed -rn 's/.*(\d{1,2}\.\d{1,2}\.\d{1,2}).*/\1/p'`"
 BOARD="`cat /tmp/sysinfo/board_name | tr -d '[ \t\r\n]'`"
+
+if [[ -f "/tmp/sysinfo/untangle_board_name"]]
+    BOARD="`cat /tmp/sysinfo/untangle_board_name | tr -d '[ \t\r\n]'`"
+fi
+
 UID="`cat /etc/config/uid | tr -d '[ \t\r\n]'`"
 DEVICE="`grep LEDE_DEVICE_MANUFACTURER_URL /etc/os-release | sed -rn 's/.*sdwan-(.*?)-Packages.*/\1/p'`"
 
