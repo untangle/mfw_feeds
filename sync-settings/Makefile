@@ -4,7 +4,7 @@ PKG_NAME:=sync-settings
 PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/untangle/$(PKG_NAME).git
+PKG_SOURCE_URL:=https://github.com/untangle/sync-settings.git
 
 include ../version.mk
 

@@ -108,8 +108,9 @@ CONFIG_VERSION_PRODUCT="MFW"
 EOF
 
 # dynamic
-openwrtVersion="$(git describe --abbrev=0 --tags --match 'v[0-9][0-9].[0-9][0-9]*' | sed -e 's/^v//')"
-mfwVersion="$(git describe --always --long --tags)"
+openwrtVersion="$(git describe --tags --abbrev=0 --match 'v[0-9][0-9].[0-9][0-9]*' | sed -e 's/^v//')"
+mfwVersion="$(git describe --always --tags --long)"
+mfwShortVersion="$(git describe --always --tags --abbrev=0)"
 echo CONFIG_VERSION_CODE="$openwrtVersion" >> .config
 echo CONFIG_VERSION_NUMBER="$mfwVersion" >> .config
 echo $mfwVersion >| $VERSION_FILE
@@ -121,7 +122,7 @@ if [ -n "$BUILD_URL" ] ; then # Jenkins build
     x86_64) DEVICE=x86-64 ;;
   esac
   packagesList="sdwan-${DEVICE}-Packages_${mfwVersion}_${SOURCE_DATE}.txt"
-  echo CONFIG_VERSION_MANUFACTURER_URL="https://downloads.untangle.com/public/sdwan/manifest/${packagesList}" >> .config
+  echo CONFIG_VERSION_MANUFACTURER_URL="https://downloads.untangle.com/public/sdwan/${mfwShortVersion}/manifest/${packagesList}" >> .config
 else
   echo CONFIG_VERSION_MANUFACTURER_URL="developer build" >> .config
 fi
