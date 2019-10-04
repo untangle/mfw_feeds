@@ -1,0 +1,58 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "definitions": {
+        "interface_stats": {
+            "type": "object",
+            "required": ["version", "interfaces"],
+            "description": "Wan interface performance stats",
+            "additionalProperties": false,
+            "properties": {
+                "version": {
+                    "type": "integer",
+                    "minimum": "1"
+                },
+                "interfaces": {
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/interface" }
+                }
+            }
+        },
+        "interface": {
+            "type": "object",
+            "required": ["interfaceId", "stats"],
+            "interfaceId": {
+                "type": "integer",
+                "description": "The interfaceId of the interface"
+            },
+            "stats": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/stat" }
+            }
+        },
+        "stat": {
+            "type": "object",
+            "required": ["name", "metrics"],
+            "type": {
+                "type": "string",
+                "description": "The metric name"
+            },
+            "unit": {
+                "type": "string",
+                "description": "The units this stats metrics are expressed in (ie. ms, %, etc)"
+            },
+            "metrics": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/metric" }
+            },
+        "metric": {
+            "name": {
+                "type": "string",
+                "description": "The name of this metric"
+            },
+            "value": {
+                "type": "integer",
+                "description": "The value of this metric"
+            }
+        }
+    }
+}

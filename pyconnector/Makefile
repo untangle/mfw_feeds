@@ -16,8 +16,8 @@ define Package/pyconnector
   CATEGORY:=Network
   SUBMENU:=Cloud
   TITLE:=PyConnector for CMD
-  URL:=https://www.github.com/untangle/pyconnector
-  DEPENDS:=+python3
+  URL:=https://github.com/untangle/pyconnector
+  DEPENDS:=+python3 +openssh-client +openssh-server
 endef
 
 define Package/pyconnector/description

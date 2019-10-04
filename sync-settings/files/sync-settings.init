@@ -5,12 +5,16 @@ START=14
 STOP=14
 
 boot() {
-	if [ ! -f /etc/config/settings.json ] ; then
-		logger -t "sync-settings" "Creating /etc/config/settings.json"
-		/usr/bin/sync-settings -c -n | logger -t "sync-settings"
-	fi
-	if [ ! -f /etc/config/defaults.json ] ; then
-	    /usr/bin/sync-settings -c -s -f /etc/config/defaults.json
+    # check if we should reset settings
+    /usr/bin/check-for-usb-reset.sh && rm /etc/config/settings.json
+
+    if [ ! -f /etc/config/settings.json ] ; then
+        logger -t "sync-settings" "Creating /etc/config/settings.json"
+        /usr/bin/sync-settings -c -n | logger -t "sync-settings"
+    fi
+
+    if [ ! -f /etc/config/defaults.json ] ; then
+        /usr/bin/sync-settings -c -s -f /etc/config/defaults.json
     fi
 
     # FIXME

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+/usr/sbin/nft "$@" 2>&1 || {
+	echo "WARNING: /usr/sbin/nft $@ failed"
+}

@@ -1,0 +1,8 @@
+CONFIG_TARGET_mvebu=y
+CONFIG_TARGET_mvebu_cortexa53=y
+CONFIG_TARGET_mvebu_cortexa53_DEVICE_globalscale_espressobin-v7-emmc=y
+CONFIG_PACKAGE_wpad-mini=y
+CONFIG_PACKAGE_kmod-mwlwifi=y
+CONFIG_PACKAGE_mwlwifi-firmware-88w8997=y
+CONFIG_PACKAGE_ath10k-firmware-qca988x=y
+CONFIG_PACKAGE_kmod-ath10k=y

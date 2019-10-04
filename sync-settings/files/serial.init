@@ -1,0 +1,20 @@
+#!/bin/sh /etc/rc.common
+
+# 11 is right after boot (10)
+START=11
+STOP=11
+
+boot() {
+	if [ ! -f /etc/config/serial ] ; then
+	    if [ -f /sys/devices/virtual/dmi/id/product_serial ] ; then
+	        cp /sys/devices/virtual/dmi/id/product_serial /etc/config/serial
+            else
+	        if [ -x "$(command -v fw_printenv)" ] ; then
+                    serial_number=$(fw_printenv serial_number | cut -d '=' -f 2)
+                    if [ "$serial_number" != "" ] ; then
+                        echo $serial_number > /etc/config/serial
+                    fi
+	        fi
+	    fi
+	fi
+}

@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Disable dropbear
+/etc/init.d/dropbear disable
+
+# Enable root login
+sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config

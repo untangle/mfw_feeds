@@ -23,7 +23,7 @@ cd openwrt
 
 Build it for your intended device and libc targets:
 ```
-docker-compose -f Dockerfile-build.yml run build (-d x86_64|wrt1900|wrt3200|omnia, -l musl|glibc)
+docker-compose -f mfw/docker-compose.build.yml run build (-d x86_64|wrt1900|wrt3200|omnia, -l musl|glibc)
 ```
 
 The OpenWRT documentation warns that building with -jN can cause
@@ -32,7 +32,7 @@ with -j1. Adding V=s increases verbosity so that you'll have output to
 look at when/if something still fails to build:
 
 ```
-docker-compose -f Dockerfile-build.yml run build (-d x86_64|wrt1900|wrt3200|omnia, -l musl|glibc) -m "-j1 V=s"
+docker-compose -f mfw/docker-compose.build.yml run build (-d x86_64|wrt1900|wrt3200|omnia, -l musl|glibc) -m "-j1 V=s"
 ```
 
 Building directly on a Stretch host:
@@ -51,7 +51,7 @@ cd openwrt
 
 Build it for your intended libc target:
 ```
-./build.sh [-d (x86_64|wrt1900|wrt3200|omnia)] [-l (musl|glibc)] [-v (<branch>|<tag>|release)]
+./mfw/build.sh [-d (x86_64|wrt1900|wrt3200|omnia)] [-l (musl|glibc)] [-v (<branch>|<tag>|release)]
 ```
 
 The OpenWRT documentation warns that building with -jN can cause
@@ -59,7 +59,7 @@ issues. If you hit a failure with -jN the first thing to do is to rerun
 with -j1. Adding V=s increases verbosity so that you'll have output to
 look at when/if something still fails to build:
 ```
-./build.sh [-d (x86_64|wrt1900|wrt3200|omnia)] [-l (musl|glibc)] [-v (<branch>|<tag>|release)] -m "-j1 V=s"
+./mfw/build.sh [-d (x86_64|wrt1900|wrt3200|omnia)] [-l (musl|glibc)] [-v (<branch>|<tag>|release)] -m "-j1 V=s"
 ```
 
 Setting up a VM
@@ -157,3 +157,14 @@ To run it in the foreground where you can see debugging output just run:
 packetd
 ```
 
+Developer info: maintaining untangleinc/mfw:x86-64 in DockerHub
+===============================================================
+
+Using a build from 2019-03-20 as an example:
+
+```
+cd build
+docker build -f Dockerfile.test.mfw --build-arg ROOTFS_TARBALL=sdwan-x86-64-generic-rootfs_v0.1.0beta1-44-g1003464fea_20190321T0728.tar.gz -t untangleinc/mfw:x86-64_20190320 .
+docker tag untangleinc/mfw:x86-64_20190320 untangleinc/mfw:x86-64 
+docker push untangleinc/mfw:x86-64 
+```
