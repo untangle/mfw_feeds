@@ -1,5 +1,5 @@
-void buildMFW(String device, String libc, String startClean, String makeOptions, String version, String buildDir) {
-  sh "docker-compose -f ${buildDir}/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${libc} -c ${startClean} -m '${makeOptions}' -v ${version}"
+void buildMFW(String device, String libc, String startClean, String makeOptions, String buildDir) {
+  sh "docker-compose -f ${buildDir}/mfw/docker-compose.build.yml -p mfw_${device} run build -d ${device} -l ${libc} -c ${startClean} -m '${makeOptions}' -v ${env.BRANCH_NAME}"
   sh "rm -fr bin/targets bin/packages tmp/version.date"
   sh "mkdir -p bin tmp"
   sh "cp -r ${buildDir}/bin/targets ${buildDir}/bin/packages bin/"
@@ -17,14 +17,13 @@ pipeline {
   agent none
 
   triggers {
-    upstream(upstreamProjects: "packetd/master, sync-settings/master, classd/master, feeds/master, admin/master",
+    upstream(upstreamProjects: "packetd/release-1.1, sync-settings/release-1.1, classd/release-1.1, feeds/release-1.1, admin/release-1.1",
              threshold: hudson.model.Result.SUCCESS)
   }
 
   parameters {
     string(name:'libc', defaultValue: 'musl', description: 'lib to link against (musl or glibc)')
     string(name:'startClean', defaultValue: '0', description: 'start clean or not (0 or 1)')
-    string(name:'version', defaultValue: 'master', description: 'version to build (master means development, release means stable; see build.sh for more details)')
     string(name:'makeOptions', defaultValue: '-j32', description: 'make options')
   }
 
@@ -47,7 +46,7 @@ pipeline {
 
             stage('Build x86_64') {
               steps {
-                buildMFW(device, libc, startClean, makeOptions, version, buildDir)
+                buildMFW(device, libc, startClean, makeOptions, buildDir)
                 stash(name:"rootfs-${device}", includes:"bin/targets/**/*generic-rootfs.tar.gz")
               }
             }
@@ -73,7 +72,7 @@ pipeline {
 
             stage('Build wrt3200') {
               steps {
-                buildMFW(device, libc, startClean, makeOptions, version, buildDir)
+                buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
             }
           }
@@ -98,7 +97,7 @@ pipeline {
 
             stage('Build omnia') {
               steps {
-                buildMFW(device, libc, startClean, makeOptions, version, buildDir)
+                buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
             }
           }
@@ -123,7 +122,7 @@ pipeline {
 
             stage('Build wrt1900') {
               steps {
-                buildMFW(device, libc, startClean, makeOptions, version, buildDir)
+                buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
             }
           }
@@ -148,7 +147,7 @@ pipeline {
 
             stage('Build wrt32x') {
               steps {
-                buildMFW(device, libc, startClean, makeOptions, version, buildDir)
+                buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
             }
           }
@@ -173,7 +172,7 @@ pipeline {
 
             stage('Build espressobin') {
               steps {
-                buildMFW(device, libc, startClean, makeOptions, version, buildDir)
+                buildMFW(device, libc, startClean, makeOptions, buildDir)
               }
             }
           }
