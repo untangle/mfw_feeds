@@ -17,7 +17,7 @@ pipeline {
   agent none
 
   triggers {
-    upstream(upstreamProjects: "packetd/release-1.1, sync-settings/release-1.1, classd/release-1.1, feeds/release-1.1, admin/release-1.1",
+    upstream(upstreamProjects: "packetd/${env.BRANCH_NAME}, sync-settings/${env.BRANCH_NAME}, classd/${env.BRANCH_NAME}, feeds/${env.BRANCH_NAME}, admin/${env.BRANCH_NAME}",
              threshold: hudson.model.Result.SUCCESS)
   }
 
