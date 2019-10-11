@@ -82,30 +82,30 @@ pipeline {
           }
         }
 
-        # stage('omnia') {
-	#   agent { label 'mfw' }
+        // stage('omnia') {
+	//   agent { label 'mfw' }
 
-        #   environment {
-        #     device = 'omnia'
-        #     buildDir = "${env.HOME}/build-mfw-${env.BRANCH_NAME}-${device}"
-        #   }
+        //   environment {
+        //     device = 'omnia'
+        //     buildDir = "${env.HOME}/build-mfw-${env.BRANCH_NAME}-${device}"
+        //   }
 
-	#   stages {
-        #     stage('Prep WS omnia') {
-        #       steps { dir(buildDir) { checkout scm } }
-        #     }
+	//   stages {
+        //     stage('Prep WS omnia') {
+        //       steps { dir(buildDir) { checkout scm } }
+        //     }
 
-        #     stage('Build omnia') {
-        #       steps {
-        #         buildMFW(device, libc, startClean, makeOptions, buildDir)
-        #       }
-        #     }
-        #   }
+        //     stage('Build omnia') {
+        //       steps {
+        //         buildMFW(device, libc, startClean, makeOptions, buildDir)
+        //       }
+        //     }
+        //   }
 
-        #   post {
-        #     success { archiveMFW(device) }
-        #   }
-        # }
+        //   post {
+        //     success { archiveMFW(device) }
+        //   }
+        // }
 
         stage('wrt1900') {
 	  agent { label 'mfw' }
