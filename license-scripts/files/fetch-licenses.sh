@@ -13,7 +13,7 @@ for f in /etc/os-release /tmp/sysinfo/board_name /etc/config/uid ; do
     fi
 done
 
-VERSION="`grep VERSION_ID /etc/os-release | sed -rn 's/.*(\d{1,2}\.\d{1,2}\.\d{1,2}).*/\1/p'`"
+VERSION="`grep VERSION_ID /etc/os-release | sed -rn 's/.*v(\d{1,2}\.\d{1,2}\.?\d{0,2}).*/\1/p'`"
 BOARD="`cat /tmp/sysinfo/board_name | tr -d '[ \t\r\n]'`"
 
 if [[ -f "/tmp/sysinfo/untangle_board_name"]] ; then
