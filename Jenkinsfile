@@ -17,7 +17,7 @@ pipeline {
   agent none
 
   triggers {
-    upstream(upstreamProjects: "packetd/release-1.1, sync-settings/release-1.1, classd/release-1.1, feeds/release-1.1, admin/release-1.1",
+    upstream(upstreamProjects: "packetd/${env.BRANCH_NAME}, sync-settings/${env.BRANCH_NAME}, classd/${env.BRANCH_NAME}, feeds/${env.BRANCH_NAME}, admin/${env.BRANCH_NAME}",
              threshold: hudson.model.Result.SUCCESS)
   }
 
@@ -82,30 +82,30 @@ pipeline {
           }
         }
 
-        stage('omnia') {
-	  agent { label 'mfw' }
+        // stage('omnia') {
+	//   agent { label 'mfw' }
 
-          environment {
-            device = 'omnia'
-            buildDir = "${env.HOME}/build-mfw-${env.BRANCH_NAME}-${device}"
-          }
+        //   environment {
+        //     device = 'omnia'
+        //     buildDir = "${env.HOME}/build-mfw-${env.BRANCH_NAME}-${device}"
+        //   }
 
-	  stages {
-            stage('Prep WS omnia') {
-              steps { dir(buildDir) { checkout scm } }
-            }
+	//   stages {
+        //     stage('Prep WS omnia') {
+        //       steps { dir(buildDir) { checkout scm } }
+        //     }
 
-            stage('Build omnia') {
-              steps {
-                buildMFW(device, libc, startClean, makeOptions, buildDir)
-              }
-            }
-          }
+        //     stage('Build omnia') {
+        //       steps {
+        //         buildMFW(device, libc, startClean, makeOptions, buildDir)
+        //       }
+        //     }
+        //   }
 
-          post {
-            success { archiveMFW(device) }
-          }
-        }
+        //   post {
+        //     success { archiveMFW(device) }
+        //   }
+        // }
 
         stage('wrt1900') {
 	  agent { label 'mfw' }
