@@ -20,7 +20,7 @@ source /usr/share/libubox/jshn.sh
 VERSION="`grep VERSION_ID /etc/os-release | sed -rn 's/.*v(\d{1,2}\.\d{1,2}\.?\d{0,2}).*/\1/p'`"
 BOARD="`cat /tmp/sysinfo/board_name | tr -d '[ \t\r\n]'`"
 
-if [[ -f "/tmp/sysinfo/untangle_board_name"]] ; then
+if [[ -f "/tmp/sysinfo/untangle_board_name" ]] ; then
     BOARD="`cat /tmp/sysinfo/untangle_board_name | tr -d '[ \t\r\n]'`"
 fi
 
