@@ -39,6 +39,9 @@ if [ $? != 0 ] ; then
 else
     echo "Saving licenses in $FILE"
     cp $OUTPUT $FILE
+
+    # rerun our qos scripts to sync license limit
+    /etc/init.d/qos restart
 fi
 
 
