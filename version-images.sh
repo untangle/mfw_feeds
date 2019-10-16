@@ -67,6 +67,11 @@ find bin/targets -iregex '.+\(gz\|img\|vdi\|vmdk\|bin\|kmod-mac80211-hwsi.+ipk\)
   cp $f ${OUTPUT_DIR}/$newName
 done
 
+find ${OUTPUT_DIR} -iname "*esxi_v*.vmdk" | while read f ; do
+  flat_b=$(basename "$f" | sed "s|esxi_v|esxi-flat_v|g")
+  sed -i "s|FLAT \".*\"|FLAT \"$flat_b\"|g" $f
+done
+
 # add a list of MFW packages, with their versions
 cp bin/packages/*/mfw/Packages ${OUTPUT_DIR}/${PACKAGES_FILE}
 
