@@ -16,7 +16,7 @@ done
 VERSION="`grep VERSION_ID /etc/os-release | sed -rn 's/.*v(\d{1,2}\.\d{1,2}\.?\d{0,2}).*/\1/p'`"
 BOARD="`cat /tmp/sysinfo/board_name | tr -d '[ \t\r\n]'`"
 
-if [[ -f "/tmp/sysinfo/untangle_board_name"]] ; then
+if [[ -f "/tmp/sysinfo/untangle_board_name" ]] ; then
     BOARD="`cat /tmp/sysinfo/untangle_board_name | tr -d '[ \t\r\n]'`"
 fi
 
@@ -39,6 +39,9 @@ if [ $? != 0 ] ; then
 else
     echo "Saving licenses in $FILE"
     cp $OUTPUT $FILE
+
+    # rerun our qos scripts to sync license limit
+    /etc/init.d/qos restart
 fi
 
 
