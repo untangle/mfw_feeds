@@ -17,6 +17,7 @@ done
 source /etc/os-release
 source /usr/share/libubox/jshn.sh
 
+FULL_VERSION="$(grep VERSION_ID /etc/os-release | cut -d '"' -f 2)"
 VERSION="`grep VERSION_ID /etc/os-release | sed -rn 's/.*v(\d{1,2}\.\d{1,2}\.?\d{0,2}).*/\1/p'`"
 BOARD="`cat /tmp/sysinfo/board_name | tr -d '[ \t\r\n]'`"
 
@@ -27,7 +28,7 @@ fi
 UID="`cat /etc/config/uid | tr -d '[ \t\r\n]'`"
 DEVICE="`grep LEDE_DEVICE_MANUFACTURER_URL /etc/os-release | sed -rn 's/.*sdwan-(.*?)-Packages.*/\1/p'`"
 
-ARGS="version=${VERSION}&board=${BOARD}&uid=${UID}"
+ARGS="version=${VERSION}&fullVersion=${FULL_VERSION}&board=${BOARD}&uid=${UID}"
 URL="https://updates.untangle.com/api/v1/releases/${DEVICE}/latest?${ARGS}"
 OUTPUT="/tmp/upgrade.json"
 SIMULATE=0
