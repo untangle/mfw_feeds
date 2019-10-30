@@ -27,6 +27,6 @@ start_service() {
 }
 
 service_triggers() {
-    procd_add_interface_trigger "interface.*.up" "WWAN0" /etc/init.d/caswell-rssi-leds start
+    procd_add_interface_trigger "interface.*.up" "LTE" /etc/init.d/caswell-rssi-leds start
 }
 
