@@ -41,10 +41,10 @@ json_add_int rsrq $rsrq
 json_add_int rsrp $rsrp
 json_add_int snr $snr
 json_add_string data_status $data_status
-json_add_int iccid $iccid
-json_add_int imsi $imsi
-json_add_int imei $imei
-json_add_int msisdn $msisdn
+json_add_string iccid $iccid
+json_add_string imsi $imsi
+json_add_string imei $imei
+json_add_string msisdn $msisdn
 json_close_object
 echo "$(json_dump)"
 
