@@ -6,10 +6,31 @@ STOP=19
 
 USE_PROCD=1
 
+device="/dev/cdc-wdm0"
+
+get_sim_info()
+{
+
+	imei=$(uqmi -s -d $device --get-imei | cut -d "\"" -f 2)
+	msisdn=$(uqmi -s -d $device --get-msisdn  | cut -d "\"" -f 2)
+	iccid=$(uqmi -s -d $device --get-iccid | cut -d "\"" -f 2)
+	imsi=$(uqmi -s -d $device --get-imsi | cut -d "\"" -f 2)
+
+	json_init
+	json_add_string iccid $iccid
+	json_add_string imsi $imsi
+	json_add_string imei $imei
+	json_add_string msisdn $msisdn
+	json_close_object
+
+	echo "$(json_dump)" > /tmp/wwan_sim_info.wwan0
+}
+
 boot() {
     grep -q -e caswell-caf-0262 -e untangle-inc-default-string /tmp/sysinfo/board_name
-    if [ $? -eq 0 ] ; then
+    if [ $? -eq 0 -a -c "$device" ] ; then
 	CASWELL_BOOT=1
+	get_sim_info
 	start "$@"
     fi
 }
