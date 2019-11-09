@@ -109,14 +109,6 @@ echo "Current version: ${VERSION}"
 echo "Newest  version: ${NEWVER}"
 echo
 
-if [ "${VERSION}" == "${NEWVER}" ] ; then
-    if [ $SIMULATE == 1 ] ; then
-        # no upgrade available
-        exit 1
-    fi
-    exit 0
-fi
-
 if [ $SIMULATE == 1 ] ; then
     echo "Upgrade available."
     # upgrade available
