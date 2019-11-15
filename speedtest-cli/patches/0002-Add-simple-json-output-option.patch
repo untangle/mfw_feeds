@@ -1,0 +1,66 @@
+From f4493148191a96b27c92e7f4bad42ae2bb12eacd Mon Sep 17 00:00:00 2001
+From: Brett Mastbergen <bmastbergen@untangle.com>
+Date: Fri, 15 Nov 2019 14:40:57 -0500
+Subject: [PATCH 2/2] Add --simple-json output option
+
+This just prints ping, download(kbps), and upload(kbps) values
+as json:
+
+{"ping":57,"download":57184,"upload":5429}
+---
+ speedtest.py | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/speedtest.py b/speedtest.py
+index a469481..c13ee2d 100755
+--- a/speedtest.py
++++ b/speedtest.py
+@@ -1731,6 +1731,9 @@ def parse_args():
+     parser.add_argument('--simple', action='store_true', default=False,
+                         help='Suppress verbose output, only show basic '
+                              'information')
++    parser.add_argument('--simple-json', action='store_true', default=False, dest='simple_json',
++                        help='Suppress verbose output, only show basic '
++                             'information in json format')
+     parser.add_argument('--csv', action='store_true', default=False,
+                         help='Suppress verbose output, only show basic '
+                              'information in CSV format. Speeds listed in '
+@@ -1851,12 +1854,12 @@ def shell():
+     if debug:
+         DEBUG = True
+ 
+-    if args.simple or args.csv or args.json:
++    if args.simple or args.simple_json or args.csv or args.json:
+         quiet = True
+     else:
+         quiet = False
+ 
+-    if args.csv or args.json:
++    if args.csv or args.json or args.simple_json:
+         machine_format = True
+     else:
+         machine_format = False
+@@ -1962,7 +1965,7 @@ def shell():
+ 
+     printer('Results:\n%r' % results.dict(), debug=True)
+ 
+-    if not args.simple and args.share:
++    if not args.simple and not args.simple_json and args.share:
+         results.share()
+ 
+     if args.simple:
+@@ -1976,6 +1979,11 @@ def shell():
+         printer(results.csv(delimiter=args.csv_delimiter))
+     elif args.json:
+         printer(results.json())
++    elif args.simple_json:
++        printer('{\"ping\":%d,\"download\":%d,\"upload\":%d}' %
++                (int(results.ping),
++                 int(results.download / 1000),
++                 int(results.upload / 1000)))
+ 
+     if args.share and not machine_format:
+         printer('Share results: %s' % results.share())
+-- 
+2.11.0
+
