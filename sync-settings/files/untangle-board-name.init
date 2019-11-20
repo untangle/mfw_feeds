@@ -28,5 +28,8 @@ boot() {
             fi
             echo $untangle_board_name > /tmp/sysinfo/untangle_board_name
             ;;
+        vmware-inc-vmware-virtual-platform)
+            echo "VMware" > /tmp/sysinfo/untangle_board_name
+            ;;
     esac
 }
