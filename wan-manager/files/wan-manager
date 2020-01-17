@@ -179,6 +179,7 @@ jump_policy()
 	echo flush set inet wan-routing $policy-table >> $TMPFILE
 	echo add rule inet wan-routing route-to-$policy set update ip saddr . ip daddr timeout 1m @$policy-table >> $TMPFILE
 	echo add rule inet wan-routing route-to-$policy set update ip daddr . ip saddr timeout 1m @$policy-table >> $TMPFILE
+	echo add rule inet wan-routing route-to-$policy jump update-rule-table >> $TMPFILE
 	echo add rule inet wan-routing route-to-$policy dict sessions ct id wan_policy long_string set $policy >> $TMPFILE
 	echo add rule inet wan-routing route-to-$policy jump mark-for-wan-$id >> $TMPFILE
 
@@ -208,6 +209,7 @@ balance_policy()
 	echo flush set inet wan-routing $policy-table >> $TMPFILE
 	echo add rule inet wan-routing route-to-$policy set update ip saddr . ip daddr timeout 1m @$policy-table >> $TMPFILE
 	echo add rule inet wan-routing route-to-$policy set update ip daddr . ip saddr timeout 1m @$policy-table >> $TMPFILE
+	echo add rule inet wan-routing route-to-$policy jump update-rule-table >> $TMPFILE
 	echo add rule inet wan-routing route-to-$policy dict sessions ct id wan_policy long_string set $policy >> $TMPFILE
 	echo add inet wan-routing route-to-$policy numgen random mod $total_weight vmap { $balance_string } >> $TMPFILE
 
