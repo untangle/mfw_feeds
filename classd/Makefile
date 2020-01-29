@@ -4,7 +4,7 @@ PKG_NAME:=classd
 PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/untangle/classd.git
+PKG_SOURCE_URL:=git@github.com:untangle/classd.git
 
 include ../version.mk
 
