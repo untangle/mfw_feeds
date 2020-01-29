@@ -50,6 +50,12 @@ done
 trap cleanup ERR INT
 CURDIR=$(dirname $(readlink -f $0))
 
+# grab github.com's ssh key, and check ssh-agent;
+# this is needed for private repositories (see MFW-877)
+mkdir -p ~/.ssh
+ssh-keyscan github.com >> ~/.ssh/known_hosts
+ssh-add -l
+
 # set MFW_VERSION, or not; this looks convoluted, but ?= in Makefiles
 # doesn't work if the variable is defined but empty
 if [[ $VERSION == "release" ]] ; then
