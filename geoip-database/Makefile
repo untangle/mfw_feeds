@@ -3,7 +3,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=geoip-database
 PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
 PKG_VERSION:=latest
-PKG_SOURCE:=GeoLite2-Country.mmdb.gz
+PKG_SOURCE:=GeoLite2-Country.tar.gz
 PKG_SOURCE_URL:=https://downloads.untangle.com/download.php?resource=geoipCountry
 PKG_HASH:=skip
 
@@ -22,7 +22,7 @@ endef
 define Build/Prepare
 	rm -rf $(PKG_BUILD_DIR)
 	mkdir -p $(PKG_BUILD_DIR)
-	gunzip -c $(DL_DIR)/$(PKG_SOURCE) > $(PKG_BUILD_DIR)/GeoLite2-Country.mmdb
+	tar -C $(PKG_BUILD_DIR) --strip=1 -xavf $(DL_DIR)/$(PKG_SOURCE)
 endef
 
 define Build/Compile
