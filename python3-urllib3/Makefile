@@ -22,7 +22,6 @@ PKG_HASH:=dbe59173209418ae49d485b87d1681aefa36252ee85884c31346debd19463232
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(BUILD_VARIANT)-urllib3-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
-include ../../packages/lang/python/python-package.mk
 include ../../packages/lang/python/python3-package.mk
 
 PKG_UNPACK:=$(HOST_TAR) -C $(PKG_BUILD_DIR) --strip-components=1 -xzf $(DL_DIR)/$(PKG_SOURCE)
