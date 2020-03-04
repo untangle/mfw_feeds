@@ -27,16 +27,12 @@ include ../../packages/lang/python/python3-package.mk
 
 PKG_UNPACK:=$(HOST_TAR) -C $(PKG_BUILD_DIR) --strip-components=1 -xzf $(DL_DIR)/$(PKG_SOURCE)
 
-define Package/python3-urllib3/Default
+define Package/python3-urllib3
   SUBMENU:=Python
   SECTION:=lang
   CATEGORY:=Languages
   TITLE:=Sanity-friendly HTTP client
   URL:=https://urllib3.readthedocs.io/
-endef
-
-define Package/python3-urllib3
-$(call Package/python-urllib3/Default)
   DEPENDS:=+PACKAGE_python3-urllib3:python3
   VARIANT:=python3
 endef
