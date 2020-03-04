@@ -17,6 +17,7 @@ define Package/sync-settings
   SUBMENU:=Python3
   TITLE:=Library for manipulating MFW system settings
   URL:=https://github.com/untangle/sync-settings
+  PKG_BUILD_DEPENDS:=python3 python3-urllib3
   DEPENDS:=+python3 +diffutils +tc +kmod-sched-core +kmod-sched-cake +kmod-ifb +kmod-sched-connmark\
 	  +uuidgen +jsonschema +kmod-nft-fib +openvpn-proto +wireguard +wan-manager +speedtest-cli\
 	  +python3-urllib3
