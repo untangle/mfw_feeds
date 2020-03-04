@@ -32,7 +32,7 @@ define Package/python3-urllib3
   CATEGORY:=Languages
   TITLE:=Sanity-friendly HTTP client
   URL:=https://urllib3.readthedocs.io/
-  DEPENDS:=+PACKAGE_python3-urllib3:python3
+  DEPENDS:=+python3
   VARIANT:=python3
 endef
 
