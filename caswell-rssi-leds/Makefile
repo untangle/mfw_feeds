@@ -25,6 +25,7 @@ endef
 define Package/caswell-rssi-leds/install
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) files/caswell-rssi-leds.init $(1)/etc/init.d/caswell-rssi-leds
+	$(INSTALL_BIN) files/disable-gnss.init $(1)/etc/init.d/disable-gnss
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) files/caswell-rssi-leds $(1)/usr/bin
 endef
