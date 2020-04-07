@@ -29,20 +29,34 @@ OUTPUT="/tmp/licenses.json"
 SIMULATE=0
 FILE="/etc/config/licenses.json"
 
-echo "Downloading licenses from $URL... "
-rm -f $OUTPUT
+if test "${BOARD#*linksys*}" != "$BOARD" || test "${BOARD#*virtualbox*}" != "$BOARD" ; then
+    cat > $FILE <<'EOF'
+{
+    "javaClass": "java.util.LinkedList",
+    "list": [
+        {
+            "seats": 1000000
+        }
+    ]
+}
+EOF
 
-wget -t 5 --timeout=30 -q -O $OUTPUT $URL
-if [ $? != 0 ] ; then
-    echo "Failed to download licenses ($?)."
-    exit 1
 else
-    echo "Saving licenses in $FILE"
-    cp $OUTPUT $FILE
+    echo "Downloading licenses from $URL... "
+    rm -f $OUTPUT
 
-    # rerun our qos scripts to sync license limit
-    /etc/init.d/qos restart
+    wget -t 5 --timeout=30 -q -O $OUTPUT $URL
+    if [ $? != 0 ] ; then
+        echo "Failed to download licenses ($?)."
+        exit 1
+    else
+        echo "Saving licenses in $FILE"
+        cp $OUTPUT $FILE
+    fi
 fi
+
+# rerun our qos scripts to sync license limit
+/etc/init.d/qos restart
 
 
 
