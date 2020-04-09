@@ -11,7 +11,7 @@ clone() {
   repo=$1
   url="${GIT_BASE_URL}$repo"
 
-  git clone -b master $url
+  git clone --depth 2 -b master $url
 }
 
 branch() {
@@ -49,8 +49,6 @@ done
 pushd mfw_build
 perl -i -pe 's/(?<=mfw_feeds.git).*/;'$BRANCH_NAME'/' feeds.conf.mfw
 git commit -a -m "Point to branch $BRANCH_NAME for mfw_feeds"
-perl -i -pe 's|/master|/'$BRANCH_NAME'|g if m/upstreamProjects:/' Jenkinsfile
-git commit -a -m "Update jenkins triggers to branch $BRANCH_NAME"
 popd
 
 # udpate subtree in openwrt
