@@ -272,7 +272,7 @@ best_of()
 		wans=""
 		policy_wans=""
 		for d in $policy_dir/* ; do
-			id=$(echo $d | cut -d '-' -f 3)
+			id=$(echo ${d##*/} | cut -d '-' -f 2)
 			policy_wans="$wans $id"
 			if wan_is_up $policy $id ; then
 				wans="$wans $id"
@@ -351,7 +351,7 @@ balance()
 		total_weight=0
 		new_balance_string=""
 		for d in $policy_dir/* ; do
-			id=$(echo $d | cut -d '-' -f 3)
+			id=$(echo ${d##*/} | cut -d '-' -f 2)
 			policy_wans="$wans $id"
 			if wan_is_up $policy $id ; then
 				wans="$wans $id"
