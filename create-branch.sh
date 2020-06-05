@@ -9,9 +9,10 @@ REPOSITORIES="classd mfw_admin mfw_build mfw_feeds nft_dict packetd sync-setting
 ## functions
 clone() {
   repo=$1
+  from=$2
   url="${GIT_BASE_URL}$repo"
 
-  git clone --depth 2 -b master $url
+  git clone --depth 2 -b $from $url
 }
 
 branch() {
@@ -25,13 +26,14 @@ branch() {
 
 ## main
 if [ $# -lt 2 ] ; then
-  echo "Usage: $0 <branch-name> <new-version> [simulate]"
+  echo "Usage: $0 <branch-name> <from> <new-version> [simulate]"
 fi
 
 # CLI args
 BRANCH_NAME=$1
-NEW_VERSION=$2
-if [ -n "$3" ] ; then
+FROM=$2
+NEW_VERSION=$3
+if [ -n "$4" ] ; then
   SIMULATE="-n"
 fi
 
@@ -41,7 +43,7 @@ pushd $tmpDir
 
 # clone each repository
 for repo in $REPOSITORIES ; do
-  clone $repo
+  clone $repo $FROM
 done
 
 # in mfw_build, point to release branch for the feeds, and also update
@@ -54,7 +56,7 @@ popd
 # udpate subtree in openwrt
 pushd openwrt
 git checkout -b $BRANCH_NAME
-git subtree pull --prefix=mfw -m 'Update mfw_build subtree as part of release branching' $tmpDir/mfw_build master
+git subtree pull --prefix=mfw -m 'Update mfw_build subtree as part of release branching' $tmpDir/mfw_build $FROM
 popd
 
 # branch each repository
@@ -63,11 +65,13 @@ for repo in $REPOSITORIES ; do
 done
 
 # update version in master
-pushd openwrt
-git checkout master
-git tag -a -m "Release branching: new version is ${NEW_VERSION}" $NEW_VERSION
-git push --tags $SIMULATE
-popd
+if [[ -n "$NEW_VERSION" ]] ; then
+  pushd openwrt
+  git checkout origin/master
+  git tag -a -m "Release branching: new version is ${NEW_VERSION}" $NEW_VERSION
+  git push --tags $SIMULATE
+  popd
+fi
 
 # exit tmpDir and remove i t
 popd
