@@ -7,4 +7,4 @@
 #src-git oldpackages http://git.openwrt.org/packages.git
 #src-link custom /usr/src/openwrt/custom-feed
 src-git packages https://github.com/openwrt/packages.git;openwrt-18.06
-src-git mfw https://github.com/untangle/mfw_feeds.git;release-1.2
+src-git mfw https://github.com/untangle/mfw_feeds.git;release-1.3
