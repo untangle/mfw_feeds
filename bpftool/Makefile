@@ -19,7 +19,8 @@ define Package/bpftool
   CATEGORY:=Development
   TITLE:=Linux bpf inspection tool
   VERSION:=$(LINUX_VERSION)-$(PKG_RELEASe)
-  DEPENDS:=+libelf1 +libopcodes +libbfd +musl-fts +libpthread
+  DEPENDS:=+libelf1 +libopcodes +libbfd \
+	   +USE_MUSL:musl-fts +USE_MUSL:libpthread
   KCONFIG:=CONFIG_BPF=y CONFIG_BPF_SYSCALL=y \
 	   CONFIG_BPF_JIT=y CONFIG_HAVE_EBPF_JIT=y
   URL:=http://www.kernel.org 
@@ -28,7 +29,6 @@ endef
 define Package/bpftool/description
 	Linux bpf inspection tool
 endef
-
 
 define Build/Prepare
 	$(CP) $(LINUX_DIR)/tools/bpf/* $(PKG_BUILD_DIR)/
@@ -43,7 +43,6 @@ MAKE_FLAGS = \
 	$(if $(findstring c,$(OPENWRT_VERBOSE)),V=1,V='') \
 	WERROR=0 \
 	prefix=/usr
-
 
 define Build/Compile
 	+$(MAKE_FLAGS) $(MAKE) $(PKG_JOBS) \
