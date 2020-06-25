@@ -72,8 +72,10 @@ proto_openvpn_setup() {
 	[ -n "$wanif" ] && {
 		local ipaddr
 		if ! network_get_ipaddr ipaddr "$wanif"; then
-			proto_notify_error "$cfg" "NO_WAN_LINK"
-			exit
+			if ! network_get_ipaddr6 ipaddr "$wanif"; then
+				proto_notify_error "$cfg" "NO_WAN_LINK"
+				exit
+			fi
 		fi
 		append opts "--bind --local $ipaddr"
 	}
