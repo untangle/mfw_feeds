@@ -148,11 +148,16 @@ disable_policy()
 
 	for wan in $wans ; do
 		echo flush set ip wan-routing wan-$wan-table >> $TMPFILE
+		echo flush set ip6 wan-routing wan-$wan-table >> $TMPFILE
 	done
 
 	echo flush chain ip wan-routing route-to-$policy >> $TMPFILE
 	echo flush set ip wan-routing $policy-table >> $TMPFILE
 	echo add rule ip wan-routing route-to-$policy return comment \"policy disabled\" >> $TMPFILE
+
+	echo flush chain ip6 wan-routing route-to-$policy >> $TMPFILE
+	echo flush set ip6 wan-routing $policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy return comment \"policy disabled\" >> $TMPFILE
 
 	nft -f $TMPFILE
 	retval=$?
@@ -173,6 +178,7 @@ jump_policy()
 
 	for wan in $wans ; do
 		echo flush set ip wan-routing wan-$wan-table >> $TMPFILE
+		echo flush set ip6 wan-routing wan-$wan-table >> $TMPFILE
 	done
 
 	echo flush chain ip wan-routing route-to-$policy >> $TMPFILE
@@ -182,6 +188,14 @@ jump_policy()
 	echo add rule ip wan-routing route-to-$policy jump update-rule-table >> $TMPFILE
 	echo add rule ip wan-routing route-to-$policy dict sessions ct id wan_policy long_string set $policy >> $TMPFILE
 	echo add rule ip wan-routing route-to-$policy jump mark-for-wan-$id >> $TMPFILE
+
+	echo flush chain ip6 wan-routing route-to-$policy >> $TMPFILE
+	echo flush set ip6 wan-routing $policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy set update ip6 saddr . ip6 daddr timeout 1m @$policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy set update ip6 daddr . ip6 saddr timeout 1m @$policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy jump update-rule-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy dict sessions ct id wan_policy long_string set $policy >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy jump mark-for-wan-$id >> $TMPFILE
 
 	nft -f $TMPFILE
 	retval=$?
@@ -203,6 +217,7 @@ balance_policy()
 
 	for wan in $wans ; do
 		echo flush set ip wan-routing wan-$wan-table >> $TMPFILE
+		echo flush set ip6 wan-routing wan-$wan-table >> $TMPFILE
 	done
 
 	echo flush chain ip wan-routing route-to-$policy >> $TMPFILE
@@ -212,6 +227,14 @@ balance_policy()
 	echo add rule ip wan-routing route-to-$policy jump update-rule-table >> $TMPFILE
 	echo add rule ip wan-routing route-to-$policy dict sessions ct id wan_policy long_string set $policy >> $TMPFILE
 	echo add ip wan-routing route-to-$policy numgen random mod $total_weight vmap { $balance_string } >> $TMPFILE
+
+	echo flush chain ip6 wan-routing route-to-$policy >> $TMPFILE
+	echo flush set ip6 wan-routing $policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy set update ip6 saddr . ip6 daddr timeout 1m @$policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy set update ip6 daddr . ip6 saddr timeout 1m @$policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy jump update-rule-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy dict sessions ct id wan_policy long_string set $policy >> $TMPFILE
+	echo add ip6 wan-routing route-to-$policy numgen random mod $total_weight vmap { $balance_string } >> $TMPFILE
 
 	nft -f $TMPFILE
 	retval=$?
