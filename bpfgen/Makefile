@@ -29,8 +29,11 @@ define Package/bpfgen/description
 endef
 
 define Package/bpfgen/install
-	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_DIR) $(1)/usr/bin $(1)/usr/bin/tests
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/bpfgen $(1)/usr/bin/bpfgen
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/test/test_bpfgen $(1)/usr/bin/test_bpfgen
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/test/tests/test_1 $(1)/usr/bin/tests/test_1
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/test/tests/test_2 $(1)/usr/bin/tests/test_2
 endef
 
 $(eval $(call BuildPackage,bpfgen))
