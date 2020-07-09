@@ -15,7 +15,7 @@ disk.
 Please note that the classd component is not free software, so in order
 to build MFW you'll need to:
 
-1. fork [mfw_feeds](https://github.com//untangle/mfw_feeds)]
+1. fork [mfw_feeds](https://github.com//untangle/mfw_feeds)
 2. create a personalized branch in that fork, where you'll set
    `CONFIG_PACKAGE_classd=n` in `configs/common/packages`.
 3. point your MFW-patched OpenWRT clone to that branch (more
