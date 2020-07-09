@@ -35,6 +35,7 @@ if test "${BOARD#*linksys*}" != "$BOARD" || test "${BOARD#*virtualbox*}" != "$BO
     "javaClass": "java.util.LinkedList",
     "list": [
         {
+            "name": "untangle-node-throughput",
             "seats": 1000000
         }
     ]
