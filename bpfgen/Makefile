@@ -29,11 +29,14 @@ define Package/bpfgen/description
 endef
 
 define Package/bpfgen/install
-	$(INSTALL_DIR) $(1)/usr/bin $(1)/usr/bin/tests
+	$(INSTALL_DIR) $(1)/usr/bin $(1)/usr/bin/tests $(1)/usr/bin/tests/tests_bpfgen $(1)/usr/bin/tests/tests_expected_bpf_output
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/bpfgen $(1)/usr/bin/bpfgen
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/test/test_bpfgen $(1)/usr/bin/test_bpfgen
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/test/tests/test_1 $(1)/usr/bin/tests/test_1
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/test/tests/test_2 $(1)/usr/bin/tests/test_2
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/test/tests_bpfgen/test_1.json $(1)/usr/bin/tests/tests_bpfgen/test_1.json
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/test/tests_bpfgen/test_2.json $(1)/usr/bin/tests/tests_bpfgen/test_2.json
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/test/tests_expected_bpf_output/test_0 $(1)/usr/bin/tests/tests_expected_bpf_output/test_0
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/test/tests_expected_bpf_output/test_1 $(1)/usr/bin/tests/tests_expected_bpf_output/test_1
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/test/tests_expected_bpf_output/test_2 $(1)/usr/bin/tests/tests_expected_bpf_output/test_2
 endef
 
 $(eval $(call BuildPackage,bpfgen))
