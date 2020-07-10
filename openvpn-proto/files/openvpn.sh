@@ -76,7 +76,7 @@ proto_openvpn_setup() {
 		network_get_ipaddr ipaddr "$wanif"
 		network_get_ipaddr6 ip6addr "$wanif6"
 
-		if [ -z "$ipaddr"] && [ -z "$ip6addr" ]; then
+		if [ -z "$ipaddr" ] && [ -z "$ip6addr" ]; then
 			proto_notify_error "$cfg" "NO_WAN_LINK"
 			exit
 		fi
@@ -85,7 +85,11 @@ proto_openvpn_setup() {
 			append opts "--bind --local $ipaddr"
 		}
 
-		[ -n "$ip6addr" ] && {
+		# Currently we are unable to bind to interfaces
+		# on both an IPv4 and IPv6 address. 
+		# This should be resolved in OpenVPN versions (>2.5):
+		# https://community.openvpn.net/openvpn/ticket/556?__cf_chl_jschl_tk__=ab3c77c30fe2d267e1c2bd>                
+		[ -z "$ipaddr" ] && [ -n "$ip6addr" ] && {
 			append opts "--bind --local $ip6addr"
 		}
 	}
