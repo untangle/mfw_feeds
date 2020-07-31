@@ -1,0 +1,57 @@
+#!/bin/sh
+
+. /lib/functions/network.sh
+. /usr/share/libubox/jshn.sh
+
+# get_rt_tables pulls from the rt_tables file and looks for tables we need to create the routes for
+# (can we do this from config or ubus?)
+get_rt_tables()
+{
+	local ret=`awk '(!/#/) && (/wan|main/) {print $2}' /etc/iproute2/rt_tables`
+	echo $ret
+}
+
+# get_missing_routes will parse neigh and static IP6 settings to try and find missing individual routes for the wan routing tables
+get_missing_routes()
+{
+	# Call ip -6 neigh to determine ip6 local neighbors 
+	# that should be in the wan.X routing tables
+	# 	- that are not link local addresses
+	#	- that are failed or incomplete
+	#	- that are not fe80 addresses
+	# Also may need pull any static IPv6 addresses in 
+	# the settings (Do static addresses show up in neigh already?)
+	local ret=`ip -6 neigh show | awk '(!/fe80/) && (/INCOMPLETE|FAILED/) {print $1}'`
+	echo $ret
+}
+
+
+while [ 1 ] ; do 
+		
+	needroutes=$(get_missing_routes)
+
+	[ -n "$needroutes" ] && {
+		echo Incorrect or failed routes found: $needroutes
+		echo Details: $needroutes
+
+		currentroutes=$(get_rt_tables)
+		echo Found these route tables: $currentroutes
+
+		for i in $needroutes
+		do
+			# Add the route to local and WAN tables (need to get LAN interfaces too)
+			#ip -6 route add 2602:61:766d:3300:f8ff:ebdd:94ca:d1 dev eth0 table wan.2
+			#ip -6 route add 2602:61:766d:3300:f8ff:ebdd:94ca:d1 dev eth0 table wan.4
+			for j in $currentroutes
+			do 
+				echo Creating routing entry for $i in table $j
+				ip -6 route add $i dev eth0 table $j
+			done
+
+			# Flush neigh entries for this address so new routes get picked up
+			echo Removing entry $i from neighbor list
+			ip -6 neigh flush $i
+
+		done
+	} || sleep 1
+done
