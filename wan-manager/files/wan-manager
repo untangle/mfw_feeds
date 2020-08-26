@@ -3,6 +3,17 @@
 . /lib/functions/network.sh
 . /usr/share/libubox/jshn.sh
 
+check_for_table()
+{
+	ipCheck=$1
+	tableCheck=$2
+	output=`nft list table $ipCheck $tableCheck`
+	retval=$?
+	if [ $retval -ne 0 ]; then
+		exit 1
+	fi
+}
+
 handle_term()
 {
 	for i in `pgrep -P $$ `
@@ -626,6 +637,9 @@ test()
 		done
 	done
 }
+
+check_for_table ip wan-routing
+check_for_table ip6 wan-routing
 
 trap 'handle_term' TERM INT
 rm -rf /tmp/wan_status/*
