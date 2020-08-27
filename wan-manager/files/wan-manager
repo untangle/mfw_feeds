@@ -10,6 +10,7 @@ check_for_table()
 	output=`nft list table $ipCheck $tableCheck`
 	retval=$?
 	if [ $retval -ne 0 ]; then
+		echo "NFT does not have a required table for wan-manager"
 		exit 1
 	fi
 }
