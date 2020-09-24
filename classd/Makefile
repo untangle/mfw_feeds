@@ -28,7 +28,7 @@ endef
 define Package/classd/install
 	$(INSTALL_DIR) $(1)/usr/bin $(1)/usr/lib $(1)/usr/share/untangle-classd
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/classd $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/lib/libnavl.so* $(1)/usr/lib/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libnavl.so* $(1)/usr/lib/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/share/untangle-classd/protolist.csv $(1)/usr/share/untangle-classd/
 endef
 
