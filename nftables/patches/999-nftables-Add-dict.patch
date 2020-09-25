@@ -30,9 +30,9 @@ index a74ffbf..999b13f 100644
  			fib.h		\
  			hash.h		\
 +			dict.h		\
+ 			json.h		\
  			mini-gmp.h	\
  			gmputil.h	\
- 			iface.h		\
 diff --git a/include/datatype.h b/include/datatype.h
 index e9f6079..f51b2a3 100644
 --- a/include/datatype.h
@@ -44,9 +44,9 @@ index e9f6079..f51b2a3 100644
 +	TYPE_INT32,
 +	TYPE_INT64,
 +	TYPE_BOOL,
+ 	TYPE_IFNAME,
  	__TYPE_MAX
  };
- #define TYPE_MAX		(__TYPE_MAX - 1)
 @@ -221,6 +224,9 @@ extern const struct datatype invalid_type;
  extern const struct datatype verdict_type;
  extern const struct datatype nfproto_type;
@@ -93,11 +93,11 @@ index 8f9da1b..b6e8574 100644
  
  enum ops {
 @@ -189,6 +193,7 @@ enum expr_flags {
- #include <meta.h>
  #include <rt.h>
  #include <hash.h>
 +#include <dict.h>
  #include <ct.h>
+ #include <socket.h>
  
  /**
 @@ -324,6 +329,19 @@ struct expr {
@@ -145,25 +145,25 @@ index 27c7356..baf98fe 100644
   * enum stmt_types - statement types
   *
 @@ -238,6 +251,7 @@ extern struct stmt *xt_stmt_alloc(const struct location *loc);
-  * @STMT_OBJREF:	stateful object reference statement
-  * @STMT_EXTHDR:	extension header statement
   * @STMT_FLOW_OFFLOAD:	flow offload statement
+  * @STMT_CONNLIMIT:	connection limit statement
+  * @STMT_MAP:		map statement
 + * @STMT_DICT:		dict statement
   */
  enum stmt_types {
  	STMT_INVALID,
 @@ -264,6 +278,7 @@ enum stmt_types {
- 	STMT_OBJREF,
- 	STMT_EXTHDR,
  	STMT_FLOW_OFFLOAD,
+ 	STMT_CONNLIMIT,
+ 	STMT_MAP,
 +	STMT_DICT,
  };
  
  /**
 @@ -325,6 +340,7 @@ struct stmt {
- 		struct xt_stmt		xt;
  		struct objref_stmt	objref;
  		struct flow_stmt	flow;
+ 		struct map_stmt		map;
 +		struct dict_stmt	dict;
  	};
  };
@@ -191,9 +191,9 @@ index 93726ca..1761a85 100644
 +	[TYPE_INT32]		= &int_type,
 +	[TYPE_INT64]		= &int64_type,
 +	[TYPE_BOOL]		= &bool_type,
+ 	[TYPE_IFNAME]		= &ifname_type,
  };
  
- const struct datatype *datatype_lookup(enum datatypes type)
 @@ -317,6 +320,91 @@ const struct datatype bitmask_type = {
  	.basetype	= &integer_type,
  };
@@ -522,9 +522,9 @@ index 571368b..3838430 100644
  					     struct stmt *stmt,
  					     struct expr **payload)
 @@ -2809,6 +2850,8 @@ int stmt_evaluate(struct eval_ctx *ctx, struct stmt *stmt)
- 		return stmt_evaluate_set(ctx, stmt);
- 	case STMT_OBJREF:
  		return stmt_evaluate_objref(ctx, stmt);
+ 	case STMT_MAP:
+ 		return stmt_evaluate_map(ctx, stmt);
 +	case STMT_DICT:
 +		return stmt_evaluate_dict(ctx, stmt);
  	default:
@@ -682,9 +682,9 @@ index e6ee007..60bea8c 100644
  	{ .name = "notrack",	.parse = netlink_parse_notrack },
  	{ .name = "masq",	.parse = netlink_parse_masq },
 @@ -1856,11 +1989,15 @@ static void expr_postprocess(struct rule_pp_ctx *ctx, struct expr **exprp)
- 	case EXPR_VERDICT:
  	case EXPR_NUMGEN:
  	case EXPR_FIB:
+ 	case EXPR_SOCKET:
 +	case EXPR_CTID:
  		break;
  	case EXPR_HASH:
@@ -773,9 +773,9 @@ index a6eb3aa..033bf8c 100644
  	nftnl_expr_set_u32(nle, NFTNL_EXPR_CMP_OP,
  			   netlink_gen_cmp_op(expr->op));
 @@ -692,6 +736,10 @@ static void netlink_gen_expr(struct netlink_linearize_ctx *ctx,
- 		return netlink_gen_hash(ctx, expr, dreg);
- 	case EXPR_FIB:
  		return netlink_gen_fib(ctx, expr, dreg);
+ 	case EXPR_SOCKET:
+ 		return netlink_gen_socket(ctx, expr, dreg);
 +	case EXPR_DICT:
 +		return netlink_gen_dict(ctx, expr, dreg);
 +	case EXPR_CTID:
@@ -838,9 +838,9 @@ index a6eb3aa..033bf8c 100644
  				 const struct stmt *stmt)
  {
 @@ -1315,6 +1410,8 @@ static void netlink_gen_stmt(struct netlink_linearize_ctx *ctx,
- 		return netlink_gen_flow_offload_stmt(ctx, stmt);
- 	case STMT_OBJREF:
  		return netlink_gen_objref_stmt(ctx, stmt);
+ 	case STMT_MAP:
+ 		return netlink_gen_map_stmt(ctx, stmt);
 +	case STMT_DICT:
 +		return netlink_gen_dict_stmt(ctx, stmt);
  	default:
@@ -888,7 +888,7 @@ index 0be8a11..52ad842 100644
  %type <val>			time_spec quota_used
  
 @@ -571,6 +574,8 @@ int nft_lex(void *, void *, void *);
- %type <val>			set_stmt_op
+ %destructor { stmt_free($$); }	map_stmt
  %type <stmt>			meter_stmt meter_stmt_alloc flow_stmt_legacy_alloc
  %destructor { stmt_free($$); }	meter_stmt meter_stmt_alloc flow_stmt_legacy_alloc
 +%type <stmt>			dict_stmt
@@ -921,9 +921,9 @@ index 0be8a11..52ad842 100644
  			{
  				struct error_record *erec;
 @@ -1951,6 +1962,7 @@ stmt			:	verdict_stmt
- 			|	dup_stmt
  			|	fwd_stmt
  			|	set_stmt
+ 			|	map_stmt
 +			|	dict_stmt
  			;
  

@@ -785,9 +785,9 @@ index 041bd35..719ff5b 100644
 --- a/src/expr_ops.c
 +++ b/src/expr_ops.c
 @@ -34,6 +34,9 @@ extern struct expr_ops expr_ops_dynset;
- extern struct expr_ops expr_ops_hash;
  extern struct expr_ops expr_ops_fib;
  extern struct expr_ops expr_ops_flow;
+ extern struct expr_ops expr_ops_socket;
 +extern struct expr_ops expr_ops_dict;
 +extern struct expr_ops expr_ops_ctid;
 +extern struct expr_ops expr_ops_scmp;
@@ -795,9 +795,9 @@ index 041bd35..719ff5b 100644
  static struct expr_ops expr_ops_notrack = {
  	.name	= "notrack",
 @@ -71,6 +74,9 @@ static struct expr_ops *expr_ops[] = {
- 	&expr_ops_fib,
  	&expr_ops_objref,
  	&expr_ops_flow,
+ 	&expr_ops_socket,
 +	&expr_ops_dict,
 +	&expr_ops_ctid,
 +	&expr_ops_scmp,
