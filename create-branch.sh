@@ -19,7 +19,7 @@ clone() {
   from=$2
   url="${GIT_BASE_URL}$repo"
 
-  git clone --depth 2 -b $from $url
+  git clone --depth 10 -b $from $url
 }
 
 branch() {
