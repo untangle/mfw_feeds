@@ -7,12 +7,19 @@ GIT_BASE_URL="git@github.com:untangle/"
 REPOSITORIES="bpfgen classd mfw_admin mfw_build mfw_feeds nft_dict packetd sync-settings openwrt"
 
 ## functions
+help() {
+  echo "$0 <new_branch> <from_branch> <new_version> [simulate]"
+  echo "for instance:"
+  echo "  '$0 release-3.0 master 3.1' creates a 3.0 branch from master, and sets master to be 3.1"
+  echo "  '$0 release-4.1 release-4.0 ""' creates a 4.1 branch from release-4.0, without changing the version in release-4.0"
+}
+
 clone() {
   repo=$1
   from=$2
   url="${GIT_BASE_URL}$repo"
 
-  git clone --depth 2 -b $from $url
+  git clone --depth 10 -b $from $url
 }
 
 branch() {
@@ -25,11 +32,13 @@ branch() {
 }
 
 ## main
-if [ $# -lt 2 ] ; then
-  echo "Usage: $0 <branch-name> <from> <new-version> [simulate]"
-fi
 
 # CLI args
+if [ $# -lt 3 ] || [ $# -gt 4 ] ; then
+  help
+  exit 1
+fi
+
 BRANCH_NAME=$1
 FROM=$2
 NEW_VERSION=$3

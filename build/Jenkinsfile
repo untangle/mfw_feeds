@@ -19,7 +19,7 @@ pipeline {
   agent none
 
   triggers {
-    upstream(upstreamProjects: "packetd/${env.BRANCH_NAME}, sync-settings/${env.BRANCH_NAME}, classd/${env.BRANCH_NAME}, feeds/${env.BRANCH_NAME}, admin/${env.BRANCH_NAME}",
+    upstream(upstreamProjects: "packetd/${env.BRANCH_NAME}, sync-settings/${env.BRANCH_NAME}, classd/${env.BRANCH_NAME}, feeds/${env.BRANCH_NAME}, admin/${env.BRANCH_NAME}, bpfgen/${env.BRANCH_NAME}",
              threshold: hudson.model.Result.SUCCESS)
   }
 
