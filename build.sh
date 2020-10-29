@@ -93,12 +93,6 @@ if [ -z "$NO_MFW_FEEDS" ]; then
   rm -fr {.,package}/feeds/untangle*
   ./scripts/feeds update -a
   ./scripts/feeds install -a -p packages
-  if [ -d ./feeds/mfw/golang ] ; then
-    # prioritize golang from mfw over official OpenWrt packages
-    for pkg in golang golang-doc golang-src ; do
-      ./scripts/feeds uninstall $pkg
-    done
-  fi
   ./scripts/feeds install -a -f -p mfw
 
   # create config file for MFW
