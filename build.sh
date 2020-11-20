@@ -14,6 +14,7 @@ usage() {
   echo "  -d <device>               : x86_64, omnia, wrt3200, wrt1900, wrt32x, espressobin (defaults to x86_64)"
   echo "  -l <libc>                 : musl, glibc (defaults to musl)"
   echo "  -m <make options>         : pass those to OpenWRT's make \"as is\" (default is -j32)"
+  echo "  -u                        : 'upstream' build, with no MFW feeds"
   echo "  -c true|false             : start clean or not (default is false, meaning \"do not start clean\""
   echo "  -v release|<branch>|<tag> : version to build from (defaults to master)"
   echo "                              - 'release' is a special keyword meaning 'most recent tag from each"
@@ -35,13 +36,15 @@ DEVICE="x86_64"
 LIBC="musl"
 VERSION="master"
 MAKE_OPTIONS="-j32"
-while getopts "hc:d:l:v:m:" opt ; do
+NO_MFW_FEEDS=""
+while getopts "uhc:d:l:v:m:" opt ; do
   case "$opt" in
     c) START_CLEAN="$OPTARG" ;;
     d) DEVICE="$OPTARG" ;;
     l) LIBC="$OPTARG" ;;
     v) VERSION="$OPTARG" ;;
     m) MAKE_OPTIONS="$OPTARG" ;;
+    u) NO_MFW_FEEDS=1 ;;
     h) usage ; exit 0 ;;
   esac
 done
@@ -82,23 +85,21 @@ SOURCE_DATE=$(date -d @$SOURCE_DATE_EPOCH +%Y%m%dT%H%M)
 mkdir -p tmp
 echo $SOURCE_DATE >| tmp/${VERSION_DATE_FILE}
 
-# add MFW feed definitions
-cp ${CURDIR}/feeds.conf.mfw feeds.conf
+if [ -z "$NO_MFW_FEEDS" ]; then
+  # add MFW feed definitions
+  cp ${CURDIR}/feeds.conf.mfw feeds.conf
 
-# install feeds
-rm -fr {.,package}/feeds/untangle*
-./scripts/feeds update -a
-./scripts/feeds install -a -p packages
-if [ -d ./feeds/mfw/golang ] ; then
-  # prioritize golang from mfw over official OpenWrt packages
-  for pkg in golang golang-doc golang-src ; do
-    ./scripts/feeds uninstall $pkg
-  done
+  # install feeds
+  rm -fr {.,package}/feeds/untangle*
+  ./scripts/feeds update -a
+  ./scripts/feeds install -a -p packages
+  ./scripts/feeds install -a -f -p mfw
+
+  # create config file for MFW
+  ./feeds/mfw/configs/generate.sh -d $DEVICE -l $LIBC >| .config
 fi
-./scripts/feeds install -a -f -p mfw
 
 # config
-./feeds/mfw/configs/generate.sh -d $DEVICE -l $LIBC >| .config
 make defconfig
 
 ## versioning
