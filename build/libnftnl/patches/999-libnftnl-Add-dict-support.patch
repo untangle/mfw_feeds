@@ -1,0 +1,656 @@
+From 7f1578063dccdde47af261c8938af09b8845c29a Mon Sep 17 00:00:00 2001
+From: Brett Mastbergen <bmastbergen@untangle.com>
+Date: Thu, 17 May 2018 15:41:18 -0400
+Subject: [PATCH] libnftnl: Add dict support (w/ ct id)
+
+---
+ include/libnftnl/expr.h             |  17 ++
+ include/linux/netfilter/nf_tables.h |  25 +++
+ src/Makefile.am                     |   2 +
+ src/expr/cmp.c                      |  11 ++
+ src/expr/ctid.c                     | 143 ++++++++++++++
+ src/expr/dict.c                     | 361 ++++++++++++++++++++++++++++++++++++
+ src/expr_ops.c                      |   6 +
+ 7 files changed, 565 insertions(+)
+ create mode 100644 src/expr/ctid.c
+ create mode 100644 src/expr/dict.c
+
+diff --git a/include/libnftnl/expr.h b/include/libnftnl/expr.h
+index 3e0f5b0..a72f487 100644
+--- a/include/libnftnl/expr.h
++++ b/include/libnftnl/expr.h
+@@ -212,6 +212,23 @@ enum {
+ };
+ 
+ enum {
++	NFTNL_EXPR_DICT_SREG	= NFTNL_EXPR_BASE,
++	NFTNL_EXPR_DICT_DREG,
++	NFTNL_EXPR_DICT_TYPE,
++	NFTNL_EXPR_DICT_TABLE,
++	NFTNL_EXPR_DICT_FIELD,
++	NFTNL_EXPR_DICT_VALUE,
++	NFTNL_EXPR_DICT_LEN,
++	NFTNL_EXPR_DICT_SIZE,
++	NFTNL_EXPR_DICT_SET,
++	NFTNL_EXPR_DICT_FLUSH,
++};
++
++enum {
++	NFTNL_EXPR_CTID_DREG	= NFTNL_EXPR_BASE,
++};
++
++enum {
+ 	NFTNL_EXPR_QUEUE_NUM	= NFTNL_EXPR_BASE,
+ 	NFTNL_EXPR_QUEUE_TOTAL,
+ 	NFTNL_EXPR_QUEUE_FLAGS,
+diff --git a/include/linux/netfilter/nf_tables.h b/include/linux/netfilter/nf_tables.h
+index 03fd1b7..2eb1e12 100644
+--- a/include/linux/netfilter/nf_tables.h
++++ b/include/linux/netfilter/nf_tables.h
+@@ -1700,6 +1700,31 @@ enum nft_ng_types {
+ };
+ #define NFT_NG_MAX	(__NFT_NG_MAX - 1)
+ 
++enum nft_dict_attributes {
++	NFTA_DICT_UNSPEC,
++	NFTA_DICT_SREG,
++	NFTA_DICT_DREG,
++	NFTA_DICT_TYPE,
++	NFTA_DICT_TABLE,
++	NFTA_DICT_FIELD,
++	NFTA_DICT_VALUE,
++	NFTA_DICT_LEN,
++	NFTA_DICT_SIZE,
++	NFTA_DICT_SET,
++	NFTA_DICT_FLUSH,
++	__NFTA_DICT_MAX,
++};
++
++#define NFTA_DICT_MAX (__NFTA_DICT_MAX - 1)
++
++enum nft_ctid_attributes {
++	NFTA_CTID_UNSPEC,
++	NFTA_CTID_DREG,
++	__NFTA_CTID_MAX,
++};
++
++#define NFTA_CTID_MAX (__NFTA_CTID_MAX - 1)
++
+ enum nft_tunnel_key_ip_attributes {
+ 	NFTA_TUNNEL_KEY_IP_UNSPEC,
+ 	NFTA_TUNNEL_KEY_IP_SRC,
+diff --git a/src/Makefile.am b/src/Makefile.am
+index f16422c..b19d582 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -36,6 +36,8 @@ libnftnl_la_SOURCES = utils.c		\
+ 		      expr/fwd.c	\
+ 		      expr/limit.c	\
+ 		      expr/log.c	\
++		      expr/dict.c	\
++		      expr/ctid.c	\
+ 		      expr/lookup.c	\
+ 		      expr/dynset.c	\
+ 		      expr/immediate.c	\
+diff --git a/src/expr/cmp.c b/src/expr/cmp.c
+index 86d7842..49f5cbe 100644
+--- a/src/expr/cmp.c
++++ b/src/expr/cmp.c
+@@ -218,3 +218,14 @@ struct expr_ops expr_ops_cmp = {
+ 	.build		= nftnl_expr_cmp_build,
+ 	.snprintf	= nftnl_expr_cmp_snprintf,
+ };
++
++struct expr_ops expr_ops_scmp = {
++	.name		= "scmp",
++	.alloc_len	= sizeof(struct nftnl_expr_cmp),
++	.max_attr	= NFTA_CMP_MAX,
++	.set		= nftnl_expr_cmp_set,
++	.get		= nftnl_expr_cmp_get,
++	.parse		= nftnl_expr_cmp_parse,
++	.build		= nftnl_expr_cmp_build,
++	.snprintf	= nftnl_expr_cmp_snprintf,
++};
+diff --git a/src/expr/ctid.c b/src/expr/ctid.c
+new file mode 100644
+index 0000000..41d0148
+--- /dev/null
++++ b/src/expr/ctid.c
+@@ -0,0 +1,143 @@
++/*
++ * (C) 2012-2013 by Pablo Neira Ayuso <pablo@netfilter.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published
++ * by the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This code has been sponsored by Sophos Astaro <http://www.sophos.com>
++ */
++
++#include <stdio.h>
++#include <string.h>
++#include <stdint.h>
++#include <arpa/inet.h>
++#include <errno.h>
++#include <linux/netfilter/nf_tables.h>
++
++#include "internal.h"
++#include <libmnl/libmnl.h>
++#include <libnftnl/expr.h>
++#include <libnftnl/rule.h>
++
++struct nftnl_expr_ctid {
++	enum nft_registers	dreg;
++};
++
++static int
++nftnl_expr_ctid_set(struct nftnl_expr *e, uint16_t type,
++		       const void *data, uint32_t data_len)
++{
++	struct nftnl_expr_ctid *ctid = nftnl_expr_data(e);
++
++	switch(type) {
++	case NFTNL_EXPR_CTID_DREG:
++		ctid->dreg = *((uint32_t *)data);
++		break;
++	default:
++		return -1;
++	}
++	return 0;
++}
++
++static const void *
++nftnl_expr_ctid_get(const struct nftnl_expr *e, uint16_t type,
++		     uint32_t *data_len)
++{
++	struct nftnl_expr_ctid *ctid = nftnl_expr_data(e);
++
++	switch(type) {
++	case NFTNL_EXPR_CTID_DREG:
++		*data_len = sizeof(ctid->dreg);
++		return &ctid->dreg;
++	}
++	return NULL;
++}
++
++static void
++nftnl_expr_ctid_build(struct nlmsghdr *nlh, const struct nftnl_expr *e)
++{
++	struct nftnl_expr_ctid *ctid = nftnl_expr_data(e);
++
++	if (e->flags & (1 << NFTNL_EXPR_CTID_DREG))
++		mnl_attr_put_u32(nlh, NFTA_CTID_DREG, htonl(ctid->dreg));
++}
++
++static int nftnl_expr_ctid_cb(const struct nlattr *attr, void *data)
++{
++	const struct nlattr **tb = data;
++	int type = mnl_attr_get_type(attr);
++
++	if (mnl_attr_type_valid(attr, NFTA_CTID_MAX) < 0)
++		return MNL_CB_OK;
++
++	switch(type) {
++	case NFTA_CTID_DREG:
++		if (mnl_attr_validate(attr, MNL_TYPE_U32) < 0)
++			abi_breakage();
++		break;
++	}
++
++	tb[type] = attr;
++	return MNL_CB_OK;
++}
++
++static int
++nftnl_expr_ctid_parse(struct nftnl_expr *e, struct nlattr *attr)
++{
++	struct nftnl_expr_ctid *ctid = nftnl_expr_data(e);
++	struct nlattr *tb[NFTA_CTID_MAX+1] = {};
++
++	if (mnl_attr_parse_nested(attr, nftnl_expr_ctid_cb, tb) < 0)
++		return -1;
++
++	if (tb[NFTA_CTID_DREG]) {
++		ctid->dreg = ntohl(mnl_attr_get_u32(tb[NFTA_CTID_DREG]));
++		e->flags |= (1 << NFTNL_EXPR_CTID_DREG);
++	}
++
++	return 0;
++}
++
++static int
++nftnl_expr_ctid_snprintf_default(char *buf, size_t size,
++			       const struct nftnl_expr *e)
++{
++	int ret, remain = size, offset = 0;
++	struct nftnl_expr_ctid *ctid = nftnl_expr_data(e);
++
++	if (e->flags & (1 << NFTNL_EXPR_CTID_DREG)) {
++		ret = snprintf(buf, remain, "load %s => reg %u ",
++			       "ct id", ctid->dreg);
++		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
++	}
++
++	return offset;
++}
++
++static int
++nftnl_expr_ctid_snprintf(char *buf, size_t len, uint32_t type,
++		       uint32_t flags, const struct nftnl_expr *e)
++{
++	switch (type) {
++	case NFTNL_OUTPUT_DEFAULT:
++		return nftnl_expr_ctid_snprintf_default(buf, len, e);
++	case NFTNL_OUTPUT_XML:
++	case NFTNL_OUTPUT_JSON:
++	default:
++		break;
++	}
++	return -1;
++}
++
++struct expr_ops expr_ops_ctid = {
++	.name		= "ctid",
++	.alloc_len	= sizeof(struct nftnl_expr_ctid),
++	.max_attr	= NFTA_CTID_MAX,
++	.set		= nftnl_expr_ctid_set,
++	.get		= nftnl_expr_ctid_get,
++	.parse		= nftnl_expr_ctid_parse,
++	.build		= nftnl_expr_ctid_build,
++	.snprintf	= nftnl_expr_ctid_snprintf,
++};
+diff --git a/src/expr/dict.c b/src/expr/dict.c
+new file mode 100644
+index 0000000..bc9d95d
+--- /dev/null
++++ b/src/expr/dict.c
+@@ -0,0 +1,361 @@
++#include <stdio.h>
++#include <stdint.h>
++#include <string.h>
++#include <arpa/inet.h>
++#include <errno.h>
++#include <linux/netfilter/nf_tables.h>
++
++#include "internal.h"
++#include <libmnl/libmnl.h>
++#include <libnftnl/expr.h>
++#include <libnftnl/rule.h>
++
++struct nftnl_expr_dict {
++	enum nft_registers	sreg;
++	enum nft_registers	dreg;
++	const char		*table;
++	const char		*field;
++	const char		*value;
++	unsigned int		type;
++	unsigned int		len;
++	unsigned int		size;
++	enum nft_registers	set;
++	unsigned int		flush;
++};
++
++static int nftnl_expr_dict_set(struct nftnl_expr *e, uint16_t type,
++				 const void *data, uint32_t data_len)
++{
++	struct nftnl_expr_dict *dict = nftnl_expr_data(e);
++	switch(type){
++	case NFTNL_EXPR_DICT_SREG:
++		dict->sreg = *((uint32_t *)data);
++		break;
++	case NFTNL_EXPR_DICT_DREG:
++		dict->dreg = *((uint32_t *)data);
++		break;
++	case NFTNL_EXPR_DICT_TYPE:
++		dict->type = *((uint32_t *)data);
++		break;
++	case NFTNL_EXPR_DICT_LEN:
++		dict->len = *((uint32_t *)data);
++		break;
++	case NFTNL_EXPR_DICT_SIZE:
++		dict->size = *((uint32_t *)data);
++		break;
++	case NFTNL_EXPR_DICT_TABLE:
++		dict->table = strdup(data);
++		if (!dict->table)
++			return -1;
++		break;
++	case NFTNL_EXPR_DICT_FIELD:
++		dict->field = strdup(data);
++		if (!dict->field)
++			return -1;
++		break;
++	case NFTNL_EXPR_DICT_VALUE:
++		dict->value = strdup(data);
++		if (!dict->value)
++			return -1;
++		break;
++	case NFTNL_EXPR_DICT_SET:
++		dict->set = *((uint32_t *)data);
++		break;
++	case NFTNL_EXPR_DICT_FLUSH:
++		dict->flush = *((uint32_t *)data);
++		break;
++	}
++	return 0;
++}
++
++static const void *
++nftnl_expr_dict_get(const struct nftnl_expr *e, uint16_t type,
++		      uint32_t *data_len)
++{
++	struct nftnl_expr_dict *dict = nftnl_expr_data(e);
++
++	switch(type) {
++	case NFTNL_EXPR_DICT_SREG:
++		*data_len = sizeof(dict->sreg);
++		return &dict->sreg;
++	case NFTNL_EXPR_DICT_DREG:
++		*data_len = sizeof(dict->dreg);
++		return &dict->dreg;
++	case NFTNL_EXPR_DICT_TYPE:
++		*data_len = sizeof(dict->type);
++		return &dict->type;
++	case NFTNL_EXPR_DICT_LEN:
++		*data_len = sizeof(dict->len);
++		return &dict->type;
++	case NFTNL_EXPR_DICT_SIZE:
++		*data_len = sizeof(dict->size);
++		return &dict->size;
++	case NFTNL_EXPR_DICT_TABLE:
++		*data_len = strlen(dict->table)+1;
++		return dict->table;
++	case NFTNL_EXPR_DICT_FIELD:
++		*data_len = strlen(dict->field)+1;
++		return dict->field;
++	case NFTNL_EXPR_DICT_VALUE:
++		*data_len = strlen(dict->value)+1;
++		return dict->value;
++	case NFTNL_EXPR_DICT_SET:
++		*data_len = sizeof(dict->set);
++		return &dict->set;
++	case NFTNL_EXPR_DICT_FLUSH:
++		*data_len = sizeof(dict->flush);
++		return &dict->flush;
++	}
++	return NULL;
++}
++
++static int nftnl_expr_dict_cb(const struct nlattr *attr, void *data)
++{
++	const struct nlattr **tb = data;
++	int type = mnl_attr_get_type(attr);
++
++	if (mnl_attr_type_valid(attr, NFTA_DICT_MAX) < 0)
++		return MNL_CB_OK;
++
++	switch(type) {
++	case NFTNL_EXPR_DICT_SREG:
++		if (mnl_attr_validate(attr, MNL_TYPE_U32) < 0)
++			abi_breakage();
++		break;
++	case NFTNL_EXPR_DICT_DREG:
++		if (mnl_attr_validate(attr, MNL_TYPE_U32) < 0)
++			abi_breakage();
++		break;
++	case NFTNL_EXPR_DICT_TYPE:
++		if (mnl_attr_validate(attr, MNL_TYPE_U32) < 0)
++			abi_breakage();
++		break;
++	case NFTNL_EXPR_DICT_LEN:
++		if (mnl_attr_validate(attr, MNL_TYPE_U32) < 0)
++			abi_breakage();
++		break;
++	case NFTNL_EXPR_DICT_SIZE:
++		if (mnl_attr_validate(attr, MNL_TYPE_U32) < 0)
++			abi_breakage();
++		break;
++	case NFTNL_EXPR_DICT_TABLE:
++		if (mnl_attr_validate(attr, MNL_TYPE_STRING) < 0)
++			abi_breakage();
++		break;
++	case NFTNL_EXPR_DICT_FIELD:
++		if (mnl_attr_validate(attr, MNL_TYPE_STRING) < 0)
++			abi_breakage();
++		break;
++	case NFTNL_EXPR_DICT_VALUE:
++		if (mnl_attr_validate(attr, MNL_TYPE_STRING) < 0)
++			abi_breakage();
++		break;
++	case NFTNL_EXPR_DICT_SET:
++		if (mnl_attr_validate(attr, MNL_TYPE_U32) < 0)
++			abi_breakage();
++		break;
++	case NFTNL_EXPR_DICT_FLUSH:
++		if (mnl_attr_validate(attr, MNL_TYPE_U32) < 0)
++			abi_breakage();
++		break;
++	}
++
++	tb[type] = attr;
++	return MNL_CB_OK;
++}
++
++static void
++nftnl_expr_dict_build(struct nlmsghdr *nlh, const struct nftnl_expr *e)
++{
++	struct nftnl_expr_dict *dict = nftnl_expr_data(e);
++
++	if (e->flags & (1 << NFTNL_EXPR_DICT_SREG))
++		mnl_attr_put_u32(nlh, NFTNL_EXPR_DICT_SREG, htonl(dict->sreg));
++
++	if (e->flags & (1 << NFTNL_EXPR_DICT_DREG))
++		mnl_attr_put_u32(nlh, NFTNL_EXPR_DICT_DREG, htonl(dict->dreg));
++
++	if (e->flags & (1 << NFTNL_EXPR_DICT_TYPE))
++		mnl_attr_put_u32(nlh, NFTNL_EXPR_DICT_TYPE, htonl(dict->type));
++
++	if (e->flags & (1 << NFTNL_EXPR_DICT_LEN))
++		mnl_attr_put_u32(nlh, NFTNL_EXPR_DICT_LEN, htonl(dict->len));
++
++	if (e->flags & (1 << NFTNL_EXPR_DICT_SIZE))
++		mnl_attr_put_u32(nlh, NFTNL_EXPR_DICT_SIZE, htonl(dict->size));
++
++	if (e->flags & (1 << NFTNL_EXPR_DICT_TABLE))
++		mnl_attr_put_strz(nlh, NFTNL_EXPR_DICT_TABLE, dict->table);
++
++	if (e->flags & (1 << NFTNL_EXPR_DICT_FIELD))
++		mnl_attr_put_strz(nlh, NFTNL_EXPR_DICT_FIELD, dict->field);
++
++	if (e->flags & (1 << NFTNL_EXPR_DICT_VALUE))
++		mnl_attr_put_strz(nlh, NFTNL_EXPR_DICT_VALUE, dict->value);
++
++	if (e->flags & (1 << NFTNL_EXPR_DICT_SET))
++		mnl_attr_put_u32(nlh, NFTNL_EXPR_DICT_SET, htonl(dict->set));
++
++	if (e->flags & (1 << NFTNL_EXPR_DICT_FLUSH))
++		mnl_attr_put_u32(nlh, NFTNL_EXPR_DICT_FLUSH, htonl(dict->flush));
++}
++
++static int
++nftnl_expr_dict_parse(struct nftnl_expr *e, struct nlattr *attr)
++{
++	struct nftnl_expr_dict *dict = nftnl_expr_data(e);
++	struct nlattr *tb[NFTA_DICT_MAX+1] = {};
++
++	if (mnl_attr_parse_nested(attr, nftnl_expr_dict_cb, tb) < 0)
++		return -1;
++
++	if (tb[NFTNL_EXPR_DICT_SREG]) {
++		dict->sreg = ntohl(mnl_attr_get_u32(tb[NFTNL_EXPR_DICT_SREG]));
++		e->flags |= (1 << NFTNL_EXPR_DICT_SREG);
++	}
++
++	if (tb[NFTNL_EXPR_DICT_DREG]) {
++		dict->dreg = ntohl(mnl_attr_get_u32(tb[NFTNL_EXPR_DICT_DREG]));
++		e->flags |= (1 << NFTNL_EXPR_DICT_DREG);
++	}
++
++	if (tb[NFTNL_EXPR_DICT_TYPE]) {
++		dict->type = ntohl(mnl_attr_get_u32(tb[NFTNL_EXPR_DICT_TYPE]));
++		e->flags |= (1 << NFTNL_EXPR_DICT_TYPE);
++	}
++
++	if (tb[NFTNL_EXPR_DICT_LEN]) {
++		dict->len = ntohl(mnl_attr_get_u32(tb[NFTNL_EXPR_DICT_LEN]));
++		e->flags |= (1 << NFTNL_EXPR_DICT_LEN);
++	}
++
++	if (tb[NFTNL_EXPR_DICT_SIZE]) {
++		dict->size = ntohl(mnl_attr_get_u32(tb[NFTNL_EXPR_DICT_SIZE]));
++		e->flags |= (1 << NFTNL_EXPR_DICT_SIZE);
++	}
++
++	if (tb[NFTNL_EXPR_DICT_TABLE]) {
++		if (dict->table)
++			xfree(dict->table);
++
++		dict->table = strdup(mnl_attr_get_str(tb[NFTNL_EXPR_DICT_TABLE]));
++		if (!dict->table)
++			return -1;
++		e->flags |= (1 << NFTNL_EXPR_DICT_TABLE);
++	}
++
++	if (tb[NFTNL_EXPR_DICT_FIELD]) {
++		if (dict->field)
++			xfree(dict->field);
++
++		dict->field = strdup(mnl_attr_get_str(tb[NFTNL_EXPR_DICT_FIELD]));
++		if (!dict->field)
++			return -1;
++		e->flags |= (1 << NFTNL_EXPR_DICT_FIELD);
++	}
++
++	if (tb[NFTNL_EXPR_DICT_VALUE]) {
++		if (dict->value)
++			xfree(dict->value);
++
++		dict->value = strdup(mnl_attr_get_str(tb[NFTNL_EXPR_DICT_VALUE]));
++		if (!dict->value)
++			return -1;
++		e->flags |= (1 << NFTNL_EXPR_DICT_VALUE);
++	}
++
++	if (tb[NFTNL_EXPR_DICT_SET]) {
++		dict->set = ntohl(mnl_attr_get_u32(tb[NFTNL_EXPR_DICT_SET]));
++		e->flags |= (1 << NFTNL_EXPR_DICT_SET);
++	}
++
++	if (tb[NFTNL_EXPR_DICT_FLUSH]) {
++		dict->flush = ntohl(mnl_attr_get_u32(tb[NFTNL_EXPR_DICT_FLUSH]));
++		e->flags |= (1 << NFTNL_EXPR_DICT_FLUSH);
++	}
++
++	return 0;
++}
++
++static int nftnl_expr_dict_snprintf_default(char *buf, size_t size,
++					   const struct nftnl_expr *e)
++{
++	struct nftnl_expr_dict *dict = nftnl_expr_data(e);
++	int remain = size, ret, offset = 0;
++
++	if (e->flags & (1 << NFTNL_EXPR_DICT_DREG)) {
++		ret = snprintf(buf, remain, "reg %u = reg %u ", dict->dreg, dict->sreg);
++		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
++	} else {
++		ret = snprintf(buf, remain, "reg %u ", dict->sreg);
++		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
++	}
++
++	if (e->flags & (1 << NFTNL_EXPR_DICT_TABLE)) {
++		ret = snprintf(buf + offset, remain, "table %s ", dict->table);
++		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
++	}
++
++	if (e->flags & (1 << NFTNL_EXPR_DICT_FIELD)) {
++		ret = snprintf(buf + offset, remain, "field %s ", dict->field);
++		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
++	}
++
++	if (e->flags & (1 << NFTNL_EXPR_DICT_TYPE)) {
++		ret = snprintf(buf + offset, remain, "type %u ", dict->type);
++		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
++	}
++
++	if (e->flags & (1 << NFTNL_EXPR_DICT_VALUE)) {
++		ret = snprintf(buf + offset, remain, "value %s ", dict->value);
++		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
++	}
++
++	if (e->flags & (1 << NFTNL_EXPR_DICT_SET)) {
++		ret = snprintf(buf + offset, remain, "set %u ", dict->set);
++		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
++	}
++
++	if (e->flags & (1 << NFTNL_EXPR_DICT_FLUSH)) {
++		ret = snprintf(buf + offset, remain, "flush");
++		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
++	}
++
++	return offset;
++}
++
++static int
++nftnl_expr_dict_snprintf(char *buf, size_t len, uint32_t type,
++			uint32_t flags, const struct nftnl_expr *e)
++{
++	switch(type) {
++	case NFTNL_OUTPUT_DEFAULT:
++		return nftnl_expr_dict_snprintf_default(buf, len, e);
++	case NFTNL_OUTPUT_XML:
++	case NFTNL_OUTPUT_JSON:
++	default:
++		break;
++	}
++	return -1;
++}
++
++static void nftnl_expr_dict_free(const struct nftnl_expr *e)
++{
++	struct nftnl_expr_dict *dict = nftnl_expr_data(e);
++
++	xfree(dict->table);
++	xfree(dict->field);
++	xfree(dict->value);
++}
++
++struct expr_ops expr_ops_dict = {
++	.name		= "dict",
++	.alloc_len	= sizeof(struct nftnl_expr_dict),
++	.max_attr	= NFTA_DICT_MAX,
++	.free		= nftnl_expr_dict_free,
++	.set		= nftnl_expr_dict_set,
++	.get		= nftnl_expr_dict_get,
++	.parse		= nftnl_expr_dict_parse,
++	.build		= nftnl_expr_dict_build,
++	.snprintf	= nftnl_expr_dict_snprintf,
++};
+diff --git a/src/expr_ops.c b/src/expr_ops.c
+index 3538dd6..f532fa3 100644
+--- a/src/expr_ops.c
++++ b/src/expr_ops.c
+@@ -37,6 +37,9 @@ extern struct expr_ops expr_ops_hash;
+ extern struct expr_ops expr_ops_fib;
+ extern struct expr_ops expr_ops_flow;
+ extern struct expr_ops expr_ops_socket;
++extern struct expr_ops expr_ops_dict;
++extern struct expr_ops expr_ops_ctid;
++extern struct expr_ops expr_ops_scmp;
+ extern struct expr_ops expr_ops_synproxy;
+ extern struct expr_ops expr_ops_tunnel;
+ extern struct expr_ops expr_ops_osf;
+@@ -81,6 +84,9 @@ static struct expr_ops *expr_ops[] = {
+ 	&expr_ops_objref,
+ 	&expr_ops_flow,
+ 	&expr_ops_socket,
++	&expr_ops_dict,
++	&expr_ops_ctid,
++	&expr_ops_scmp,
+ 	&expr_ops_synproxy,
+ 	&expr_ops_tunnel,
+ 	&expr_ops_osf,
+-- 
+2.11.0
+

@@ -1,0 +1,3 @@
+---
+subtrees:
+  build: git@github.com:untangle/mfw_build.git

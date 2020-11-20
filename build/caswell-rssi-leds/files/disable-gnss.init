@@ -1,0 +1,22 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006-2011 OpenWrt.org
+
+START=99
+STOP=99
+
+device="/dev/ttyUSB2"
+
+disable_gnss()
+{
+	# disable GNSS
+	echo -e "AT!ENTERCND=\"A710\"" > /dev/ttyUSB2
+	echo -e "AT!CUSTOM=\"GPSENABLE\",0" > /dev/ttyUSB2
+}
+
+boot() {
+    grep -q -e caswell-caf-0262 -e untangle-inc-default-string /tmp/sysinfo/board_name
+    if [ $? -eq 0 -a -c "$device" ] ; then
+	disable_gnss
+    fi
+}
+

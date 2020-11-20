@@ -1,0 +1,17 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006-2011 OpenWrt.org
+
+START=99
+STOP=99
+
+USE_PROCD=1
+
+boot() {
+    grep -q -e caswell-caf-0262 -e untangle-inc-default-string /tmp/sysinfo/board_name
+    if [ $? -eq 0 ] ; then
+        echo netdev > /sys/class/leds/caswell:green:wifi/trigger
+        echo wlan0 > /sys/class/leds/caswell:green:wifi/device_name
+        echo link > /sys/class/leds/caswell:green:wifi/mode
+    fi
+}
+

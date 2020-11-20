@@ -1,0 +1,94 @@
+From 6091c1eaad73980180df4237bbdc06ded38239f4 Mon Sep 17 00:00:00 2001
+From: Brett Mastbergen <bmastbergen@untangle.com>
+Date: Mon, 17 Jun 2019 13:50:37 -0400
+Subject: [PATCH] nuvoton_main: Add wifi led device
+
+---
+ nuvoton_main.c | 43 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 43 insertions(+)
+
+diff --git a/nuvoton_main.c b/nuvoton_main.c
+index f236601..2f4768c 100644
+--- a/nuvoton_main.c
++++ b/nuvoton_main.c
+@@ -29,6 +29,7 @@
+ #include <linux/pci.h>
+ #include <linux/hwmon-sysfs.h>
+ #include <linux/ioport.h>
++#include <linux/leds.h>
+ 
+ #include "nct6775f.h"
+ #include "nct6776f.h"
+@@ -43,6 +44,8 @@ static gpio_priv_t	g_priv;
+ #define GPIO_NAME "nuvoton GPIO"
+ #define PFX GPIO_NAME ": "
+ 
++static struct led_classdev wifi_led;
++
+ static struct SIO_DEVICE sio_device_tbl [] = {
+ 	{ SIO_PRIV(0xB47, "NCT6775F", 9) },
+ 	{ SIO_PRIV(0xC33, "NCT6776F", 9) },
+@@ -775,6 +778,43 @@ int nuvoton_match(void)
+ }
+ EXPORT_SYMBOL(nuvoton_match);
+ 
++static void wifi_led_set(struct led_classdev *cdev, enum led_brightness b)
++{
++	int pin = 64;
++
++	request_io_port(EFER);
++
++	g_priv.ops.set_select(1, pin);
++	if (b != LED_OFF)
++		g_priv.ops.set_output(0, pin);
++	else
++		g_priv.ops.set_output(1, pin);
++
++	release_region(EFER, 1);
++}
++
++int cw_gpio_get_value_by_nctsio(int __pin);
++static enum led_brightness wifi_led_get(struct led_classdev *cdev)
++{
++	return cw_gpio_get_value_by_nctsio(64) ? LED_OFF : LED_FULL;
++}
++
++static void register_wifi_led(struct device * dev)
++{
++	wifi_led.name = "caswell:green:wifi";
++	wifi_led.brightness_set = wifi_led_set;
++	wifi_led.brightness_get = wifi_led_get;
++	wifi_led.default_trigger = NULL;
++
++	led_classdev_register(dev, &wifi_led);
++	wifi_led_set(&wifi_led, LED_OFF);
++}
++
++static void unregister_wifi_led(void)
++{
++	led_classdev_unregister(&wifi_led);
++}
++
+ static int __init nuvoton_gpio_init(void)
+ {
+ 	int			ret = 0;
+@@ -806,6 +846,8 @@ static int __init nuvoton_gpio_init(void)
+ 	gpio_register_fs(g_priv.mdev->class);
+ #endif
+ 
++	register_wifi_led(g_priv.mdev->this_device);
++
+ 	return ret;
+ 
+ err_misc:
+@@ -816,6 +858,7 @@ err_match:
+ 
+ static void __exit nuvoton_gpio_exit(void)
+ {
++	unregister_wifi_led();
+ #if ( LINUX_VERSION_CODE > KERNEL_VERSION(2,6,18) )
+ 	gpio_unregister_fs(g_priv.mdev->this_device);
+ #else
+-- 
+2.11.0
+

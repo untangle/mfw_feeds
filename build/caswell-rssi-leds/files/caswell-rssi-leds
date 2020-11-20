@@ -1,0 +1,34 @@
+#!/bin/sh
+
+. /lib/functions/network.sh
+. /usr/share/libubox/jshn.sh
+
+# init
+i2cset -y 0 0x21 0x01 0x00
+i2cset -y 0 0x21 0x03 0x00
+
+if network_is_up LTE ; then
+	while [ 1 ] ; do
+		status="$(uqmi -s -d /dev/cdc-wdm0 --get-data-status)"
+		if [ $status = "\"disconnected\"" ] ; then
+			i2cset -y 0 0x21 0x01 0x00
+		else
+			rssi=-100
+			json_load "$(uqmi -s -d /dev/cdc-wdm0 --get-signal-info)"
+			json_get_var rssi rssi
+
+			if [ $rssi -ge -65 ] ; then
+				i2cset -y 0 0x21 0x01 0xf0
+			elif [ $rssi -le -64 -a $rssi -ge -75 ] ; then
+				i2cset -y 0 0x21 0x01 0x70
+			elif [ $rssi -le -74 -a $rssi -ge -85 ] ; then
+				i2cset -y 0 0x21 0x01 0x30
+			else
+				i2cset -y 0 0x21 0x01 0x10
+			fi
+		fi
+		sleep 10
+	done
+else
+	i2cset -y 0 0x21 0x01 0x00
+fi

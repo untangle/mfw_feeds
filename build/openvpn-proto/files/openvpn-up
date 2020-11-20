@@ -1,0 +1,53 @@
+#!/bin/sh
+
+#DBG=1
+
+[ -n "$INTERFACE" ] || {
+	echo "openvpn-up no INTERFACE variable appended"
+	exit 1
+}
+
+[ -n "$DBG" ] && {
+	env > /tmp/openvpn-up-${INTERFACE}-env.log
+}
+
+. /lib/netifd/netifd-proto.sh
+proto_init_update "$dev" 1 1
+proto_set_keep 1
+[ -n "$ifconfig_local" ] && proto_add_ipv4_address "$ifconfig_local" 32
+[ -n "$ifconfig_ipv6_local" ] && proto_add_ipv6_address "$ifconfig_ipv6_local" 128
+
+# set default route
+[ -n "$DEFAULTROUTE" ] && {
+	proto_add_ipv4_route "0.0.0.0" "0" "$gw" "0.0.0.0/0" "$METRIC"
+	proto_add_ipv6_route "::" "0" "$gw" "$METRIC" "" "::/0" ""
+}
+
+# set dns server
+c=1
+while true ; do
+	v=foreign_option_$c
+	eval "fo=\$$v"
+	[ -n "$fo" ] || break
+	[ "${fo%% *}" = "dhcp-option" ] && {
+		s=${fo#dhcp-option }
+		[ "${s%% *}" = "DNS" ] && {
+			dns=${s#DNS }
+			[ -n "$PEERDNS" ] && {
+				proto_add_dns_server "$dns"
+			}
+		}
+	}
+	c=$(( $c+1 ))
+done
+
+proto_send_update "$INTERFACE"
+
+[ -d /etc/openvpn/ip-up.d ] && {
+	for SCRIPT in /etc/openvpn/ip-up.d/*
+	do
+		[ -x "$SCRIPT" ] && "$SCRIPT" "$@"
+	done
+}
+
+exit 0

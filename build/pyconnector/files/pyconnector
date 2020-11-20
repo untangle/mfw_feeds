@@ -1,0 +1,332 @@
+#!/usr/bin/python3
+"""
+pyconnector is the connection agent for command center and remote support
+"""
+# pylint: disable=global-statement
+# pylint: disable=broad-except
+# pylint: disable=bare-except
+# pylint: disable=unused-argument
+# pylint: disable=eval-used
+# pylint: disable=unused-import
+
+import sys
+import subprocess
+import shlex
+import time
+import socket
+import os
+import getopt
+import datetime
+import random
+import traceback
+import base64
+import ssl
+import platform
+
+UNTANGLE_CMD_PORTS = [80, 443, 993, 4443, 587, 995, 8080, 53, 25]
+UNTANGLE_CMD_SERVERS = ["cmd.untangle.com", "cmd.metaloft.com"]
+# UNTANGLE_CMD_SERVERS = ["dev-cmd.untangle.com"]
+RETRY_TIME_LONG = 10
+RETRY_TIME_SHORT = 5
+CERTS_FILE = '/tmp/pyconnector/certs.pem'
+
+command_socket = None
+command_socket_file = None
+debug_level = 1
+
+def usage():
+    """Display usage"""
+    print("""\
+usage: %s [options]
+Options:
+  -h | --help                   help - print this message
+  -l <log>       | --log=<log>          output to specified log instead of stdout/stderr
+  -d <debug_lvl> | --debug-level=<0-2>  debug verbosite level
+  -s <server>    | --server=<server>    specify a cmd server
+  -p <port>      | --port=<port>        specify a port to connect to cmd
+""" % sys.argv[0])
+
+def system(cmd_str):
+    """Run a system() command and return the combined output"""
+    args = shlex.split(cmd_str)
+    proc = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (stdout, stderr) = proc.communicate()
+    return stdout + stderr
+
+def debug(dstr, level=1):
+    """Print a debug statement"""
+    if level <= debug_level:
+        print("%s: %s" % (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), dstr))
+        sys.stdout.flush()
+
+def write_cert_file():
+    """write the cert file for connecting to server"""
+    f = open(CERTS_FILE, 'w')
+    f.write('-----BEGIN CERTIFICATE-----\n')
+    f.write('MIID/jCCAuagAwIBAgIJAJHqqamP5SB2MA0GCSqGSIb3DQEBCwUAMIGTMQswCQYD\n')
+    f.write('VQQGEwJVUzELMAkGA1UECAwCTlYxEjAQBgNVBAcMCVN0YXRlbGluZTESMBAGA1UE\n')
+    f.write('CgwJbm9kZXJvdXRlMQswCQYDVQQLDAJJVDEeMBwGA1UEAwwVY2VudHJhbC5ub2Rl\n')
+    f.write('cm91dGUuY29tMSIwIAYJKoZIhvcNAQkBFhNjZXJ0c0Bub2Rlcm91dGUuY29tMB4X\n')
+    f.write('DTE5MDIyNzA1NTY0OFoXDTI5MDIyNDA1NTY0OFowgZMxCzAJBgNVBAYTAlVTMQsw\n')
+    f.write('CQYDVQQIDAJOVjESMBAGA1UEBwwJU3RhdGVsaW5lMRIwEAYDVQQKDAlub2Rlcm91\n')
+    f.write('dGUxCzAJBgNVBAsMAklUMR4wHAYDVQQDDBVjZW50cmFsLm5vZGVyb3V0ZS5jb20x\n')
+    f.write('IjAgBgkqhkiG9w0BCQEWE2NlcnRzQG5vZGVyb3V0ZS5jb20wggEiMA0GCSqGSIb3\n')
+    f.write('DQEBAQUAA4IBDwAwggEKAoIBAQCiGK7PIblp1IM1Ui144ksrrJdF/3xcZDz8/1Yt\n')
+    f.write('uS4uhF7Lwm7foQuYSI7eAaxntziVUntXr4JmrktDF1rWmwFWE4jDLtEhCW39tCRc\n')
+    f.write('Hyf1+QXaa0O5PYwzEWJFg94OBP/YPRrrassLTrY5Nt+8vh9saw75Wy1qnWwYwd8O\n')
+    f.write('8hKHipBVga5NIXjMVTQZlVayYKx3MtzQ3jE26iLH8KZAZDPMvRiO3rlmFQ7AwCEq\n')
+    f.write('Afz4u/H+V5elj/ZcQ87YZyAkGdQ30UHfJBghWXK5tD18ASO1VEG7C+g1HKPPES6N\n')
+    f.write('Su4l9sXajB/Re9+7lsaBVIk4dOVBBw+z9SS/zaUrKhoFkkITAgMBAAGjUzBRMB0G\n')
+    f.write('A1UdDgQWBBT8IwkZyUV3BVogo/RPJ7iGi8a/NjAfBgNVHSMEGDAWgBT8IwkZyUV3\n')
+    f.write('BVogo/RPJ7iGi8a/NjAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IB\n')
+    f.write('AQBpla5CbuKpf0dVcfN27KViix7U3UgKM+aRqx7FWSZ6gr75Z080Y9KfJZ1X/9/a\n')
+    f.write('cSvTUIqCOdcdX2ckLKve8mL8hZUktzMcLYl/pLPYSdNuf9hRakjcoFjqQZmnnUcG\n')
+    f.write('62icOHJXcRaxe4yw59KxUx9r3yyrP/UDV4yQLcjNG/X/88ecsLa7nifZ+Tz8LoiT\n')
+    f.write('CROj5dcuiPr7+/c+HJCaNfZIgCjVhkkA2L6Y0r9m3FSgDOOdvYD4eib2MSFS+qi1\n')
+    f.write('XSfCZ37xE8qdgEQX2Z5it+NFbNSo7RJgu5XL0Gtmzsx0bjkBcw46u1prpUdpvv12\n')
+    f.write('dVpTX9wU2pJwkvcWoSY4JZe9\n')
+    f.write('-----END CERTIFICATE-----\n')
+    f.write('-----BEGIN CERTIFICATE-----\n')
+    f.write('MIIDGjCCAoOgAwIBAgIJAJWdC06wNHyNMA0GCSqGSIb3DQEBBQUAMIGlMQswCQYD\n')
+    f.write('VQQGEwJVUzETMBEGA1UECAwKQ2FsaWZvcm5pYTESMBAGA1UEBwwJU3Vubnl2YWxl\n')
+    f.write('MRQwEgYDVQQKDAtVbnRhbmdsZSBDQTEYMBYGA1UECwwPY2EudW50YW5nbGUuY29t\n')
+    f.write('MRgwFgYDVQQDDA9jYS51bnRhbmdsZS5jb20xIzAhBgkqhkiG9w0BCQEWFGRtb3Jy\n')
+    f.write('aXNAdW50YW5nbGUuY29tMB4XDTEyMDgwOTIxMzU0NVoXDTIyMDgwNzIxMzU0NVow\n')
+    f.write('gaUxCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRIwEAYDVQQHDAlT\n')
+    f.write('dW5ueXZhbGUxFDASBgNVBAoMC1VudGFuZ2xlIENBMRgwFgYDVQQLDA9jYS51bnRh\n')
+    f.write('bmdsZS5jb20xGDAWBgNVBAMMD2NhLnVudGFuZ2xlLmNvbTEjMCEGCSqGSIb3DQEJ\n')
+    f.write('ARYUZG1vcnJpc0B1bnRhbmdsZS5jb20wgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJ\n')
+    f.write('AoGBALYepW5elyeiDDHAYC7UMD+3VMj3Wp+X69r+APllVTJBlaNI+rmdmR0IUuRu\n')
+    f.write('0P3wpcZm1OooaoUU7q2F2zYbhyqtPB9ULPzNyQ0ys2KvXmauSkmx9He6ysDiWHmD\n')
+    f.write('F7MTxhR/I7WI1n6E+7EIpP+CGbDYd2w5nWFzWhhx28936RwPAgMBAAGjUDBOMB0G\n')
+    f.write('A1UdDgQWBBQRNxGoQB+2uSfjfxvJp7Uq3zHGADAfBgNVHSMEGDAWgBQRNxGoQB+2\n')
+    f.write('uSfjfxvJp7Uq3zHGADAMBgNVHRMEBTADAQH/MA0GCSqGSIb3DQEBBQUAA4GBAJOy\n')
+    f.write('tlQvH4BGnrvCalM+8v/UEL/UYDziJmrv6kKW2OVrdp83a2iLLwhkAwBIEAvmgJpD\n')
+    f.write('iIYjmzyqkwC3tJOREcN5XKo83AKKxgIB0UWwH6Vo4k6XlxwE8CGfXwl++6/RAmAu\n')
+    f.write('KZFJgDBndnYz9thw4TuIjrQriZDPRVcpCz9T/tX3\n')
+    f.write('-----END CERTIFICATE-----\n')
+    f.write('-----BEGIN CERTIFICATE-----\n')
+    f.write('MIICujCCAiMCAQEwDQYJKoZIhvcNAQEFBQAwgaUxCzAJBgNVBAYTAlVTMRMwEQYD\n')
+    f.write('VQQIDApDYWxpZm9ybmlhMRIwEAYDVQQHDAlTdW5ueXZhbGUxFDASBgNVBAoMC1Vu\n')
+    f.write('dGFuZ2xlIENBMRgwFgYDVQQLDA9jYS51bnRhbmdsZS5jb20xGDAWBgNVBAMMD2Nh\n')
+    f.write('LnVudGFuZ2xlLmNvbTEjMCEGCSqGSIb3DQEJARYUZG1vcnJpc0B1bnRhbmdsZS5j\n')
+    f.write('b20wHhcNMTIwODA5MjEzNjM5WhcNMjIwODA3MjEzNjM5WjCBpDELMAkGA1UEBhMC\n')
+    f.write('VVMxEzARBgNVBAgMCkNhbGlmb3JuaWExEjAQBgNVBAcMCVN1bm55dmFsZTERMA8G\n')
+    f.write('A1UECgwIVW50YW5nbGUxGTAXBgNVBAsMEGNtZC51bnRhbmdsZS5jb20xGTAXBgNV\n')
+    f.write('BAMMEGNtZC51bnRhbmdsZS5jb20xIzAhBgkqhkiG9w0BCQEWFGRtb3JyaXNAdW50\n')
+    f.write('YW5nbGUuY29tMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDUeVn2SrWChvlb\n')
+    f.write('RjtymxCyH+1QUaS2x34K+7oYxoa5NPs7u85bHpWM7HeFiN3gdZ1Qf+B6wkwa2spG\n')
+    f.write('coir2wqp7udrEX5PipnHXVPqtOLExE5yNcwJ5kEmcd0l/LUh1I4Y7mXebqrrSvCE\n')
+    f.write('j3P1xQF0mZ/gkFI0xjaFTKr6wYSxwwIDAQABMA0GCSqGSIb3DQEBBQUAA4GBAFne\n')
+    f.write('oaoFbMan9WBqnPkCbTdDmMdOMesIBRfr3YIzzbfHtemfX0v+nMdsL8XdFc2dBlhl\n')
+    f.write('UP6dCmvX3ZJtF/6O45lq+8tjVbN0PIECSDDNHuppheKoI6STWaD2WCklwLVqItw0\n')
+    f.write('0oHL7BzL8/3QuL3xEWsMwAHhF7Mjvs683F9JhZ81\n')
+    f.write('-----END CERTIFICATE-----\n')
+    f.close()
+
+def connect():
+    """connect to server"""
+    global command_socket
+    global command_socket_file
+    if command_socket != None:
+        return
+
+    random.shuffle(UNTANGLE_CMD_SERVERS)
+    random.shuffle(UNTANGLE_CMD_PORTS)
+    debug("Connecting to %s:%i..." % (UNTANGLE_CMD_SERVERS[0], UNTANGLE_CMD_PORTS[0]))
+
+    try:
+        write_cert_file()
+        command_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        # turn on keepalive
+        command_socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        # turn on keepalive after 60 seconds (overrides kernel default in /proc/sys/net/ipv4/tcp_keepalive_time)
+        command_socket.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 60)
+        # set keepalive interval to 60 seconds (overrides kernel default in /proc/sys/net/ipv4/tcp_keepalive_intvl)
+        command_socket.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, 60)
+        # set keepalive probe count to 2 (overrides kernel default in /proc/sys/net/ipv4/tcp_keepalive_probes)
+        command_socket.setsockopt(socket.SOL_TCP, socket.TCP_KEEPCNT, 2)
+
+        command_socket = ssl.wrap_socket(command_socket, ca_certs=CERTS_FILE, cert_reqs=ssl.CERT_REQUIRED)
+        command_socket.connect((UNTANGLE_CMD_SERVERS[0], UNTANGLE_CMD_PORTS[0]))
+    except Exception as e:
+        sys.stderr.write("Failed to connect: (%s)\n" % e)
+        reset_command_socket()
+        return
+
+    command_socket_file = command_socket.makefile("rb")
+
+def run_cmd_pre_hook(cmd_str):
+    """
+    This function can be overridden
+    It provides a hook that is call before run_cmd
+    """
+    pass
+
+def run_cmd_exception_hook(cmd_str):
+    """
+    This function can be overridden
+    It provides a hook that is call if run_cmd causes an exception
+    """
+    pass
+
+def run_cmd_post_hook(result):
+    """
+    This function can be overridden
+    It provides a hook after run_cmd with the result
+    """
+    pass
+
+def run_cmd(cmd_str):
+    """run a command using eval"""
+    debug("Command Received.")
+    debug("Received: %s" % cmd_str.strip(), 2)
+    run_cmd_pre_hook(cmd_str)
+    try:
+        result = eval(cmd_str.strip())
+        run_cmd_post_hook(result)
+        try:
+            return result.decode()
+        except:
+            return str(result)
+    except Exception as e:
+        run_cmd_exception_hook(cmd_str)
+        debug("Exception: %s" % str(e))
+        traceback.print_exc()
+        return "Error (%s)" % type(e)
+
+def read_from_cmd():
+    """Read a command from cmd and run it and send the result"""
+
+    # connect to center (if necessary)
+    if command_socket is None:
+        connect()
+    if command_socket is None:
+        reset_command_socket()
+        debug("Failed to connect. Retrying in %i seconds..." % RETRY_TIME_LONG)
+        time.sleep(RETRY_TIME_LONG)
+        return
+    else:
+        write_status_file(True)
+
+    # read from center
+    try:
+        cmd = command_socket_file.readline().decode()
+        if cmd == "":
+            sys.stderr.write("Disconnected. Retrying in %i seconds...\n" % RETRY_TIME_SHORT)
+            reset_command_socket()
+            time.sleep(RETRY_TIME_SHORT)
+            return
+    except Exception as e:
+        sys.stderr.write("Failed to read: (%s)\n" % e)
+        reset_command_socket()
+        time.sleep(RETRY_TIME_LONG)
+        return
+
+    # run command
+    output = run_cmd(cmd)
+    debug("Result: %s" % output.strip())
+    try:
+        output_len = len(output)
+        message = str(output_len) + "\n" + output
+        command_socket.sendall(message.encode())
+    except Exception as e:
+        sys.stderr.write("Failed to write: (%s)\n" % e)
+        reset_command_socket()
+        time.sleep(RETRY_TIME_SHORT)
+        return
+
+def reset_command_socket():
+    """reset command_socket"""
+    global command_socket
+    command_socket = None
+    write_status_file(False)
+
+def write_status_file(connected):
+    """write status file"""
+    status_filename = "/var/run/pyconnector.status"
+    status_file = open(status_filename, "w")
+    if connected:
+        status_file.write("connected")
+    else:
+        status_file.write("unconnected")
+    status_file.close()
+
+def check_pid_file():
+    """check pid file"""
+    pid_filename = "/var/run/pyconnector.pid"
+    old_pid = None
+    if os.access(pid_filename, os.F_OK):
+        pid_file = open(pid_filename, "r")
+        pid_file.seek(0)
+        old_pid = pid_file.readline().strip()
+
+    # if theres already a pid file and its not me, exit
+    if os.path.exists("/proc/%s" % old_pid):
+        if str(os.getpid()) != old_pid:
+            print("pyconnector already running! pid: %s" % old_pid)
+            sys.exit(1)
+        else:
+            debug("removing stale pid file: %s" % old_pid)
+            os.remove(pid_filename)
+
+    pid_file = open(pid_filename, "w")
+    pid_file.write("%s" % os.getpid())
+    pid_file.close()
+
+def make_tmpdirs():
+    """Make any necessary tmp directories"""
+    try:
+        os.makedirs("/tmp/pyconnector")
+    except Exception:
+        pass
+def parse_args():
+    """parse command line arguments"""
+    try:
+        opts, _ = getopt.getopt(sys.argv[1:], "hl:s:p:d:", ['help', 'log=', 'server=', 'port=', 'debug-level='])
+    except getopt.GetoptError as err:
+        print(str(err))
+        usage()
+        sys.exit(2)
+
+    cmd_servers = []
+    cmd_ports = []
+
+    for opt in opts:
+        k, v = opt
+        if k == '-h' or k == '--help':
+            usage()
+            sys.exit(0)
+        elif k == '-l' or k == '--log':
+            logfile = open(v, "a")
+            sys.stdout = logfile
+            sys.stderr = logfile
+        elif k == '-s' or k == '--server':
+            cmd_servers.append(v)
+        elif k == '-p' or k == '--port':
+            cmd_ports.append(int(v))
+        elif k == '-d' or k == '--debug-level':
+            global debug_level
+            debug_level = int(v)
+
+    if cmd_servers != []:
+        global UNTANGLE_CMD_SERVERS
+        UNTANGLE_CMD_SERVERS = cmd_servers
+    if cmd_ports != []:
+        global UNTANGLE_CMD_PORTS
+        UNTANGLE_CMD_PORTS = cmd_ports
+
+#
+# Main
+#
+if __name__ == "__main__":
+    write_status_file(False)
+    make_tmpdirs()
+    parse_args()
+    # Commented out to allow multiple pyconnectors
+    # check_pid_file()
+
+    while True:
+        debug("")
+        read_from_cmd()

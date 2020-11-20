@@ -1,0 +1,652 @@
+#!/bin/sh
+
+. /lib/functions/network.sh
+. /usr/share/libubox/jshn.sh
+
+check_for_table()
+{
+	ipCheck=$1
+	tableCheck=$2
+	output=`nft list table $ipCheck $tableCheck`
+	retval=$?
+	if [ $retval -ne 0 ]; then
+		echo "NFT does not have a required table for wan-manager"
+		exit 1
+	fi
+}
+
+handle_term()
+{
+	for i in `pgrep -P $$ `
+	do
+		kill -9 $i
+	done
+}
+
+wait_for_change()
+{
+	files=$1
+
+	inotifywait -r -qq -e create,modify $files
+}
+
+get_wan_bandwidth()
+{
+	id=$1
+
+	ret=0
+
+	json_load_file /etc/config/current.json
+	json_select network
+	json_select interfaces
+	json_get_keys interfaces
+	for i in $interfaces ; do
+		json_select $i
+		json_get_var interfaceId interfaceId
+		if [ $id = $interfaceId ] ; then
+			json_get_var downloadKbps downloadKbps
+			ret=$downloadKbps
+		fi
+		json_select ..
+	done
+	json_select ..
+	json_select ..
+
+	echo $ret
+}
+
+
+get_static_weight()
+{
+	policy=$1
+	id=$2
+
+	ret=0
+
+	json_load_file /etc/config/current.json
+	json_select wan
+	json_select policies
+	json_get_keys policies
+	for p in $policies ; do
+		json_select $p
+		json_get_var policyId policyId
+		policyIdString="policy-$policyId"
+		if [ $policy = $policyIdString ] ; then
+			json_select interfaces
+			json_get_keys interfaces
+			for i in $interfaces ; do
+				json_select $i
+				json_get_var interfaceId interfaceId
+				if [ $interfaceId -eq 0 ] ; then
+					ret=1
+				elif [ $id = $interfaceId ] ; then
+					json_get_var weight weight
+					ret=$weight
+				fi
+				json_select ..
+			done
+			json_select ..
+		fi
+		json_select ..
+	done
+	json_select ..
+	json_select ..
+
+	echo $ret
+}
+
+get_stat()
+{
+	id=$1
+	stat_name=$2
+	metric_name=$3
+
+	test=0
+
+	json_load_file /tmp/stats.json
+	if json_is_a interfaces array ; then
+		json_select interfaces
+		json_get_keys interfaces
+		for intf in $interfaces; do
+			json_select $intf
+			json_get_var interfaceId interfaceId
+			if [ $id = $interfaceId ] ; then
+				json_select "stats"
+				json_get_keys stats
+				for stat in $stats; do
+					json_select $stat
+					json_get_vars name
+					if [ $stat_name = $name ] ; then
+						json_select "metrics"
+						json_get_keys metrics
+						for metric in $metrics; do
+							json_select $metric
+							json_get_vars name value
+							if [ $metric_name = $name ] ; then
+								test=$(echo ${value%%.*})
+							fi
+							json_select ..
+						done
+						json_select ..
+					fi
+					json_select ..
+				done
+				json_select ..
+			fi
+			json_select ..
+		done
+		json_select ..
+	fi
+
+	echo $test
+}
+
+wan_is_up()
+{
+	policy=$1
+	id=$2
+
+	test_dir="/tmp/wan_status/$policy/wan-$id"
+
+	! find $test_dir -type f | xargs grep down > /dev/null
+}
+
+disable_policy()
+{
+	policy=$1
+	wans=$2
+
+	TMPFILE=`mktemp -t $policy-changeset.XXXXXX`
+
+	for wan in $wans ; do
+		echo flush set ip wan-routing wan-$wan-table >> $TMPFILE
+		echo flush set ip6 wan-routing wan-$wan-table >> $TMPFILE
+	done
+
+	echo flush chain ip wan-routing route-to-$policy >> $TMPFILE
+	echo flush set ip wan-routing $policy-table >> $TMPFILE
+	echo add rule ip wan-routing route-to-$policy return comment \"policy disabled\" >> $TMPFILE
+
+	echo flush chain ip6 wan-routing route-to-$policy >> $TMPFILE
+	echo flush set ip6 wan-routing $policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy return comment \"policy disabled\" >> $TMPFILE
+
+	nft -f $TMPFILE
+	retval=$?
+	while [ $retval -ne 0 ] ; do
+		nft -f $TMPFILE
+		retval=$?
+	done
+	rm $TMPFILE
+}
+
+jump_policy()
+{
+	policy=$1
+	id=$2
+	wans=$3
+
+	TMPFILE=`mktemp -t $policy-changeset.XXXXXX`
+
+	for wan in $wans ; do
+		echo flush set ip wan-routing wan-$wan-table >> $TMPFILE
+		echo flush set ip6 wan-routing wan-$wan-table >> $TMPFILE
+	done
+
+	echo flush chain ip wan-routing route-to-$policy >> $TMPFILE
+	echo flush set ip wan-routing $policy-table >> $TMPFILE
+	echo add rule ip wan-routing route-to-$policy set update ip saddr . ip daddr timeout 1m @$policy-table >> $TMPFILE
+	echo add rule ip wan-routing route-to-$policy set update ip daddr . ip saddr timeout 1m @$policy-table >> $TMPFILE
+	echo add rule ip wan-routing route-to-$policy jump update-rule-table >> $TMPFILE
+	echo add rule ip wan-routing route-to-$policy dict sessions ct id wan_policy long_string set $policy >> $TMPFILE
+	echo add rule ip wan-routing route-to-$policy jump mark-for-wan-$id >> $TMPFILE
+
+	echo flush chain ip6 wan-routing route-to-$policy >> $TMPFILE
+	echo flush set ip6 wan-routing $policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy set update ip6 saddr . ip6 daddr timeout 1m @$policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy set update ip6 daddr . ip6 saddr timeout 1m @$policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy jump update-rule-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy dict sessions ct id wan_policy long_string set $policy >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy jump mark-for-wan-$id >> $TMPFILE
+
+	nft -f $TMPFILE
+	retval=$?
+	while [ $retval -ne 0 ] ; do
+		nft -f $TMPFILE
+		retval=$?
+	done
+	rm $TMPFILE
+}
+
+balance_policy()
+{
+	policy=$1
+	wans=$2
+	total_weight=$3
+	balance_string=$4
+
+	TMPFILE=`mktemp -t $policy-changeset.XXXXXX`
+
+	for wan in $wans ; do
+		echo flush set ip wan-routing wan-$wan-table >> $TMPFILE
+		echo flush set ip6 wan-routing wan-$wan-table >> $TMPFILE
+	done
+
+	echo flush chain ip wan-routing route-to-$policy >> $TMPFILE
+	echo flush set ip wan-routing $policy-table >> $TMPFILE
+	echo add rule ip wan-routing route-to-$policy set update ip saddr . ip daddr timeout 1m @$policy-table >> $TMPFILE
+	echo add rule ip wan-routing route-to-$policy set update ip daddr . ip saddr timeout 1m @$policy-table >> $TMPFILE
+	echo add rule ip wan-routing route-to-$policy jump update-rule-table >> $TMPFILE
+	echo add rule ip wan-routing route-to-$policy dict sessions ct id wan_policy long_string set $policy >> $TMPFILE
+	echo add ip wan-routing route-to-$policy numgen random mod $total_weight vmap { $balance_string } >> $TMPFILE
+
+	echo flush chain ip6 wan-routing route-to-$policy >> $TMPFILE
+	echo flush set ip6 wan-routing $policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy set update ip6 saddr . ip6 daddr timeout 1m @$policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy set update ip6 daddr . ip6 saddr timeout 1m @$policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy jump update-rule-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy dict sessions ct id wan_policy long_string set $policy >> $TMPFILE
+	echo add ip6 wan-routing route-to-$policy numgen random mod $total_weight vmap { $balance_string } >> $TMPFILE
+
+	nft -f $TMPFILE
+	retval=$?
+	while [ $retval -ne 0 ] ; do
+		nft -f $TMPFILE
+		retval=$?
+	done
+	rm $TMPFILE
+}
+
+specific_wan()
+{
+	policy=$1
+	id=$2
+
+	policy_dir="/tmp/wan_status/$policy"
+	mkdir -p $policy_dir
+
+	status="init"
+
+	while [ 1 ] ; do
+		wait_for_change "/tmp/stats.json $policy_dir"
+		if wan_is_up $policy $id ; then
+			result="up"
+		else
+			result="down"
+		fi
+
+		if [ ! $result = $status ] ; then
+			status=$result
+			if [ $status = "up" ] ; then
+				jump_policy $policy $id "$id"
+			else
+				disable_policy $policy "$id"
+			fi
+		fi
+	done
+}
+
+best_of()
+{
+	policy=$1
+	stat_name=$2
+	metric_name=$3
+	operator=$4
+
+	policy_dir="/tmp/wan_status/$policy"
+	mkdir -p $policy_dir
+
+	status="init"
+	current_best_wan=-1
+
+	while [ 1 ] ; do
+		wait_for_change "/tmp/stats.json $policy_dir"
+		best_wan=-1
+		best_stat=-1
+
+		wans=""
+		policy_wans=""
+		for d in $policy_dir/* ; do
+			id=$(echo $d | cut -d '-' -f 3)
+			policy_wans="$wans $id"
+			if wan_is_up $policy $id ; then
+				wans="$wans $id"
+			fi
+		done
+
+		for wan in $wans ; do
+			stat=$(get_stat $wan $stat_name $metric_name)
+			if [ $best_wan -eq -1 ] ; then
+				best_wan=$wan
+				best_stat=$stat
+			else
+				case $operator in
+					le)
+						if [ $stat -le $best_stat ] ; then
+							best_wan=$wan
+							best_stat=$stat
+						fi
+						;;
+					lt)
+						if [ $stat -lt $best_stat ] ; then
+							best_wan=$wan
+							best_stat=$stat
+						fi
+						;;
+					ge)
+						if [ $stat -ge $best_stat ] ; then
+							best_wan=$wan
+							best_stat=$stat
+						fi
+						;;
+					gt)
+						if [ $stat -gt $best_stat ] ; then
+							best_wan=$wan
+							best_stat=$stat
+						fi
+						;;
+				esac
+			fi
+		done
+
+		if [ $best_wan -eq -1 ] ; then
+			result="down"
+		else
+			result="up"
+		fi
+
+		if [ ! $result = $status ] || [ ! $current_best_wan -eq $best_wan ] ; then
+			if [ $result = "up" ] ; then
+				jump_policy $policy $best_wan "$policy_wans"
+				current_best_wan=$best_wan
+			else
+				disable_policy $policy "$policy_wans"
+			fi
+		fi
+		status=$result
+	done
+}
+
+balance()
+{
+
+	policy=$1
+	algorithm=$2
+
+	policy_dir="/tmp/wan_status/$policy"
+	mkdir -p $policy_dir
+
+	status="init"
+	balance_string=""
+
+	while [ 1 ] ; do
+		wait_for_change "/tmp/stats.json $policy_dir"
+		wans=""
+		policy_wans=""
+		total_weight=0
+		new_balance_string=""
+		for d in $policy_dir/* ; do
+			id=$(echo $d | cut -d '-' -f 3)
+			policy_wans="$wans $id"
+			if wan_is_up $policy $id ; then
+				wans="$wans $id"
+			fi
+		done
+
+		total_latency=0
+		if [ $algorithm = "LATENCY" ] ; then
+			for wan in $wans ; do
+				latency=$(get_stat $wan "latency" "1_minute")
+				total_latency=$((total_latency + $latency))
+			done
+		fi
+		for wan in $wans ; do
+			if [ $algorithm = "WEIGHTED" ] ; then
+				weight=$(get_static_weight $policy $wan)
+			elif [ $algorithm = "LATENCY" ] ; then
+				weight=$(get_stat $wan "latency" "1_minute")
+				weight=$(($total_latency - $weight))
+				if [ $weight -eq 0 ] ; then
+					weight=100
+				fi
+			elif [ $algorithm = "AVAILABLE_BANDWIDTH" ] ; then
+				weight=$(get_stat $wan "available_bandwidth" "1_minute")
+			elif [ $algorithm = "BANDWIDTH" ] ; then
+				weight=$(get_wan_bandwidth $wan)
+			fi
+
+			if [ $weight -eq 0 ] ; then
+				continue
+			fi
+
+			if [ $total_weight -ne 0 ] ; then
+				new_balance_string="$new_balance_string, "
+			fi
+
+			range_end=$(($weight + $total_weight - 1))
+			if [ $total_weight -eq $range_end ] ; then
+				new_balance_string="$new_balance_string$total_weight : jump mark-for-wan-$wan"
+			else
+				new_balance_string="$new_balance_string$total_weight-$range_end : jump mark-for-wan-$wan"
+			fi
+			total_weight=$((total_weight + $weight))
+		done
+
+		if [ "$new_balance_string" = "" ] ; then
+			result="down"
+			if [ ! $status = "down" ] ; then
+				disable_policy $policy "$policy_wans"
+			fi
+		else
+			result="up"
+			if [ ! $status = "up" ] || [ ! "$new_balance_string" = "$balance_string" ] ; then
+				balance_policy $policy "$policy_wans" $total_weight "$new_balance_string"
+				balance_string="$new_balance_string"
+			fi
+		fi
+		status=$result
+	done
+}
+
+attribute()
+{
+	policy=$1
+	id=$2
+	interface=$3
+	attribute=$4
+
+	result_dir="/tmp/wan_status/$policy/wan-$id"
+	if [ $attribute = "NAME" ] ; then
+		contains=$5
+		result=$6
+		result_file="$result_dir/${attribute}_${contains}"
+	else
+		result=$5
+		result_file="$result_dir/$attribute"
+	fi
+	mkdir -p $result_dir
+
+	echo $result > $result_file
+}
+
+metric()
+{
+	policy=$1
+	id=$2
+	interface=$3
+	stat_name=$4
+	metric_name=$5
+	operator=$6
+	val=$7
+
+	status="init"
+
+	test=-1
+
+	result_dir="/tmp/wan_status/$policy/wan-$id"
+	result_file="$result_dir/${stat_name}_${metric_name}_${operator}_${val}"
+	mkdir -p $result_dir
+
+	while [ 1 ] ; do
+		wait_for_change "/tmp/stats.json"
+		test=$(get_stat $id $stat_name $metric_name)
+
+		result="down"
+		if [ $test -ne -1 ] ; then
+			case $operator in
+				le)
+					if [ $test -le $val ] ; then
+						result="up"
+					fi
+					;;
+				lt)
+					if [ $test -lt $val ] ; then
+						result="up"
+					fi
+					;;
+				ge)
+					if [ $test -ge $val ] ; then
+						result="up"
+					fi
+					;;
+				gt)
+					if [ $test -gt $val ] ; then
+						result="up"
+					fi
+					;;
+			esac
+		fi
+
+		if [ ! $result = $status ] ; then
+			echo $result > $result_file
+			status=$result
+		fi
+	done
+}
+
+up()
+{
+	policy=$1
+	interfaceId=$2
+	interface=$3
+
+	result_dir="/tmp/wan_status/$policy/wan-$interfaceId"
+	result_file="$result_dir/up"
+
+	status="init"
+
+	mkdir -p $result_dir
+
+	while [ 1 ] ; do
+		network_flush_cache
+		if network_is_up $interface ; then
+			#echo up > $result_file
+			result="up"
+		else
+			#echo down > $result_file
+			result="down"
+		fi
+
+		if [ ! $result = $status ] ; then
+			echo $result > $result_file
+			status=$result
+		fi
+
+		sleep 1
+	done
+}
+
+test()
+{
+	policy=$1
+	interfaceId=$2
+	interface=$3
+	criteria=$4
+	interval=$5
+	timeout=$6
+	threshold=$7
+	host=$8
+
+	local device ip_address dns_server gw
+
+	result0=1
+	result1=1
+	result2=1
+	result3=1
+	result4=1
+	result5=1
+	result6=1
+	result7=1
+	result8=1
+	result9=1
+
+	status="init"
+
+	result_dir="/tmp/wan_status/$policy/wan-$interfaceId"
+	result_file="$result_dir/${criteria}_${host}_${interval}_${timeout}_${threshold}"
+
+	mkdir -p $result_dir
+	while [ 1 ] ; do
+		for i in $(seq 0 9) ; do
+			network_flush_cache
+			if network_is_up $interface ; then
+
+				network_get_device device $interface
+				network_get_ipaddr ip_address $interface
+				network_get_dnsserver dns_server $interface
+				network_get_gateway gw $interface
+
+				case $criteria in
+					ping)
+						ping -I $device -w $timeout -c 1 $host > /dev/null && let result"$i"=1 || let result"$i"=0
+						;;
+					arp)
+						arping -s $ip_address -I $device -c 1 $gw > /dev/null && let result"$i"=1 || let result"$i"=0
+						;;
+					dns)
+						dig -b $ip_address +tries=3 +timeout=$timeout $dns_server $host > /dev/null && let result"$i"=1 || let result"$i"=0
+						;;
+					http)
+						wget --no-check-certificate --bind-address=$ip_address --header="Wan-Failover-Flag: true" --tries=3 -O /dev/null $host 2> /dev/null && let result"$i"=1 || let result"$i"=0
+						;;
+					*)
+						echo "Unknown test $criteria"
+						let result"$i"=0
+						;;
+				esac
+
+				count=0
+				for i in $(seq 0 9) ; do
+					eval "temp=\"\$result$i\""
+					if [ $temp -eq 0 ] ; then
+						let count++
+					fi
+				done
+				if [ $count -ge $threshold ] ; then
+					result="down"
+				else
+					result="up"
+				fi
+			fi
+
+			if [ ! $result = $status ] ; then
+				echo $result > $result_file
+				status=$result
+			fi
+
+			sleep $interval
+		done
+	done
+}
+
+check_for_table ip wan-routing
+check_for_table ip6 wan-routing
+
+trap 'handle_term' TERM INT
+rm -rf /tmp/wan_status/*
+. /etc/config/wan_manager
+
+for i in `pgrep -P $$ `
+do
+	wait $i
+done

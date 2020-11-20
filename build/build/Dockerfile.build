@@ -1,0 +1,31 @@
+FROM debian:stretch
+
+USER root
+
+RUN apt-get update
+RUN apt-get install -y git
+RUN apt-get install -y curl
+RUN apt-get install -y build-essential
+RUN apt-get install -y gawk
+RUN apt-get install -y file
+RUN apt-get install -y wget
+RUN apt-get install -y unzip
+RUN apt-get install -y time
+RUN apt-get install -y python2.7
+RUN apt-get install -y libncurses5
+RUN apt-get install -y libncurses5-dev
+RUN apt-get install -y libssl-dev
+RUN apt-get install -y gettext
+RUN apt-get install -y swig
+RUN apt-get install -y zlib1g-dev
+RUN apt-get install -y ruby-sass
+RUN apt-get install -y openssh-client
+
+ENV FORCE_UNSAFE_CONFIGURE=1
+ENV SRC=/home/mfw/openwrt
+RUN mkdir -p ${SRC}
+VOLUME ${SRC}
+
+WORKDIR ${SRC}
+
+ENTRYPOINT [ "./mfw/build.sh" ]

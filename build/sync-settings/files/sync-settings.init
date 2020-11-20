@@ -1,0 +1,25 @@
+#!/bin/sh /etc/rc.common
+
+# 14 is right after haveged (13)
+START=14
+STOP=14
+
+boot() {
+    # check if we should reset settings
+    /usr/bin/check-for-usb-reset.sh && rm /etc/config/settings.json
+
+    if [ ! -f /etc/config/settings.json ] ; then
+        logger -t "sync-settings" "Creating /etc/config/settings.json"
+        /usr/bin/sync-settings -c -n | logger -t "sync-settings"
+    else
+        /usr/bin/sync-settings -n | logger -t "sync-settings"
+    fi
+
+    if [ ! -f /etc/config/defaults.json ] ; then
+        /usr/bin/sync-settings -c -s -f /etc/config/defaults.json
+    fi
+
+    # FIXME
+    # We need to check the version and call an upgrade utility if the version of the settings is out-of-date
+    # If we upgrade the settings we should recreate defaults.json
+}
