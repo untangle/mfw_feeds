@@ -1,0 +1,36 @@
+FROM debian:buster-slim
+
+USER root
+
+RUN echo 'APT::Install-Recommends "false";' > /etc/apt/apt.conf.d/no-recommends && \ 
+    echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/no-recommends
+
+RUN apt update -q
+RUN apt install -y build-essential
+RUN apt install -y curl
+RUN apt install -y file
+RUN apt install -y gawk
+RUN apt install -y gettext
+RUN apt install -y git
+RUN apt install -y libncurses-dev
+RUN apt install -y libssl-dev
+RUN apt install -y openssh-client
+RUN apt install -y python2.7
+RUN apt install -y ruby-sass
+RUN apt install -y swig
+RUN apt install -y time
+RUN apt install -y unzip
+RUN apt install -y wget
+RUN apt install -y zlib1g-dev
+
+RUN apt clean
+RUN rm -rf /var/lib/apt/lists/* /var/cache/apt-show-versions/*
+
+ENV FORCE_UNSAFE_CONFIGURE=1
+ENV SRC=/home/mfw/openwrt
+RUN mkdir -p ${SRC}
+VOLUME ${SRC}
+
+WORKDIR ${SRC}
+
+ENTRYPOINT [ "./mfw/build.sh" ]

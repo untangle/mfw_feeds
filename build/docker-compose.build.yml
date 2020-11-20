@@ -11,6 +11,19 @@ services:
       - ../:/home/mfw/openwrt
       - ${SSH_AUTH_SOCK}:/ssh-agent
 
+  build-buster-local-container:
+    build:
+      context: .
+      dockerfile: Dockerfile.buster-build
+    environment:
+      BUILD_URL:
+      AWS_ACCESS_KEY_ID:
+      AWS_SECRET_ACCESS_KEY:
+      SSH_AUTH_SOCK: /ssh-agent
+    volumes:
+      - ${PWD}:/home/mfw/openwrt
+      - ${SSH_AUTH_SOCK}:/ssh-agent
+
   build-local-container:
     build:
       context: .
