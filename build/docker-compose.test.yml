@@ -1,0 +1,17 @@
+version: '2'
+services:
+  mfw:
+    build:
+      context: .
+      dockerfile: Dockerfile.test.mfw
+      args:
+        - ROOTFS_TARBALL
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test.agent
+    depends_on:
+      - mfw
+    volumes:
+      - ./:/home/mfw/test-agent

@@ -1,0 +1,23 @@
+version: '2'
+services:
+  build:
+    image: untangleinc/mfw:build
+    environment:
+      BUILD_URL:
+      AWS_ACCESS_KEY_ID:
+      AWS_SECRET_ACCESS_KEY:
+      SSH_AUTH_SOCK: /ssh-agent
+    volumes:
+      - ../:/home/mfw/openwrt
+      - ${SSH_AUTH_SOCK}:/ssh-agent
+
+  build-local-container:
+    build:
+      context: .
+      dockerfile: Dockerfile.build
+    environment:
+      SSH_AUTH_SOCK: /ssh-agent
+    volumes:
+      - ../:/home/mfw/openwrt
+      - ${SSH_AUTH_SOCK}:/ssh-agent
+

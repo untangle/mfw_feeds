@@ -1,0 +1,19 @@
+FROM debian:stretch
+
+USER root
+
+RUN echo 'APT::Install-Recommends "false";' > /etc/apt/apt.conf.d/no-recommends && \
+    echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/no-recommends
+
+RUN apt-get update -q
+RUN apt-get install -y openssh-client
+RUN apt-get install -y netcat
+RUN apt-get install -y curl
+
+ENV SRC=/home/mfw/test-agent
+RUN mkdir -p ${SRC}
+VOLUME ${SRC}
+
+WORKDIR ${SRC}
+
+ENTRYPOINT [ "./test-agent.sh" ]
