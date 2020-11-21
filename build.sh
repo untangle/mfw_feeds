@@ -90,7 +90,7 @@ if [ -z "$NO_MFW_FEEDS" ]; then
   cp ${CURDIR}/feeds.conf.mfw feeds.conf
 
   # install feeds
-  rm -fr {.,package}/feeds/untangle*
+  rm -fr {.,package}/feeds/mfw*
   ./scripts/feeds update -a
   ./scripts/feeds install -a -p packages
   ./scripts/feeds install -a -f -p mfw
