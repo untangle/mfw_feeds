@@ -15,11 +15,7 @@ boot() {
         /usr/bin/sync-settings -n | logger -t "sync-settings"
     fi
 
-    if [ ! -f /etc/config/defaults.json ] ; then
-        /usr/bin/sync-settings -c -s -f /etc/config/defaults.json
-    fi
-
-    # FIXME
-    # We need to check the version and call an upgrade utility if the version of the settings is out-of-date
-    # If we upgrade the settings we should recreate defaults.json
+    # remove /etc/config/defaults.json
+    # we used to create it here, but never used it for anything
+    rm -f /etc/config/defaults.json
 }
