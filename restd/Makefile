@@ -47,8 +47,8 @@ endef
 define Package/restd/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(OUR_SRC_DIR)/cmd/restd/restd $(1)/usr/bin/
-  $(INSTALL_DIR) $(1)/etc/init.d
-  $(INSTALL_BIN) files/restd.init $(1)/etc/init.d/restd
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) files/restd.init $(1)/etc/init.d/restd
 endef
 
 $(eval $(call BuildPackage,restd))
