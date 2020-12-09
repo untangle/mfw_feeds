@@ -24,6 +24,7 @@ define Package/restd
   TITLE:=RESTful api and web server daemon
   URL:=https://github.com/untangle/restd
   PKG_BUILD_DEPENDS:=golang
+  DEPENDS:=+libsodium +libzmq +libzmq-curve
 endef
 
 define Package/restd/description
