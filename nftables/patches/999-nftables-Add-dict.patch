@@ -1,16 +1,16 @@
-From 4aaed52e68c44b7b4e81383f27837f40fe7135a4 Mon Sep 17 00:00:00 2001
+From 1348ea781d55d5bc9eca71f93038d420f35f3a15 Mon Sep 17 00:00:00 2001
 From: Brett Mastbergen <bmastbergen@untangle.com>
 Date: Thu, 20 Dec 2018 16:29:49 -0500
 Subject: [PATCH] nftables: Add dict (w/ ct id)
 
 ---
  include/Makefile.am       |   1 +
- include/datatype.h        |   6 ++
+ include/datatype.h        |   8 ++
  include/dict.h            |   7 ++
  include/expression.h      |  18 ++++
  include/statement.h       |  16 ++++
  src/Makefile.am           |   1 +
- src/datatype.c            |  90 ++++++++++++++++++
+ src/datatype.c            | 100 ++++++++++++++++++++
  src/dict.c                | 163 ++++++++++++++++++++++++++++++++
  src/evaluate.c            |  43 +++++++++
  src/expression.c          |   4 +
@@ -18,7 +18,7 @@ Subject: [PATCH] nftables: Add dict (w/ ct id)
  src/netlink_linearize.c   |  99 +++++++++++++++++++-
  src/parser_bison.y        | 230 ++++++++++++++++++++++++++++++++++++++++++++--
  src/scanner.l             |   9 ++
- 14 files changed, 820 insertions(+), 8 deletions(-)
+ 14 files changed, 832 insertions(+), 8 deletions(-)
  create mode 100644 include/dict.h
  create mode 100644 src/dict.c
 
@@ -35,26 +35,28 @@ index 04a4a619..4bc1ce82 100644
  			mini-gmp.h	\
  			gmputil.h	\
 diff --git a/include/datatype.h b/include/datatype.h
-index c1d08cc2..39c49639 100644
+index c1d08cc2..53bce0b6 100644
 --- a/include/datatype.h
 +++ b/include/datatype.h
-@@ -88,6 +88,9 @@ enum datatypes {
+@@ -88,6 +88,10 @@ enum datatypes {
  	TYPE_FIB_ADDR,
  	TYPE_BOOLEAN,
  	TYPE_CT_EVENTBIT,
 +	TYPE_INT32,
 +	TYPE_INT64,
 +	TYPE_BOOL,
++	TYPE_CT_ID,
  	TYPE_IFNAME,
  	TYPE_IGMP_TYPE,
  	__TYPE_MAX
-@@ -244,6 +247,9 @@ extern const struct datatype invalid_type;
+@@ -244,6 +248,10 @@ extern const struct datatype invalid_type;
  extern const struct datatype verdict_type;
  extern const struct datatype nfproto_type;
  extern const struct datatype bitmask_type;
 +extern const struct datatype int_type;
 +extern const struct datatype int64_type;
 +extern const struct datatype bool_type;
++extern const struct datatype ct_id_type;
  extern const struct datatype integer_type;
  extern const struct datatype string_type;
  extern const struct datatype lladdr_type;
@@ -182,23 +184,33 @@ index 740c21f2..8aa95644 100644
  		rt.c				\
  		numgen.c			\
 diff --git a/src/datatype.c b/src/datatype.c
-index c5a01346..878f94d1 100644
+index c5a01346..b5f5941a 100644
 --- a/src/datatype.c
 +++ b/src/datatype.c
-@@ -69,6 +69,9 @@ static const struct datatype *datatypes[TYPE_MAX + 1] = {
+@@ -69,6 +69,10 @@ static const struct datatype *datatypes[TYPE_MAX + 1] = {
  	[TYPE_ECN]		= &ecn_type,
  	[TYPE_FIB_ADDR]         = &fib_addr_type,
  	[TYPE_BOOLEAN]		= &boolean_type,
 +	[TYPE_INT32]		= &int_type,
 +	[TYPE_INT64]		= &int64_type,
 +	[TYPE_BOOL]		= &bool_type,
++	[TYPE_CT_ID]		= &ct_id_type,
  	[TYPE_IFNAME]		= &ifname_type,
  	[TYPE_IGMP_TYPE]	= &igmp_type_type,
  };
-@@ -355,6 +358,93 @@ const struct datatype bitmask_type = {
+@@ -355,6 +359,102 @@ const struct datatype bitmask_type = {
  	.basetype	= &integer_type,
  };
  
++const struct datatype ct_id_type = {
++	.type		= TYPE_CT_ID,
++	.name		= "ct_id",
++	.desc		= "ct_id",
++	.size		= 4 * BITS_PER_BYTE,
++	.byteorder	= BYTEORDER_BIG_ENDIAN,
++	.basetype	= &integer_type,
++};
++
 +static void int_type_print(const struct expr *expr, struct output_ctx *octx)
 +{
 +	int value;
@@ -291,7 +303,7 @@ index c5a01346..878f94d1 100644
  	const struct datatype *dtype = expr->dtype;
 diff --git a/src/dict.c b/src/dict.c
 new file mode 100644
-index 00000000..a60b987a
+index 00000000..302dd1ab
 --- /dev/null
 +++ b/src/dict.c
 @@ -0,0 +1,163 @@
@@ -453,8 +465,8 @@ index 00000000..a60b987a
 +{
 +	struct expr *expr;
 +
-+	expr = expr_alloc(loc, EXPR_CTID, &int_type,
-+			  BYTEORDER_HOST_ENDIAN, 32);
++	expr = expr_alloc(loc, EXPR_CTID, &ct_id_type,
++			  BYTEORDER_BIG_ENDIAN, 32);
 +
 +	return expr;
 +}
