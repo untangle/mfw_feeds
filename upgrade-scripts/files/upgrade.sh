@@ -49,6 +49,9 @@ echo "Checking for new releases with URL: ${URL}"
 
 rm -f $OUTPUT
 
+# request a db cleanup on packetd to free up some /tmp space
+wget -q -O /dev/null --post-data '' http://localhost/api/dbcleanup
+
 wget -t 5 --timeout=30 -q -O $OUTPUT $URL
 if [ $? != 0 ] ; then
     echo "Failed to reach upgrade server."
