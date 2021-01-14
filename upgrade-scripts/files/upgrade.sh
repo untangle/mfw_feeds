@@ -26,7 +26,7 @@ if [[ -f "/tmp/sysinfo/untangle_board_name" ]] ; then
 fi
 
 UID="`cat /etc/config/uid | tr -d '[ \t\r\n]'`"
-DEVICE="`grep LEDE_DEVICE_MANUFACTURER_URL /etc/os-release | sed -rn 's/.*sdwan-(.*?)-Packages.*/\1/p'`"
+DEVICE="`grep DEVICE_MANUFACTURER_URL /etc/os-release | sed -rn 's/.*sdwan-(.*?)-Packages.*/\1/p'`"
 
 ARGS="version=${VERSION}&fullVersion=${FULL_VERSION}&board=${BOARD}&uid=${UID}"
 URL="https://updates.untangle.com/api/v1/releases/${DEVICE}/latest?${ARGS}"
