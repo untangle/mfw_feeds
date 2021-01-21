@@ -1,5 +1,5 @@
-MFW_VERSION ?= $(shell ../build/git-remote-find-tag.sh $(1))
-MFW_COMMIT = $(shell ../build/git-remote-describe.sh $(1) $(2))
+MFW_VERSION ?= $(shell git ls-remote --refs --tags $(1) | tail -n 1 | sed -e 's|.*/||')
+MFW_COMMIT = $(shell git ls-remote --refs $(1) refs/heads/$(2) refs/tags/$(2) | cut -f 1)
 
 PKG_SOURCE_VERSION := $(call MFW_VERSION,$(PKG_SOURCE_URL))
 PKG_VERSION := $(call MFW_COMMIT,$(PKG_SOURCE_URL),$(PKG_SOURCE_VERSION))
