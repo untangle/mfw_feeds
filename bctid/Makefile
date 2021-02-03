@@ -17,7 +17,7 @@ define Package/bctid
   CATEGORY:=Network
   SUBMENU:=Firewall
   TITLE:=BrightCloud Threat Intelligence Daemon
-  URL:=https://github.com/untangle/bcti.git
+  URL:=https://github.com/untangle/bctid
   DEPENDS:=+libidn2
 endef
 
