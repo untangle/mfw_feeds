@@ -5,7 +5,7 @@ PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=git@github.com:untangle/bctid.git
-PKG_SOURCE_VERSION:=MFW-1320
+PKG_SOURCE_VERSION:=mfw-1320
 
 include ../version.mk
 
