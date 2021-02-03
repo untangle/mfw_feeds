@@ -4,7 +4,7 @@ PKG_NAME:=bctid
 PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=git@github.com:rasmusenc-untangle/bcti-sdk-linux.git
+PKG_SOURCE_URL:=git@github.com:untangle/bcti.git
 
 include ../version.mk
 
@@ -16,9 +16,8 @@ define Package/bctid
   CATEGORY:=Network
   SUBMENU:=Firewall
   TITLE:=BrightCloud Threat Intelligence Daemon
-  URL:=https://github.com/rasmussenc-untangle/bcti-sdk-linux/
-  PKG_BUILD_DEPENDS:=libstdcpp
-  DEPENDS:=+libstdcpp libidn2
+  URL:=https://github.com/untangle/bcti.git
+  DEPENDS:=+libidn2
 endef
 
 define Package/bctid/description
