@@ -36,4 +36,4 @@ define Package/bctid/install
 	$(CP) $(PKG_INSTALL_DIR)/database/public_suffix_list.dat $(1)/usr/share/untangle-bctid/
 endef
 
-$(eval $(call BuildPackage, bctid))
+$(eval $(call BuildPackage,bctid))
