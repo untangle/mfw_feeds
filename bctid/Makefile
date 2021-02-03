@@ -10,7 +10,6 @@ PKG_SOURCE_VERSION:=mfw-1320
 include ../version.mk
 
 include $(INCLUDE_DIR)/package.mk
-# include $(INCLUDE_DIR)/cmake.mk
 
 define Package/bctid
   SECTION:=net
@@ -23,10 +22,6 @@ endef
 
 define Package/bctid/description
   BrightCloud Threat Intelligence Daemon
-endef
-
-define Build/Compile
-	docker-compose -f docker-compose.build.yml run build
 endef
 
 define Package/bctid/install
