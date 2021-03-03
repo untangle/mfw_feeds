@@ -9,14 +9,14 @@ usage() {
 
 # logMessage is used to log a normal stdout message to the logger
 logMessage() {
-    echo $1
-    logger -t upgrade.sh $1
+    echo "$1"
+    logger -t upgrade.sh "$1"
 }
 
 # logException is used to log a user.crit error to the logger
 logException() {
-    echo $1
-    logger -p 2 -s -t upgrade.sh $1
+    echo "$1"
+    logger -p 2 -s -t upgrade.sh "$1"
 }
 
 for f in /etc/os-release /tmp/sysinfo/board_name /etc/config/uid ; do
