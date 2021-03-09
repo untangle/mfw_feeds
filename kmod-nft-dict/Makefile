@@ -5,7 +5,7 @@ PKG_NAME:=nft-dict
 PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=Brett Mastbergen <bmastbergen@untangle.com>
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/untangle/nft_dict.git
+PKG_SOURCE_URL:=https://github.com/rasmussen-untangle/nft_dict.git
 
 include ../version.mk
 
@@ -14,7 +14,7 @@ include $(INCLUDE_DIR)/package.mk
 define KernelPackage/nft-dict
   SUBMENU:=Network Support
   TITLE:=Netfilter generic dictionary support
-  URL:=https://github.com/untangle/nft_dict
+  URL:=https://github.com/rasmussen-untangle/nft_dict
   FILES:=$(PKG_BUILD_DIR)/dict.ko \
          $(PKG_BUILD_DIR)/nft_dict.ko
   AUTOLOAD:=$(call AutoLoad,75,dict)
