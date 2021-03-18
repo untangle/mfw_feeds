@@ -4,7 +4,7 @@ PKG_NAME:=ui
 PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=David Wilson <dwilson@untangle.com>
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/untangle/mfw_ui.git
+PKG_SOURCE_URL:=git@github.com:untangle/mfw_ui.git
 
 include ../version.mk
 
