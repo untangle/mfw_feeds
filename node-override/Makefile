@@ -7,7 +7,7 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=node-override
+PKG_NAME:=node
 PKG_VERSION:=v14.16.0
 PKG_RELEASE:=1
 
