@@ -11,7 +11,7 @@ PKG_NAME:=node
 PKG_VERSION:=v14.16.0
 PKG_RELEASE:=1
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+PKG_SOURCE:=node-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://nodejs.org/dist/$(PKG_VERSION)
 PKG_HASH:=4e7648a617f79b459d583f7dbdd31fbbac5b846d41598f3b54331a5b6115dfa6
 
@@ -32,7 +32,7 @@ PKG_ASLR_PIE:=0
 include $(INCLUDE_DIR)/host-build.mk
 include $(INCLUDE_DIR)/package.mk
 
-define Package/node
+define Package/node-override
   SECTION:=lang
   CATEGORY:=Languages
   SUBMENU:=Node.js
@@ -43,7 +43,7 @@ define Package/node
 	   +libcares +libatomic +NODEJS_ICU_SYSTEM:icu +NODEJS_ICU_SYSTEM:icu-full-data
 endef
 
-define Package/node/description
+define Package/node-override/description
   Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine. Node.js uses
   an event-driven, non-blocking I/O model that makes it lightweight and efficient. Node.js'
    package ecosystem, npm, is the largest ecosystem of open source libraries in the world.
@@ -67,7 +67,7 @@ define Package/node-npm/description
 	NPM is the package manager for NodeJS
 endef
 
-define Package/node/config
+define Package/node-override/config
 	if PACKAGE_node
 	choice
 		prompt "i18n features"
@@ -135,7 +135,7 @@ define Build/InstallDev
 	$(CP) $(PKG_INSTALL_DIR)/usr/include/* $(1)/usr/include/
 endef
 
-define Package/node/install
+define Package/node-override/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/node $(1)/usr/bin/
 endef
@@ -149,5 +149,5 @@ define Package/node-npm/install
 endef
 
 $(eval $(call HostBuild))
-$(eval $(call BuildPackage,node))
-$(eval $(call BuildPackage,node-npm))
+$(eval $(call BuildPackage,node-override))
+#$(eval $(call BuildPackage,node-npm))
