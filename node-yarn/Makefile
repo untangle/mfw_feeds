@@ -18,7 +18,7 @@ PKG_LICENSE:=BSD-2-Clause
 PKG_LICENSE_FILES:=LICENSE
 
 PKG_HOST_ONLY:=1
-HOST_BUILD_DEPENDS:=node/host
+HOST_BUILD_DEPENDS:=node-override/host
 HOST_BUILD_PARALLEL:=1
 
 include $(INCLUDE_DIR)/host-build.mk
@@ -30,7 +30,7 @@ define Package/node-yarn
   CATEGORY:=Languages
   TITLE:=Fast, reliable, and secure dependency management
   URL:=https://yarnpkg.com/
-  DEPENDS:=+node
+  DEPENDS:=+node-override
   BUILDONLY:=1
 endef
 
