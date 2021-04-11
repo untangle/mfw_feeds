@@ -41,11 +41,11 @@ LogLevel=Info
 #LogLevel=Debug
 
 # LocalDatabaseDirectory: URL and IP databases are stored here
-LocalDatabaseDirectory=/var/lib/bctid/database
+LocalDatabaseDirectory=/usr/share/untangle-bctid
 
 # TLDPath: Path to public suffix list file. See https://publicsuffix.org for updates
 # The public suffix list has the current top level domains
-TLDPath=/var/lib/bctid/database/public_suffix_list.dat
+TLDPath=/usr/share/untangle-bctid/public_suffix_list.dat
 
 # CloudLookups: Disable for local database only lookups, applies to URL lookups
 CloudLookups=True
