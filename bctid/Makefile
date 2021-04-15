@@ -35,13 +35,9 @@ define Package/bctid/install
 	$(INSTALL_BIN) $(TMP_BUILD_DIR)/bin/bctid $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) files/bctid.init $(1)/etc/init.d/bctid
+	$(INSTALL_BIN) files/bcti.cfg.sdwan $(1)/usr/share/untangle-bctid/bcti.cfg
 	$(CP) $(TMP_BUILD_DIR)/lib/* $(1)/usr/lib/
 	$(CP) $(TMP_BUILD_DIR)/database/* $(1)/usr/share/untangle-bctid/
-	$(CP) $(TMP_BUILD_DIR)/bin/bcti.cfg $(1)/usr/share/untangle-bctid/
-	sed -i 's/^OEM=.*/OEM=Untangle/g' $(1)/usr/share/untangle-bctid/bcti.cfg
-	sed -i 's/^Device=.*/Device=NGFirewall_Internal/g' $(1)/usr/share/untangle-bctid/bcti.cfg
-	sed -i 's/^LocalDatabaseDirectory=.*/LocalDatabaseDirectory=\/usr\/share\/untangle-bctid/g' $(1)/usr/share/untangle-bctid/bcti.cfg
-	sed -i 's/^TLDPath=.*/TLDPath=\/usr\/share\/untangle-bctid\/public_suffix_list.dat/g' $(1)/usr/share/untangle-bctid/bcti.cfg
 endef
 
 $(eval $(call BuildPackage,bctid))
