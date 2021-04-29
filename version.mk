@@ -4,8 +4,9 @@ MFW_COMMIT = $(shell git ls-remote --refs $(1) refs/heads/$(2) refs/tags/$(2) | 
 # allow the user to force a specific URL or version, per package
 #
 # for instance one could declare PKG_SOURCE_URL_packetd,
-# PKG_SOURCE_VERSION_classd, etc
-check-var-overridden = $(if $($(1)_$(PKG_NAME)),$($(1)_$(PKG_NAME)),$(2))
+# PKG_SOURCE_VERSION_classd, PKG_SOURCE_URL_sync_settings, etc
+PKG_NAME_NO_DASH = $(subst -,_,$(PKG_NAME))
+check-var-overridden = $(if $($(1)_$(PKG_NAME_NO_DASH)),$($(1)_$(PKG_NAME_NO_DASH)),$(2))
 PKG_SOURCE_URL := $(call check-var-overridden,PKG_SOURCE_URL,$(PKG_SOURCE_URL))
 PKG_SOURCE_VERSION := $(call check-var-overridden,PKG_SOURCE_VERSION,$(call MFW_VERSION,$(PKG_SOURCE_URL)))
 
@@ -16,6 +17,7 @@ PKG_SOURCE := $(PKG_NAME)-$(PKG_SOURCE_VERSION)-$(PKG_VERSION).tar.xz
 
 all:
 	echo $(PKG_NAME)
+	echo $(PKG_NAME_NO_DASH)
 	echo $(PKG_SOURCE_URL)
 	echo $(PKG_SOURCE_VERSION)
 	echo $(PKG_VERSION)
