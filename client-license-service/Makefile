@@ -34,6 +34,7 @@ define Build/Compile
                         CC=$(TARGET_CC) \
                         CXX=$(TARGET_CXX) \
                         $(call GoPackage/Environment) ; \
+	go get -u github.com/untangle/golang-shared@a8873a88006fedbbc6b5bc9eb45c4b81bc9ed7f5 \
 	go mod tidy; \
 	go mod vendor; \
 	go build --mod=vendor -ldflags "-X 'main.Version=${VERSION}'" -o build/client-license-service
