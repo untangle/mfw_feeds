@@ -35,7 +35,6 @@ define Build/Compile
                         CXX=$(TARGET_CXX) \
                         $(call GoPackage/Environment) ; \
 	git checkout MFW-1406; \
-	git pull; \
 	go get -u github.com/untangle/golang-shared@b4b278d476ceec2f4f5a8bf3c4a0bbf62035a21b; \
 	go mod tidy; \
 	go mod vendor; \
