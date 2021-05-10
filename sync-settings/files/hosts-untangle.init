@@ -1,0 +1,11 @@
+#!/bin/sh /etc/rc.common
+
+# 13 is before sync-settings (14)
+START=13
+STOP=13
+
+boot() {
+    if [ ! -f /tmp/hosts.untangle] ; then
+        touch /tmp/hosts.untangle
+    fi
+}
