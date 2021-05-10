@@ -10,7 +10,10 @@ drives=`ls /dev/sd[a-z][1-99] 2>/dev/null`
 
 mkdir /tmp/thumb
 for drive in $drives ; do
-	mount -o ro $drive /tmp/thumb
+	mount -o ro $drive /tmp/thumb 1>/dev/null 2>&1
+	if [ $? -ne 0 ] ; then
+		continue
+	fi
 	find /tmp/thumb -iname "$trigger_name"* | grep -q $trigger_name
 	if [ $? -eq 0 ] ; then
 		found=1
