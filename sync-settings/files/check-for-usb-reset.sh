@@ -5,19 +5,21 @@
 #
 
 trigger_name="reset_settings"
-found=1
-drives=`ls /dev/sd[a-z][1-99]`
+found=0
+drives=`ls /dev/sd[a-z][1-99] 2>/dev/null`
 
 mkdir /tmp/thumb
 for drive in $drives ; do
 	mount -o ro $drive /tmp/thumb
 	find /tmp/thumb -iname "$trigger_name"* | grep -q $trigger_name
-	found=$?
+	if [ $? -eq 0 ] ; then
+		found=1
+	fi
 	umount /tmp/thumb
-	if [ $found -eq 0 ] ; then
+	if [ $found -eq 1 ] ; then
 		break
 	fi
 done
-rm -rf /tmp/thumb
+rmdir /tmp/thumb
 
 exit $found
