@@ -6,7 +6,10 @@ STOP=14
 
 boot() {
     # check if we should reset settings
-    /usr/bin/check-for-usb-reset.sh && rm /etc/config/settings.json
+    /usr/bin/check-for-usb-reset.sh
+    if [ $? -eq 1 ] ; then
+        rm /etc/config/settings.json
+    fi
 
     if [ ! -f /etc/config/settings.json ] ; then
         logger -t "sync-settings" "Creating /etc/config/settings.json"
