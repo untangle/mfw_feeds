@@ -6,6 +6,7 @@
 
 trigger_name="reset_settings"
 found=0
+# Look for mountable partitions
 drives=`ls /dev/sd[a-z][1-99] 2>/dev/null`
 
 mkdir /tmp/thumb
