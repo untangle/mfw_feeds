@@ -7,15 +7,13 @@ STOP=21
 USE_PROCD=1
 
 start_service() {
-    # disable for now till backend is in place.
-    exit 0
     procd_open_instance client-license-service
 
     # procd_set_param env GODEBUG=schedtrace=30000
     # procd_set_param env GODEBUG=schedtrace=30000,scheddetail=1
 
     # command
-    procd_set_param command /usr/bin/client-license-service -l /etc/config/licenses.json -f /etc/config/uid -p SDWanRouter -u `cat /etc/config/uid`
+    procd_set_param command /usr/bin/client-license-service -l /etc/config/licenses.json -f /etc/config/uid -p sdwan -u `cat /etc/config/uid`
     # restart indefinitely if crashed, 5 seconds between attempts
     procd_set_param respawn 3600 5 0
 
