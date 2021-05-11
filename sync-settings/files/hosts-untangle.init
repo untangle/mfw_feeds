@@ -5,7 +5,7 @@ START=13
 STOP=13
 
 boot() {
-    if [ ! -f /tmp/hosts.untangle] ; then
+    if [ ! -f /tmp/hosts.untangle ] ; then
         touch /tmp/hosts.untangle
     fi
 }
