@@ -34,7 +34,6 @@ define Build/Compile
                         CC=$(TARGET_CC) \
                         CXX=$(TARGET_CXX) \
                         $(call GoPackage/Environment) ; \
-  git checkout MFW-1406 \
 	go mod tidy; \
 	go mod vendor; \
 	go build --mod=vendor -ldflags "-X 'main.Version=${VERSION}' -X 'main.IsDev=no'" -o build/client-license-service
