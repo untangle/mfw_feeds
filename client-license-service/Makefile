@@ -36,7 +36,7 @@ define Build/Compile
                         $(call GoPackage/Environment) ; \
 	go mod tidy; \
 	go mod vendor; \
-	go build --mod=vendor -ldflags "-X 'main.Version=${VERSION}'" -o build/client-license-service
+	go build --mod=vendor -ldflags "-X 'main.Version=${VERSION}' -X 'main.IsDev=no'" -o build/client-license-service
 endef
 
 define Package/client-license-service/install
