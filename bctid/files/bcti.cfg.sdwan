@@ -84,7 +84,7 @@ EnableIpRtu=False
 # IpGeoCacheSize: The maximum number of cached geo entries.
 IpGeoCacheSize=2000
 # IpRepCacheSize: The maximum number of cached reputation entries.
-IpRepCacheSize=2000
+IpRepCacheSize=0
 # IpFileMask is a bitmask, set the appropriate bits to download a specific
 # set of databases or specify 4096 for everything. For 1-8, specify 255 and so on
 # 0 = Spam Sources
