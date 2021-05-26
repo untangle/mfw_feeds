@@ -21,3 +21,10 @@ start_service() {
     procd_close_instance
 }
 
+# bctid daemonizes itself as a child process, thus the PIDFILE will always be wrong
+# procd also cannot kill child spawned processes
+# unless newer versions of bctid have better pid/init support, we do this for now
+# we will just kill the spawned bctid here
+stop_service() {
+    ps | grep [/]usr/bin/bctid | awk '{print $1}' | xargs kill -9 $1 2>&1
+}
