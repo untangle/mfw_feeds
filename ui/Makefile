@@ -28,7 +28,7 @@ define Build/Compile
 endef
 
 define Package/ui/install
-	make -C $(PKG_BUILD_DIR) DESTDIR=$(1)/www/ui install
+	make -C $(PKG_BUILD_DIR) DESTDIR=$(1)/www/admin install
 endef
 
 $(eval $(call BuildPackage,ui))
