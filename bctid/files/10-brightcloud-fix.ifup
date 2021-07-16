@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Add this alias to loopback to allow Brightcloud Daemon to start up.
+# This is temporary only for the current SDK.  Once we update and verify,
+# we can remove this.
+ip addr add 172.217.4.110 dev lo
+
