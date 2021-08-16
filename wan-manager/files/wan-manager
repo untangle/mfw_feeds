@@ -491,6 +491,14 @@ metric()
 		wait_for_change "/tmp/stats.json"
 		test=$(get_stat $id $stat_name $metric_name)
 
+		# Important assumption here!!! 
+		# VPNs and some other interfaces sometimes report a latency of 0
+		# For now, we should set those to something arbitrarily high (999) so they are not used in the
+		# latency best of checks
+		if [ $stat_name = "latency" ] && [ $test = 0] ; then
+			test=-1
+		fi
+
 		result="down"
 		if [ $test -ne -1 ] ; then
 			case $operator in
