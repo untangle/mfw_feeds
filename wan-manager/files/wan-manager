@@ -493,8 +493,7 @@ metric()
 
 		# Important assumption here!!! 
 		# VPNs and some other interfaces sometimes report a latency of 0
-		# For now, we should set those to something arbitrarily high (999) so they are not used in the
-		# latency best of checks
+		# Setting the test results to -1 will allow the logic below to skip this interface during the WAN checks
 		if [ $stat_name = "latency" ] && [ $test = 0] ; then
 			test=-1
 		fi
