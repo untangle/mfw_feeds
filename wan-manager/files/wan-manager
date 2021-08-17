@@ -491,6 +491,13 @@ metric()
 		wait_for_change "/tmp/stats.json"
 		test=$(get_stat $id $stat_name $metric_name)
 
+		# Important assumption here!!! 
+		# VPNs and some other interfaces sometimes report a latency of 0
+		# Setting the test results to -1 will allow the logic below to skip this interface during the WAN checks
+		if [ $stat_name = "latency" ] && [ $test = 0] ; then
+			test=-1
+		fi
+
 		result="down"
 		if [ $test -ne -1 ] ; then
 			case $operator in
