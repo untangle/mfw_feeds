@@ -333,6 +333,18 @@ best_of()
 
 		for wan in $wans ; do
 			stat=$(get_stat $wan $stat_name $metric_name)
+
+			logMessage "best_of: comparing best_wan ($best_wan stat: $best_stat) with wan: $wan, stat $stat $stat_name $metric_name"
+
+			# Important assumption here!!! 
+			# VPNs and some other interfaces sometimes report a latency of 0
+			# If this happens, we should continue and ignore this particular interface during best_of calculations
+			if [ $stat_name = "latency" ] ; then
+				if [ "$stat" = 0 ] || [ "$stat" = -1 ] ; then
+					continue
+				fi
+			fi
+
 			if [ $best_wan -eq -1 ] ; then
 				best_wan=$wan
 				best_stat=$stat
