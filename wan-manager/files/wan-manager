@@ -372,7 +372,7 @@ best_of()
 			result="up"
 		fi
 
-		logMessage "best_of: current_best_wan:$current_best_wan best_wan:$best_wan result:$result status:$status"
+		logMessage "best_of: all_wans:$wans current_best_wan:$current_best_wan best_wan:$best_wan result:$result status:$status"
 		if [ ! $result = $status ] || [ ! $current_best_wan -eq $best_wan ] ; then
 			if [ $result = "up" ] ; then
 				logMessage "best_of: Switching best WAN: current_best_wan: $current_best_wan best_wan: $best_wan result: $result status: $status"
@@ -565,7 +565,6 @@ up()
 	mkdir -p $result_dir
 
 	while [ 1 ] ; do
-		logMessage "Checking for interface changes:$interface status: $status"
 		network_flush_cache
 		if network_is_up $interface ; then
 			logMessage "$interface is up"
@@ -578,7 +577,7 @@ up()
 		fi
 
 		if [ ! $result = $status ] ; then
-			logMessage "Updating $interface file with new $result..."
+			logMessage "Updating $interface file with new status result:$result..."
 			echo $result > $result_file
 			status=$result
 		fi
