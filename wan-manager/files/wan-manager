@@ -3,6 +3,17 @@
 . /lib/functions/network.sh
 . /usr/share/libubox/jshn.sh
 
+DEBUG=false
+
+# logMessage is used to log a normal stdout message to the logger
+# @param $1 - the message to log
+logMessage() 
+{
+	if [ "$DEBUG" = true ] ; then
+		logger -t wan-manager "$1"
+	fi
+}
+
 check_for_table()
 {
 	ipCheck=$1
@@ -173,9 +184,11 @@ disable_policy()
 
 	nft -f $TMPFILE
 	retval=$?
+	logMessage "disabling policy: $policy All Wans:$wans Retval: $retval"
 	while [ $retval -ne 0 ] ; do
 		nft -f $TMPFILE
 		retval=$?
+		logMessage "nft -f Failed to disable policy: $policy All Wans:$wans Retval: $retval, trying again..."
 	done
 	rm $TMPFILE
 }
@@ -211,9 +224,11 @@ jump_policy()
 
 	nft -f $TMPFILE
 	retval=$?
+	logMessage "updating jump_policy for policy:$policy mark for WAN:$id All WANs: $wans; retval: $retval"
 	while [ $retval -ne 0 ] ; do
 		nft -f $TMPFILE
 		retval=$?
+		logMessage "nft -f failed during jump_policy for policy:$policy mark for WAN:$id All WANs: $wans; retval: $retval, trying again..."
 	done
 	rm $TMPFILE
 }
@@ -250,9 +265,11 @@ balance_policy()
 
 	nft -f $TMPFILE
 	retval=$?
+	logMessage "running balance policy:$policy All Wans:$wans total_weight:$total_weight balance string:$balance_string Retval: $retval"
 	while [ $retval -ne 0 ] ; do
 		nft -f $TMPFILE
 		retval=$?
+		logMessage "nft -f failed while running balance policy:$policy All Wans:$wans total_weight:$total_weight balance string:$balance_string Retval: $retval, trying again..."
 	done
 	rm $TMPFILE
 }
@@ -316,6 +333,18 @@ best_of()
 
 		for wan in $wans ; do
 			stat=$(get_stat $wan $stat_name $metric_name)
+
+			logMessage "best_of: comparing best_wan ($best_wan stat: $best_stat) with wan: $wan, stat $stat $stat_name $metric_name"
+
+			# Important assumption here!!! 
+			# VPNs and some other interfaces sometimes report a latency of 0
+			# If this happens, we should continue and ignore this particular interface during best_of calculations
+			if [ $stat_name = "latency" ] ; then
+				if [ "$stat" = 0 ] || [ "$stat" = -1 ] ; then
+					continue
+				fi
+			fi
+
 			if [ $best_wan -eq -1 ] ; then
 				best_wan=$wan
 				best_stat=$stat
@@ -355,11 +384,14 @@ best_of()
 			result="up"
 		fi
 
+		logMessage "best_of: all_wans:$wans current_best_wan:$current_best_wan best_wan:$best_wan result:$result status:$status"
 		if [ ! $result = $status ] || [ ! $current_best_wan -eq $best_wan ] ; then
 			if [ $result = "up" ] ; then
+				logMessage "best_of: Switching best WAN: current_best_wan: $current_best_wan best_wan: $best_wan result: $result status: $status"
 				jump_policy $policy $best_wan "$policy_wans"
 				current_best_wan=$best_wan
 			else
+				logMessage "best_of: Disabling policy:$policy with WANs:$policy_wans"	
 				disable_policy $policy "$policy_wans"
 			fi
 		fi
@@ -547,14 +579,17 @@ up()
 	while [ 1 ] ; do
 		network_flush_cache
 		if network_is_up $interface ; then
+			logMessage "$interface is up"
 			#echo up > $result_file
 			result="up"
 		else
 			#echo down > $result_file
+			logMessage "$interface is down"
 			result="down"
 		fi
 
 		if [ ! $result = $status ] ; then
+			logMessage "Updating $interface file with new status result:$result..."
 			echo $result > $result_file
 			status=$result
 		fi
@@ -595,6 +630,7 @@ test()
 	mkdir -p $result_dir
 	while [ 1 ] ; do
 		for i in $(seq 0 9) ; do
+			logMessage "Flushing cache and looking for interface: $interface..."
 			network_flush_cache
 			if network_is_up $interface ; then
 
@@ -642,6 +678,7 @@ test()
 			fi
 
 			sleep $interval
+			logMessage "WAN-Manager test interval running"
 		done
 	done
 }
