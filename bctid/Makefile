@@ -25,6 +25,7 @@ endef
 
 define Build/Compile
 	cd $(PKG_BUILD_DIR)/untangle-bctid ; \
+	git checkout MFW-1561; \
 	$(TARGET_CONFIGURE_OPTS) $(MAKE)
 endef
 
