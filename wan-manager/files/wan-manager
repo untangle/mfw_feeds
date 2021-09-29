@@ -60,10 +60,7 @@ is_offline()
 				done
 				json_select ..
 		fi
-		if [ "$offline" = "true" ]; then
-				return 1
-		fi
-		return 0
+		echo $offline
 }
 
 get_wan_bandwidth()
@@ -603,7 +600,8 @@ up()
 
 	while [ 1 ] ; do
 		network_flush_cache
-		if network_is_up $interface  && [ "$(is_offline $interfaceId)" = 0 ]; then
+		offline=$(is_offline $interfaceId)
+		if network_is_up $interface  && [ "$offline" = "false" ]; then
 			logMessage "$interface is up"
 			#echo up > $result_file
 			result="up"
@@ -657,7 +655,7 @@ test()
 		for i in $(seq 0 9) ; do
 			logMessage "Flushing cache and looking for interface: $interface..."
 			network_flush_cache
-			if network_is_up $interface  && [ "$(is_offline $interfaceId)" = 0 ]; then
+			if network_is_up $interface  && [ "$offline" = "false" ]; then
 
 				network_get_device device $interface
 				network_get_ipaddr ip_address $interface
