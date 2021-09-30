@@ -41,6 +41,28 @@ wait_for_change()
 	inotifywait -r -qq -e create,modify $files
 }
 
+is_offline()
+{                                                                                                                                                                                      
+		local offline
+
+		id=$1
+		json_load_file /tmp/stats.json
+		if json_is_a interfaces array ; then
+				json_select interfaces
+				json_get_keys interfaces
+				for intf in $interfaces; do
+						json_select $intf
+						json_get_var interfaceId interfaceId
+						if [ $id = $interfaceId ] ; then
+								json_get_var offline offline
+						fi
+						json_select ..
+				done
+				json_select ..
+		fi
+		echo $offline
+}
+
 get_wan_bandwidth()
 {
 	id=$1
@@ -578,7 +600,8 @@ up()
 
 	while [ 1 ] ; do
 		network_flush_cache
-		if network_is_up $interface ; then
+		offline=$(is_offline $interfaceId)
+		if network_is_up $interface  && [ "$offline" = "false" ]; then
 			logMessage "$interface is up"
 			#echo up > $result_file
 			result="up"
@@ -632,7 +655,7 @@ test()
 		for i in $(seq 0 9) ; do
 			logMessage "Flushing cache and looking for interface: $interface..."
 			network_flush_cache
-			if network_is_up $interface ; then
+			if network_is_up $interface  && [ "$offline" = "false" ]; then
 
 				network_get_device device $interface
 				network_get_ipaddr ip_address $interface
