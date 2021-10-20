@@ -34,35 +34,37 @@ endef
 TMP_BUILD_DIR:=$(PKG_BUILD_DIR)/tmp/
 
 define Package/bctid/install
-	$(INSTALL_DIR) $(1)/usr/bin $(1)/usr/lib $(1)/usr/share/untangle-bctid
+	$(INSTALL_DIR) $(1)/usr/bin $(1)/usr/lib/bctid $(1)/usr/share/bctid
 	$(INSTALL_BIN) $(TMP_BUILD_DIR)/src/bin/bctid $(1)/usr/bin/
+	$(CP) $(TMP_BUILD_DIR)/src/bin/bcti.cfg $(1)/usr/share/bctid/
+	$(CP) $(TMP_BUILD_DIR)/src/lib/* $(1)/usr/lib/bctid
+	$(CP) $(TMP_BUILD_DIR)/src/database/* $(1)/usr/share/bctid/
+
+	# Init script
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) files/bctid.init $(1)/etc/init.d/bctid
-	$(INSTALL_DIR) $(1)/etc/config/ifup.d
-	#$(INSTALL_BIN) files/10-brightcloud-fix.ifup $(1)/etc/config/ifup.d/10-brightcloud-fix
-	#$(INSTALL_BIN) files/bcti.cfg.sdwan $(1)/usr/share/untangle-bctid/bcti.cfg
 
-	$(CP) $(TMP_BUILD_DIR)/src/lib/* $(1)/usr/lib/
-	#$(CP) $(TMP_BUILD_DIR)/src/database/* $(1)/usr/share/untangle-bctid/
-
-	# Copy and modify bcti.cfg for our licensed services and current configuration.
-	$(CP) $(TMP_BUILD_DIR)/src/bin/bcti.cfg $(1)/usr/share/untangle-bctid/
+	# Modify bcti.cfg template for our licensed services
 
 	# Our base credentials
-	sed -i -e  's/\(OEM=\).*/\1Untangle/' $(1)/usr/share/untangle-bctid/bcti.cfg
-	sed -i -e  's/\(Device=\).*/\1SDWanRouter/' $(1)/usr/share/untangle-bctid/bcti.cfg
-	sed -i -e  's/\(UID=\).*/\1XXX/' $(1)/usr/share/untangle-bctid/bcti.cfg
+	sed -i -e  's/\(OEM=\).*/\1Untangle/' $(1)/usr/share/bctid/bcti.cfg
+	sed -i -e  's/\(Device=\).*/\1SDWanRouter/' $(1)/usr/share/bctid/bcti.cfg
+	sed -i -e  's/\(UID=\).*/\1XXX/' $(1)/usr/share/bctid/bcti.cfg
 
 	# Disable unlicensed services
-	sed -i -e  's/\(EnableUrlDb=\).*/\1False/' $(1)/usr/share/untangle-bctid/bcti.cfg
-	sed -i -e  's/\(EnableIpDb=\).*/\1False/' $(1)/usr/share/untangle-bctid/bcti.cfg
-	sed -i -e  's/\(EnableMd5=\).*/\1False/' $(1)/usr/share/untangle-bctid/bcti.cfg
-	sed -i -e  's/\(EnablePhishing=\).*/\1False/' $(1)/usr/share/untangle-bctid/bcti.cfg
-	sed -i -e  's/\(EnableCDB=\).*/\1False/' $(1)/usr/share/untangle-bctid/bcti.cfg
-	sed -i -e  's/\(EnableCSI=\).*/\1False/' $(1)/usr/share/untangle-bctid/bcti.cfg
+	sed -i -e  's/\(EnableUrlDb=\).*/\1False/' $(1)/usr/share/bctid/bcti.cfg
+	sed -i -e  's/\(EnableIpDb=\).*/\1False/' $(1)/usr/share/bctid/bcti.cfg
+	sed -i -e  's/\(EnableMd5=\).*/\1False/' $(1)/usr/share/bctid/bcti.cfg
+	sed -i -e  's/\(EnablePhishing=\).*/\1False/' $(1)/usr/share/bctid/bcti.cfg
+	sed -i -e  's/\(EnableCDB=\).*/\1False/' $(1)/usr/share/bctid/bcti.cfg
+	sed -i -e  's/\(EnableCSI=\).*/\1False/' $(1)/usr/share/bctid/bcti.cfg
 
 	# Logfile
-	sed -i -e  's/\(LogFile=\).*/\1\/tmp\/bcti.log/' $(1)/usr/share/untangle-bctid/bcti.cfg
+	sed -i -e  's/\(LogFile=\).*/\1\/tmp\/log\/bcti.log/' $(1)/usr/share/bctid/bcti.cfg
+
+	# Database
+	sed -i -e  's/\(LocalDatabaseDirectory=\).*/\1\/usr\/share\/bctid/' $(1)/usr/share/bctid/bcti.cfg
+	sed -i -e  's/\(TLDPath=\).*/\1\/usr\/share\/bctid\/public_suffix_list.dat/' $(1)/usr/share/bctid/bcti.cfg
 
 endef
 
