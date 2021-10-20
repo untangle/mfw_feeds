@@ -9,7 +9,7 @@ PKG_SOURCE_URL:=https://github.com/untangle/sync-settings.git
 include ../version.mk
 
 include $(INCLUDE_DIR)/package.mk
-include ../../packages/lang/python/python3-package.mk
+include $(TOPDIR)/feeds/packages/lang/python/python3-package.mk
 
 define Package/sync-settings
   SECTION:=lang
