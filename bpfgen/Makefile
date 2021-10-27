@@ -4,7 +4,7 @@ PKG_NAME:=bpfgen
 PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=Tiffany Kalin <tkalin@untangle.com>
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/untangle/bpfgen.git
+PKG_SOURCE_URL:=git@github.com:untangle/bpfgen.git
 
 include ../version.mk
 
