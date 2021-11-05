@@ -21,4 +21,12 @@ define Package/container
   KCONFIG:=$(shell cat Config | xargs)
 endef
 
+define Build/Compile
+	true
+endef
+
+define Package/container/install
+  true
+endef
+
 $(eval $(call BuildPackage,container))

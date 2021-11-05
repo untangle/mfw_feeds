@@ -1,65 +1,68 @@
-From 77a9a6a2f49dda9d6397c5901d4d66b50da02370 Mon Sep 17 00:00:00 2001
+From 1348ea781d55d5bc9eca71f93038d420f35f3a15 Mon Sep 17 00:00:00 2001
 From: Brett Mastbergen <bmastbergen@untangle.com>
 Date: Thu, 20 Dec 2018 16:29:49 -0500
 Subject: [PATCH] nftables: Add dict (w/ ct id)
 
 ---
  include/Makefile.am       |   1 +
- include/datatype.h        |   6 ++
+ include/datatype.h        |   8 ++
  include/dict.h            |   7 ++
  include/expression.h      |  18 ++++
  include/statement.h       |  16 ++++
  src/Makefile.am           |   1 +
- src/datatype.c            |  88 ++++++++++++++++++
+ src/datatype.c            | 100 ++++++++++++++++++++
  src/dict.c                | 163 ++++++++++++++++++++++++++++++++
  src/evaluate.c            |  43 +++++++++
+ src/expression.c          |   4 +
  src/netlink_delinearize.c | 141 ++++++++++++++++++++++++++++
  src/netlink_linearize.c   |  99 +++++++++++++++++++-
  src/parser_bison.y        | 230 ++++++++++++++++++++++++++++++++++++++++++++--
  src/scanner.l             |   9 ++
- 13 files changed, 814 insertions(+), 8 deletions(-)
+ 14 files changed, 832 insertions(+), 8 deletions(-)
  create mode 100644 include/dict.h
  create mode 100644 src/dict.c
 
 diff --git a/include/Makefile.am b/include/Makefile.am
-index a74ffbf..999b13f 100644
+index 04a4a619..4bc1ce82 100644
 --- a/include/Makefile.am
 +++ b/include/Makefile.am
-@@ -6,6 +6,7 @@ noinst_HEADERS = 	cli.h		\
- 			expression.h	\
+@@ -8,6 +8,7 @@ noinst_HEADERS = 	cli.h		\
  			fib.h		\
  			hash.h		\
+ 			ipopt.h		\
 +			dict.h		\
+ 			json.h		\
  			mini-gmp.h	\
  			gmputil.h	\
- 			iface.h		\
 diff --git a/include/datatype.h b/include/datatype.h
-index e9f6079..f51b2a3 100644
+index c1d08cc2..53bce0b6 100644
 --- a/include/datatype.h
 +++ b/include/datatype.h
-@@ -84,6 +84,9 @@ enum datatypes {
+@@ -88,6 +88,10 @@ enum datatypes {
  	TYPE_FIB_ADDR,
  	TYPE_BOOLEAN,
  	TYPE_CT_EVENTBIT,
 +	TYPE_INT32,
 +	TYPE_INT64,
 +	TYPE_BOOL,
++	TYPE_CT_ID,
+ 	TYPE_IFNAME,
+ 	TYPE_IGMP_TYPE,
  	__TYPE_MAX
- };
- #define TYPE_MAX		(__TYPE_MAX - 1)
-@@ -221,6 +224,9 @@ extern const struct datatype invalid_type;
+@@ -244,6 +248,10 @@ extern const struct datatype invalid_type;
  extern const struct datatype verdict_type;
  extern const struct datatype nfproto_type;
  extern const struct datatype bitmask_type;
 +extern const struct datatype int_type;
 +extern const struct datatype int64_type;
 +extern const struct datatype bool_type;
++extern const struct datatype ct_id_type;
  extern const struct datatype integer_type;
  extern const struct datatype string_type;
  extern const struct datatype lladdr_type;
 diff --git a/include/dict.h b/include/dict.h
 new file mode 100644
-index 0000000..c9e683a
+index 00000000..c9e683a1
 --- /dev/null
 +++ b/include/dict.h
 @@ -0,0 +1,7 @@
@@ -71,10 +74,10 @@ index 0000000..c9e683a
 +
 +#endif /* NFTABLES_DICT_H */
 diff --git a/include/expression.h b/include/expression.h
-index 8f9da1b..b6e8574 100644
+index 717b6755..7756e92b 100644
 --- a/include/expression.h
 +++ b/include/expression.h
-@@ -36,6 +36,8 @@
+@@ -40,6 +40,8 @@
   * @EXPR_NUMGEN:	number generation expression
   * @EXPR_HASH:		hash expression
   * @EXPR_RT:		routing expression
@@ -83,28 +86,27 @@ index 8f9da1b..b6e8574 100644
   */
  enum expr_types {
  	EXPR_INVALID,
-@@ -62,6 +64,8 @@ enum expr_types {
+@@ -69,6 +71,8 @@ enum expr_types {
  	EXPR_HASH,
  	EXPR_RT,
  	EXPR_FIB,
 +	EXPR_DICT,
 +	EXPR_CTID,
+ 	EXPR_XFRM,
  };
  
- enum ops {
-@@ -189,6 +193,7 @@ enum expr_flags {
+@@ -194,6 +198,7 @@ enum expr_flags {
  #include <meta.h>
  #include <rt.h>
  #include <hash.h>
 +#include <dict.h>
  #include <ct.h>
- 
- /**
-@@ -324,6 +329,19 @@ struct expr {
- 			uint32_t		flags;
+ #include <socket.h>
+ #include <osf.h>
+@@ -342,6 +347,19 @@ struct expr {
  			uint32_t		result;
  		} fib;
-+		struct {
+ 		struct {
 +			/* EXPR_DICT */
 +			struct expr		*expr;
 +			const char *		table;
@@ -117,14 +119,15 @@ index 8f9da1b..b6e8574 100644
 +			/* EXPR_CTID */
 +			uint32_t		val;
 +		} ctid;
- 	};
- };
- 
++		struct {
+ 			/* EXPR_XFRM */
+ 			enum nft_xfrm_keys	key;
+ 			uint8_t		direction;
 diff --git a/include/statement.h b/include/statement.h
-index 27c7356..baf98fe 100644
+index 585908de..c5324523 100644
 --- a/include/statement.h
 +++ b/include/statement.h
-@@ -211,6 +211,19 @@ struct xt_stmt {
+@@ -252,6 +252,19 @@ struct xt_stmt {
  
  extern struct stmt *xt_stmt_alloc(const struct location *loc);
  
@@ -144,60 +147,70 @@ index 27c7356..baf98fe 100644
  /**
   * enum stmt_types - statement types
   *
-@@ -238,6 +251,7 @@ extern struct stmt *xt_stmt_alloc(const struct location *loc);
-  * @STMT_OBJREF:	stateful object reference statement
-  * @STMT_EXTHDR:	extension header statement
+@@ -279,6 +292,7 @@ extern struct stmt *xt_stmt_alloc(const struct location *loc);
   * @STMT_FLOW_OFFLOAD:	flow offload statement
+  * @STMT_CONNLIMIT:	connection limit statement
+  * @STMT_MAP:		map statement
 + * @STMT_DICT:		dict statement
+  * @STMT_SYNPROXY:	synproxy statement
   */
  enum stmt_types {
- 	STMT_INVALID,
-@@ -264,6 +278,7 @@ enum stmt_types {
- 	STMT_OBJREF,
- 	STMT_EXTHDR,
+@@ -307,6 +321,7 @@ enum stmt_types {
  	STMT_FLOW_OFFLOAD,
+ 	STMT_CONNLIMIT,
+ 	STMT_MAP,
 +	STMT_DICT,
+ 	STMT_SYNPROXY,
  };
  
- /**
-@@ -325,6 +340,7 @@ struct stmt {
- 		struct xt_stmt		xt;
+@@ -372,6 +387,7 @@ struct stmt {
  		struct objref_stmt	objref;
  		struct flow_stmt	flow;
+ 		struct map_stmt		map;
 +		struct dict_stmt	dict;
+ 		struct synproxy_stmt	synproxy;
  	};
  };
- 
 diff --git a/src/Makefile.am b/src/Makefile.am
-index 7fa72a8..dfd80ee 100644
+index 740c21f2..8aa95644 100644
 --- a/src/Makefile.am
 +++ b/src/Makefile.am
-@@ -37,6 +37,7 @@ libnftables_la_SOURCES =			\
- 		exthdr.c			\
+@@ -41,6 +41,7 @@ libnftables_la_SOURCES =			\
  		fib.c				\
  		hash.c				\
+ 		ipopt.c				\
 +		dict.c				\
  		meta.c				\
  		rt.c				\
  		numgen.c			\
 diff --git a/src/datatype.c b/src/datatype.c
-index 93726ca..1761a85 100644
+index c5a01346..b5f5941a 100644
 --- a/src/datatype.c
 +++ b/src/datatype.c
-@@ -68,6 +68,9 @@ static const struct datatype *datatypes[TYPE_MAX + 1] = {
+@@ -69,6 +69,10 @@ static const struct datatype *datatypes[TYPE_MAX + 1] = {
  	[TYPE_ECN]		= &ecn_type,
  	[TYPE_FIB_ADDR]         = &fib_addr_type,
  	[TYPE_BOOLEAN]		= &boolean_type,
 +	[TYPE_INT32]		= &int_type,
 +	[TYPE_INT64]		= &int64_type,
 +	[TYPE_BOOL]		= &bool_type,
++	[TYPE_CT_ID]		= &ct_id_type,
+ 	[TYPE_IFNAME]		= &ifname_type,
+ 	[TYPE_IGMP_TYPE]	= &igmp_type_type,
  };
- 
- const struct datatype *datatype_lookup(enum datatypes type)
-@@ -317,6 +320,91 @@ const struct datatype bitmask_type = {
+@@ -355,6 +359,102 @@ const struct datatype bitmask_type = {
  	.basetype	= &integer_type,
  };
  
++const struct datatype ct_id_type = {
++	.type		= TYPE_CT_ID,
++	.name		= "ct_id",
++	.desc		= "ct_id",
++	.size		= 4 * BITS_PER_BYTE,
++	.byteorder	= BYTEORDER_BIG_ENDIAN,
++	.basetype	= &integer_type,
++};
++
 +static void int_type_print(const struct expr *expr, struct output_ctx *octx)
 +{
 +	int value;
@@ -206,7 +219,8 @@ index 93726ca..1761a85 100644
 +	nft_print(octx, "%d", value);
 +}
 +
-+static struct error_record *int_type_parse(const struct expr *sym,
++static struct error_record *int_type_parse(struct parse_ctx *ctx,
++					       const struct expr *sym,
 +						     struct expr **res)
 +{
 +	int value;
@@ -238,7 +252,8 @@ index 93726ca..1761a85 100644
 +	nft_print(octx, "%"PRId64, value);
 +}
 +
-+static struct error_record *int64_type_parse(const struct expr *sym,
++static struct error_record *int64_type_parse(struct parse_ctx *ctx,
++					       const struct expr *sym,
 +						     struct expr **res)
 +{
 +	int64_t value;
@@ -288,7 +303,7 @@ index 93726ca..1761a85 100644
  	const struct datatype *dtype = expr->dtype;
 diff --git a/src/dict.c b/src/dict.c
 new file mode 100644
-index 0000000..e397e75
+index 00000000..302dd1ab
 --- /dev/null
 +++ b/src/dict.c
 @@ -0,0 +1,163 @@
@@ -397,7 +412,7 @@ index 0000000..e397e75
 +	xfree(expr->dict.value);
 +}
 +
-+static const struct expr_ops dict_expr_ops = {
++const struct expr_ops dict_expr_ops = {
 +	.type		= EXPR_DICT,
 +	.name		= "dict",
 +	.print		= dict_expr_print,
@@ -415,7 +430,7 @@ index 0000000..e397e75
 +		size = data_type->size;
 +	}
 +
-+	expr = expr_alloc(loc, &dict_expr_ops, data_type,
++	expr = expr_alloc(loc, EXPR_DICT, data_type,
 +			  data_type->byteorder, size);
 +	expr->dict.type = data_type->type;
 +	expr->dict.size = size / BITS_PER_BYTE;
@@ -438,7 +453,7 @@ index 0000000..e397e75
 +	new->ctid = expr->ctid;
 +}
 +
-+static const struct expr_ops ctid_expr_ops = {
++const struct expr_ops ctid_expr_ops = {
 +	.type		= EXPR_CTID,
 +	.name		= "ctid",
 +	.print		= ctid_expr_print,
@@ -450,16 +465,16 @@ index 0000000..e397e75
 +{
 +	struct expr *expr;
 +
-+	expr = expr_alloc(loc, &ctid_expr_ops, &int_type,
-+			  BYTEORDER_HOST_ENDIAN, 32);
++	expr = expr_alloc(loc, EXPR_CTID, &ct_id_type,
++			  BYTEORDER_BIG_ENDIAN, 32);
 +
 +	return expr;
 +}
 diff --git a/src/evaluate.c b/src/evaluate.c
-index 571368b..3838430 100644
+index 831eb7c2..e97df279 100755
 --- a/src/evaluate.c
 +++ b/src/evaluate.c
-@@ -1400,6 +1400,31 @@ static int expr_evaluate_hash(struct eval_ctx *ctx, struct expr **exprp)
+@@ -1493,6 +1493,31 @@ static int expr_evaluate_hash(struct eval_ctx *ctx, struct expr **exprp)
  	return 0;
  }
  
@@ -491,7 +506,7 @@ index 571368b..3838430 100644
  /*
   * Transfer the invertible binops to the constant side of an equality
   * expression. A left shift is only invertible if the low n bits are
-@@ -1830,6 +1855,10 @@ static int expr_evaluate(struct eval_ctx *ctx, struct expr **expr)
+@@ -1921,6 +1946,10 @@ static int expr_evaluate(struct eval_ctx *ctx, struct expr **expr)
  		return expr_evaluate_numgen(ctx, expr);
  	case EXPR_HASH:
  		return expr_evaluate_hash(ctx, expr);
@@ -499,10 +514,10 @@ index 571368b..3838430 100644
 +		return expr_evaluate_dict(ctx, expr);
 +	case EXPR_CTID:
 +		return expr_evaluate_ctid(ctx, expr);
+ 	case EXPR_XFRM:
+ 		return expr_evaluate_xfrm(ctx, expr);
  	default:
- 		BUG("unknown expression type %s\n", (*expr)->ops->name);
- 	}
-@@ -2074,6 +2103,18 @@ static int stmt_evaluate_ct(struct eval_ctx *ctx, struct stmt *stmt)
+@@ -2234,6 +2263,18 @@ static int stmt_evaluate_ct(struct eval_ctx *ctx, struct stmt *stmt)
  				 &stmt->ct.expr);
  }
  
@@ -521,20 +536,42 @@ index 571368b..3838430 100644
  static int reject_payload_gen_dependency_tcp(struct eval_ctx *ctx,
  					     struct stmt *stmt,
  					     struct expr **payload)
-@@ -2809,6 +2850,8 @@ int stmt_evaluate(struct eval_ctx *ctx, struct stmt *stmt)
- 		return stmt_evaluate_set(ctx, stmt);
- 	case STMT_OBJREF:
+@@ -3150,6 +3191,8 @@ int stmt_evaluate(struct eval_ctx *ctx, struct stmt *stmt)
  		return stmt_evaluate_objref(ctx, stmt);
+ 	case STMT_MAP:
+ 		return stmt_evaluate_map(ctx, stmt);
 +	case STMT_DICT:
 +		return stmt_evaluate_dict(ctx, stmt);
+ 	case STMT_SYNPROXY:
+ 		return stmt_evaluate_synproxy(ctx, stmt);
  	default:
- 		BUG("unknown statement type %s\n", stmt->ops->name);
- 	}
+diff --git a/src/expression.c b/src/expression.c
+index cb49e0b7..b4c200f8 100644
+--- a/src/expression.c
++++ b/src/expression.c
+@@ -28,6 +28,8 @@
+ extern const struct expr_ops ct_expr_ops;
+ extern const struct expr_ops fib_expr_ops;
+ extern const struct expr_ops hash_expr_ops;
++extern const struct expr_ops dict_expr_ops;
++extern const struct expr_ops ctid_expr_ops;
+ extern const struct expr_ops meta_expr_ops;
+ extern const struct expr_ops numgen_expr_ops;
+ extern const struct expr_ops osf_expr_ops;
+@@ -1201,6 +1203,8 @@ const struct expr_ops *expr_ops(const struct expr *e)
+ 	case EXPR_RELATIONAL: return &relational_expr_ops;
+ 	case EXPR_NUMGEN: return &numgen_expr_ops;
+ 	case EXPR_HASH: return &hash_expr_ops;
++	case EXPR_DICT: return &dict_expr_ops;
++	case EXPR_CTID: return &ctid_expr_ops;
+ 	case EXPR_RT: return &rt_expr_ops;
+ 	case EXPR_FIB: return &fib_expr_ops;
+ 	case EXPR_XFRM: return &xfrm_expr_ops;
 diff --git a/src/netlink_delinearize.c b/src/netlink_delinearize.c
-index e6ee007..60bea8c 100644
+index fc2574b1..c8228a58 100644
 --- a/src/netlink_delinearize.c
 +++ b/src/netlink_delinearize.c
-@@ -846,6 +846,136 @@ static void netlink_parse_reject(struct netlink_parse_ctx *ctx,
+@@ -920,6 +920,136 @@ static void netlink_parse_reject(struct netlink_parse_ctx *ctx,
  	ctx->stmt = stmt;
  }
  
@@ -671,7 +708,7 @@ index e6ee007..60bea8c 100644
  static void netlink_parse_nat(struct netlink_parse_ctx *ctx,
  			      const struct location *loc,
  			      const struct nftnl_expr *nle)
-@@ -1249,6 +1379,9 @@ static const struct {
+@@ -1473,6 +1603,9 @@ static const struct {
  	{ .name = "limit",	.parse = netlink_parse_limit },
  	{ .name = "range",	.parse = netlink_parse_range },
  	{ .name = "reject",	.parse = netlink_parse_reject },
@@ -679,15 +716,17 @@ index e6ee007..60bea8c 100644
 +	{ .name = "ctid",	.parse = netlink_parse_ctid },
 +	{ .name = "scmp",	.parse = netlink_parse_cmp },
  	{ .name = "nat",	.parse = netlink_parse_nat },
+ 	{ .name = "tproxy",	.parse = netlink_parse_tproxy },
  	{ .name = "notrack",	.parse = netlink_parse_notrack },
- 	{ .name = "masq",	.parse = netlink_parse_masq },
-@@ -1856,11 +1989,15 @@ static void expr_postprocess(struct rule_pp_ctx *ctx, struct expr **exprp)
- 	case EXPR_VERDICT:
+@@ -2158,6 +2291,7 @@ static void expr_postprocess(struct rule_pp_ctx *ctx, struct expr **exprp)
  	case EXPR_NUMGEN:
  	case EXPR_FIB:
+ 	case EXPR_SOCKET:
 +	case EXPR_CTID:
+ 	case EXPR_OSF:
+ 	case EXPR_XFRM:
  		break;
- 	case EXPR_HASH:
+@@ -2165,6 +2299,9 @@ static void expr_postprocess(struct rule_pp_ctx *ctx, struct expr **exprp)
  		if (expr->hash.expr)
  			expr_postprocess(ctx, &expr->hash.expr);
  		break;
@@ -697,7 +736,7 @@ index e6ee007..60bea8c 100644
  	case EXPR_CT:
  		ct_expr_update_type(&ctx->pctx, expr);
  		break;
-@@ -2271,6 +2408,10 @@ static void rule_parse_postprocess(struct netlink_parse_ctx *ctx, struct rule *r
+@@ -2598,6 +2735,10 @@ static void rule_parse_postprocess(struct netlink_parse_ctx *ctx, struct rule *r
  		case STMT_OBJREF:
  			expr_postprocess(&rctx, &stmt->objref.expr);
  			break;
@@ -709,7 +748,7 @@ index e6ee007..60bea8c 100644
  			break;
  		}
 diff --git a/src/netlink_linearize.c b/src/netlink_linearize.c
-index a6eb3aa..033bf8c 100644
+index 498326d0..9b7a6835 100644
 --- a/src/netlink_linearize.c
 +++ b/src/netlink_linearize.c
 @@ -146,6 +146,45 @@ static void netlink_gen_hash(struct netlink_linearize_ctx *ctx,
@@ -758,12 +797,12 @@ index a6eb3aa..033bf8c 100644
  static void netlink_gen_payload(struct netlink_linearize_ctx *ctx,
  				const struct expr *expr,
  				enum nft_registers dreg)
-@@ -383,7 +422,12 @@ static void netlink_gen_cmp(struct netlink_linearize_ctx *ctx,
+@@ -525,7 +564,12 @@ static void netlink_gen_relational(struct netlink_linearize_ctx *ctx,
  		break;
  	}
  
 -	nle = alloc_nft_expr("cmp");
-+	if (expr->left->ops->type == EXPR_DICT &&
++	if (expr->left->etype == EXPR_DICT &&
 +	   (expr->left->dict.type == TYPE_INT32 || expr->left->dict.type == TYPE_INT64)) {
 +		nle = alloc_nft_expr("scmp");
 +	} else {
@@ -772,18 +811,18 @@ index a6eb3aa..033bf8c 100644
  	netlink_put_register(nle, NFTNL_EXPR_CMP_SREG, sreg);
  	nftnl_expr_set_u32(nle, NFTNL_EXPR_CMP_OP,
  			   netlink_gen_cmp_op(expr->op));
-@@ -692,6 +736,10 @@ static void netlink_gen_expr(struct netlink_linearize_ctx *ctx,
- 		return netlink_gen_hash(ctx, expr, dreg);
- 	case EXPR_FIB:
+@@ -735,6 +779,10 @@ static void netlink_gen_expr(struct netlink_linearize_ctx *ctx,
  		return netlink_gen_fib(ctx, expr, dreg);
+ 	case EXPR_SOCKET:
+ 		return netlink_gen_socket(ctx, expr, dreg);
 +	case EXPR_DICT:
 +		return netlink_gen_dict(ctx, expr, dreg);
 +	case EXPR_CTID:
 +		return netlink_gen_ctid(ctx, expr, dreg);
- 	default:
- 		BUG("unknown expression type %s\n", expr->ops->name);
- 	}
-@@ -1212,6 +1260,53 @@ static void netlink_gen_flow_offload_stmt(struct netlink_linearize_ctx *ctx,
+ 	case EXPR_OSF:
+ 		return netlink_gen_osf(ctx, expr, dreg);
+ 	case EXPR_XFRM:
+@@ -1282,6 +1330,53 @@ static void netlink_gen_flow_offload_stmt(struct netlink_linearize_ctx *ctx,
  	nftnl_rule_add_expr(ctx->nlr, nle);
  }
  
@@ -837,20 +876,20 @@ index a6eb3aa..033bf8c 100644
  static void netlink_gen_set_stmt(struct netlink_linearize_ctx *ctx,
  				 const struct stmt *stmt)
  {
-@@ -1315,6 +1410,8 @@ static void netlink_gen_stmt(struct netlink_linearize_ctx *ctx,
- 		return netlink_gen_flow_offload_stmt(ctx, stmt);
- 	case STMT_OBJREF:
+@@ -1424,6 +1519,8 @@ static void netlink_gen_stmt(struct netlink_linearize_ctx *ctx,
  		return netlink_gen_objref_stmt(ctx, stmt);
+ 	case STMT_MAP:
+ 		return netlink_gen_map_stmt(ctx, stmt);
 +	case STMT_DICT:
 +		return netlink_gen_dict_stmt(ctx, stmt);
  	default:
  		BUG("unknown statement type %s\n", stmt->ops->name);
  	}
 diff --git a/src/parser_bison.y b/src/parser_bison.y
-index 0be8a11..52ad842 100644
+index bff5e274..d564eb55 100644
 --- a/src/parser_bison.y
 +++ b/src/parser_bison.y
-@@ -159,6 +159,7 @@ int nft_lex(void *, void *, void *);
+@@ -163,6 +163,7 @@ int nft_lex(void *, void *, void *);
  %token TOKEN_EOF 0		"end of file"
  %token JUNK			"junk"
  
@@ -858,7 +897,7 @@ index 0be8a11..52ad842 100644
  %token NEWLINE			"newline"
  %token COLON			"colon"
  %token SEMICOLON		"semicolon"
-@@ -258,7 +259,8 @@ int nft_lex(void *, void *, void *);
+@@ -280,7 +281,8 @@ int nft_lex(void *, void *, void *);
  %token <string> STRING		"string"
  %token <string> QUOTED_STRING	"quoted string"
  %token <string> ASTERISK_STRING	"string with a trailing asterisk"
@@ -868,7 +907,7 @@ index 0be8a11..52ad842 100644
  
  %token LL_HDR			"ll"
  %token NETWORK_HDR		"nh"
-@@ -458,6 +460,7 @@ int nft_lex(void *, void *, void *);
+@@ -501,6 +503,7 @@ int nft_lex(void *, void *, void *);
  %token RANDOM			"random"
  %token FULLY_RANDOM		"fully-random"
  %token PERSISTENT		"persistent"
@@ -876,9 +915,9 @@ index 0be8a11..52ad842 100644
  
  %token QUEUE			"queue"
  %token QUEUENUM			"num"
-@@ -490,8 +493,8 @@ int nft_lex(void *, void *, void *);
- 
- %token EXTHDR			"exthdr"
+@@ -544,8 +547,8 @@ int nft_lex(void *, void *, void *);
+ %token IN			"in"
+ %token OUT			"out"
  
 -%type <string>			identifier type_identifier string comment_spec
 -%destructor { xfree($$); }	identifier type_identifier string comment_spec
@@ -887,27 +926,27 @@ index 0be8a11..52ad842 100644
  
  %type <val>			time_spec quota_used
  
-@@ -571,6 +574,8 @@ int nft_lex(void *, void *, void *);
- %type <val>			set_stmt_op
+@@ -637,6 +640,8 @@ int nft_lex(void *, void *, void *);
+ %destructor { stmt_free($$); }	map_stmt
  %type <stmt>			meter_stmt meter_stmt_alloc flow_stmt_legacy_alloc
  %destructor { stmt_free($$); }	meter_stmt meter_stmt_alloc flow_stmt_legacy_alloc
 +%type <stmt>			dict_stmt
 +%destructor { stmt_free($$); }	dict_stmt
  
- %type <expr>			symbol_expr verdict_expr integer_expr variable_expr
- %destructor { expr_free($$); }	symbol_expr verdict_expr integer_expr variable_expr
-@@ -649,8 +654,8 @@ int nft_lex(void *, void *, void *);
+ %type <expr>			symbol_expr verdict_expr integer_expr variable_expr chain_expr policy_expr
+ %destructor { expr_free($$); }	symbol_expr verdict_expr integer_expr variable_expr chain_expr policy_expr
+@@ -715,8 +720,8 @@ int nft_lex(void *, void *, void *);
  %type <expr>			arp_hdr_expr
  %destructor { expr_free($$); }	arp_hdr_expr
  %type <val>			arp_hdr_field
--%type <expr>			ip_hdr_expr	icmp_hdr_expr		numgen_expr	hash_expr
--%destructor { expr_free($$); }	ip_hdr_expr	icmp_hdr_expr		numgen_expr	hash_expr
-+%type <expr>			ip_hdr_expr	icmp_hdr_expr		numgen_expr	hash_expr	dict_expr
-+%destructor { expr_free($$); }	ip_hdr_expr	icmp_hdr_expr		numgen_expr	hash_expr	dict_expr
- %type <val>			ip_hdr_field	icmp_hdr_field
+-%type <expr>			ip_hdr_expr	icmp_hdr_expr		igmp_hdr_expr numgen_expr	hash_expr
+-%destructor { expr_free($$); }	ip_hdr_expr	icmp_hdr_expr		igmp_hdr_expr numgen_expr	hash_expr
++%type <expr>			ip_hdr_expr	icmp_hdr_expr		igmp_hdr_expr numgen_expr	hash_expr	dict_expr
++%destructor { expr_free($$); }	ip_hdr_expr	icmp_hdr_expr		igmp_hdr_expr numgen_expr	hash_expr	dict_expr
+ %type <val>			ip_hdr_field	icmp_hdr_field		igmp_hdr_field
+ %type <val>			ip_option_type	ip_option_field
  %type <expr>			ip6_hdr_expr    icmp6_hdr_expr
- %destructor { expr_free($$); }	ip6_hdr_expr	icmp6_hdr_expr
-@@ -1749,6 +1754,12 @@ string			:	STRING
+@@ -2073,6 +2078,12 @@ string			:	STRING
  			|	ASTERISK_STRING
  			;
  
@@ -920,15 +959,15 @@ index 0be8a11..52ad842 100644
  time_spec		:	STRING
  			{
  				struct error_record *erec;
-@@ -1951,6 +1962,7 @@ stmt			:	verdict_stmt
- 			|	dup_stmt
+@@ -2343,6 +2354,7 @@ stmt			:	verdict_stmt
  			|	fwd_stmt
  			|	set_stmt
+ 			|	map_stmt
 +			|	dict_stmt
+ 			|	synproxy_stmt
  			;
  
- verdict_stmt		:	verdict_expr
-@@ -2666,6 +2678,143 @@ match_stmt		:	relational_expr
+@@ -3210,6 +3222,143 @@ match_stmt		:	relational_expr
  			}
  			;
  
@@ -1072,7 +1111,7 @@ index 0be8a11..52ad842 100644
  variable_expr		:	'$'	identifier
  			{
  				struct scope *scope = current_scope(state);
-@@ -2700,7 +2849,16 @@ symbol_expr		:	variable_expr
+@@ -3253,7 +3402,16 @@ symbol_expr		:	variable_expr
  			}
  			;
  
@@ -1090,15 +1129,15 @@ index 0be8a11..52ad842 100644
  			{
  				char str[64];
  
-@@ -2720,6 +2878,7 @@ primary_expr		:	symbol_expr			{ $$ = $1; }
+@@ -3274,6 +3432,7 @@ primary_expr		:	symbol_expr			{ $$ = $1; }
  			|	rt_expr				{ $$ = $1; }
  			|	ct_expr				{ $$ = $1; }
  			|	numgen_expr			{ $$ = $1; }
 +			|	dict_expr			{ $$ = $1; }
  			|	hash_expr			{ $$ = $1; }
  			|	fib_expr			{ $$ = $1; }
- 			|	'('	basic_expr	')'	{ $$ = $2; }
-@@ -3405,6 +3564,59 @@ numgen_expr		:	NUMGEN	numgen_type	MOD	NUM	offset_opt
+ 			|	osf_expr			{ $$ = $1; }
+@@ -4171,6 +4330,59 @@ xfrm_expr		:	IPSEC	xfrm_dir	xfrm_spnum	xfrm_state_key
  			}
  			;
  
@@ -1158,8 +1197,8 @@ index 0be8a11..52ad842 100644
  hash_expr		:	JHASH		expr	MOD	NUM	SEED	NUM	offset_opt
  			{
  				$$ = hash_expr_alloc(&@$, $4, true, $6, $7, NFT_HASH_JENKINS);
-@@ -3454,7 +3666,11 @@ rt_key			:	CLASSID		{ $$ = NFT_RT_CLASSID; }
- 			|	MTU		{ $$ = NFT_RT_TCPMSS; }
+@@ -4221,7 +4433,11 @@ rt_key			:	CLASSID		{ $$ = NFT_RT_CLASSID; }
+ 			|	IPSEC		{ $$ = NFT_RT_XFRM; }
  			;
  
 -ct_expr			: 	CT	ct_key
@@ -1169,13 +1208,13 @@ index 0be8a11..52ad842 100644
 +			}
 +			| 	CT	ct_key
  			{
- 				$$ = ct_expr_alloc(&@$, $2, -1, NFPROTO_UNSPEC);
+ 				$$ = ct_expr_alloc(&@$, $2, -1);
  			}
 diff --git a/src/scanner.l b/src/scanner.l
-index b4a227a..243eb0d 100644
+index c1adcbdd..c6f8bd69 100644
 --- a/src/scanner.l
 +++ b/src/scanner.l
-@@ -113,6 +113,8 @@ decstring	{digit}+
+@@ -118,6 +118,8 @@ decstring	{digit}+
  hexstring	0[xX]{hexdigit}+
  letter		[a-zA-Z]
  string		({letter}|[_.])({letter}|{digit}|[/\-_\.])*
@@ -1184,7 +1223,7 @@ index b4a227a..243eb0d 100644
  quotedstring	\"[^"]*\"
  asteriskstring	({string}\*|{string}\\\*)
  comment		#.*$
-@@ -353,6 +355,7 @@ addrstring	({macaddr}|{ip4addr}|{ip6addr})
+@@ -372,6 +374,7 @@ addrstring	({macaddr}|{ip4addr}|{ip6addr})
  "random"		{ return RANDOM; }
  "fully-random"		{ return FULLY_RANDOM; }
  "persistent"		{ return PERSISTENT; }
@@ -1192,7 +1231,7 @@ index b4a227a..243eb0d 100644
  
  "ll"			{ return LL_HDR; }
  "nh"			{ return NETWORK_HDR; }
-@@ -505,6 +508,7 @@ addrstring	({macaddr}|{ip4addr}|{ip6addr})
+@@ -543,6 +546,7 @@ addrstring	({macaddr}|{ip4addr}|{ip6addr})
  "status"		{ return STATUS; }
  
  "numgen"		{ return NUMGEN; }
@@ -1200,7 +1239,7 @@ index b4a227a..243eb0d 100644
  "inc"			{ return INC; }
  "mod"			{ return MOD; }
  "offset"		{ return OFFSET; }
-@@ -589,6 +593,11 @@ addrstring	({macaddr}|{ip4addr}|{ip6addr})
+@@ -647,6 +651,11 @@ addrstring	({macaddr}|{ip4addr}|{ip6addr})
  				return STRING;
  			}
  

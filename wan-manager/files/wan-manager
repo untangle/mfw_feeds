@@ -3,6 +3,29 @@
 . /lib/functions/network.sh
 . /usr/share/libubox/jshn.sh
 
+DEBUG=false
+
+# logMessage is used to log a normal stdout message to the logger
+# @param $1 - the message to log
+logMessage() 
+{
+	if [ "$DEBUG" = true ] ; then
+		logger -t wan-manager "$1"
+	fi
+}
+
+check_for_table()
+{
+	ipCheck=$1
+	tableCheck=$2
+	output=`nft list table $ipCheck $tableCheck`
+	retval=$?
+	if [ $retval -ne 0 ]; then
+		echo "NFT does not have a required table for wan-manager"
+		exit 1
+	fi
+}
+
 handle_term()
 {
 	for i in `pgrep -P $$ `
@@ -16,6 +39,28 @@ wait_for_change()
 	files=$1
 
 	inotifywait -r -qq -e create,modify $files
+}
+
+is_offline()
+{                                                                                                                                                                                      
+		local offline
+
+		id=$1
+		json_load_file /tmp/stats.json
+		if json_is_a interfaces array ; then
+				json_select interfaces
+				json_get_keys interfaces
+				for intf in $interfaces; do
+						json_select $intf
+						json_get_var interfaceId interfaceId
+						if [ $id = $interfaceId ] ; then
+								json_get_var offline offline
+						fi
+						json_select ..
+				done
+				json_select ..
+		fi
+		echo $offline
 }
 
 get_wan_bandwidth()
@@ -148,17 +193,24 @@ disable_policy()
 
 	for wan in $wans ; do
 		echo flush set ip wan-routing wan-$wan-table >> $TMPFILE
+		echo flush set ip6 wan-routing wan-$wan-table >> $TMPFILE
 	done
 
 	echo flush chain ip wan-routing route-to-$policy >> $TMPFILE
 	echo flush set ip wan-routing $policy-table >> $TMPFILE
 	echo add rule ip wan-routing route-to-$policy return comment \"policy disabled\" >> $TMPFILE
 
+	echo flush chain ip6 wan-routing route-to-$policy >> $TMPFILE
+	echo flush set ip6 wan-routing $policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy return comment \"policy disabled\" >> $TMPFILE
+
 	nft -f $TMPFILE
 	retval=$?
+	logMessage "disabling policy: $policy All Wans:$wans Retval: $retval"
 	while [ $retval -ne 0 ] ; do
 		nft -f $TMPFILE
 		retval=$?
+		logMessage "nft -f Failed to disable policy: $policy All Wans:$wans Retval: $retval, trying again..."
 	done
 	rm $TMPFILE
 }
@@ -173,6 +225,7 @@ jump_policy()
 
 	for wan in $wans ; do
 		echo flush set ip wan-routing wan-$wan-table >> $TMPFILE
+		echo flush set ip6 wan-routing wan-$wan-table >> $TMPFILE
 	done
 
 	echo flush chain ip wan-routing route-to-$policy >> $TMPFILE
@@ -183,11 +236,21 @@ jump_policy()
 	echo add rule ip wan-routing route-to-$policy dict sessions ct id wan_policy long_string set $policy >> $TMPFILE
 	echo add rule ip wan-routing route-to-$policy jump mark-for-wan-$id >> $TMPFILE
 
+	echo flush chain ip6 wan-routing route-to-$policy >> $TMPFILE
+	echo flush set ip6 wan-routing $policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy set update ip6 saddr . ip6 daddr timeout 1m @$policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy set update ip6 daddr . ip6 saddr timeout 1m @$policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy jump update-rule-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy dict sessions ct id wan_policy long_string set $policy >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy jump mark-for-wan-$id >> $TMPFILE
+
 	nft -f $TMPFILE
 	retval=$?
+	logMessage "updating jump_policy for policy:$policy mark for WAN:$id All WANs: $wans; retval: $retval"
 	while [ $retval -ne 0 ] ; do
 		nft -f $TMPFILE
 		retval=$?
+		logMessage "nft -f failed during jump_policy for policy:$policy mark for WAN:$id All WANs: $wans; retval: $retval, trying again..."
 	done
 	rm $TMPFILE
 }
@@ -203,6 +266,7 @@ balance_policy()
 
 	for wan in $wans ; do
 		echo flush set ip wan-routing wan-$wan-table >> $TMPFILE
+		echo flush set ip6 wan-routing wan-$wan-table >> $TMPFILE
 	done
 
 	echo flush chain ip wan-routing route-to-$policy >> $TMPFILE
@@ -213,11 +277,21 @@ balance_policy()
 	echo add rule ip wan-routing route-to-$policy dict sessions ct id wan_policy long_string set $policy >> $TMPFILE
 	echo add ip wan-routing route-to-$policy numgen random mod $total_weight vmap { $balance_string } >> $TMPFILE
 
+	echo flush chain ip6 wan-routing route-to-$policy >> $TMPFILE
+	echo flush set ip6 wan-routing $policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy set update ip6 saddr . ip6 daddr timeout 1m @$policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy set update ip6 daddr . ip6 saddr timeout 1m @$policy-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy jump update-rule-table >> $TMPFILE
+	echo add rule ip6 wan-routing route-to-$policy dict sessions ct id wan_policy long_string set $policy >> $TMPFILE
+	echo add ip6 wan-routing route-to-$policy numgen random mod $total_weight vmap { $balance_string } >> $TMPFILE
+
 	nft -f $TMPFILE
 	retval=$?
+	logMessage "running balance policy:$policy All Wans:$wans total_weight:$total_weight balance string:$balance_string Retval: $retval"
 	while [ $retval -ne 0 ] ; do
 		nft -f $TMPFILE
 		retval=$?
+		logMessage "nft -f failed while running balance policy:$policy All Wans:$wans total_weight:$total_weight balance string:$balance_string Retval: $retval, trying again..."
 	done
 	rm $TMPFILE
 }
@@ -281,6 +355,18 @@ best_of()
 
 		for wan in $wans ; do
 			stat=$(get_stat $wan $stat_name $metric_name)
+
+			logMessage "best_of: comparing best_wan ($best_wan stat: $best_stat) with wan: $wan, stat $stat $stat_name $metric_name"
+
+			# Important assumption here!!! 
+			# VPNs and some other interfaces sometimes report a latency of 0
+			# If this happens, we should continue and ignore this particular interface during best_of calculations
+			if [ $stat_name = "latency" ] ; then
+				if [ "$stat" = 0 ] || [ "$stat" = -1 ] ; then
+					continue
+				fi
+			fi
+
 			if [ $best_wan -eq -1 ] ; then
 				best_wan=$wan
 				best_stat=$stat
@@ -320,11 +406,14 @@ best_of()
 			result="up"
 		fi
 
+		logMessage "best_of: all_wans:$wans current_best_wan:$current_best_wan best_wan:$best_wan result:$result status:$status"
 		if [ ! $result = $status ] || [ ! $current_best_wan -eq $best_wan ] ; then
 			if [ $result = "up" ] ; then
+				logMessage "best_of: Switching best WAN: current_best_wan: $current_best_wan best_wan: $best_wan result: $result status: $status"
 				jump_policy $policy $best_wan "$policy_wans"
 				current_best_wan=$best_wan
 			else
+				logMessage "best_of: Disabling policy:$policy with WANs:$policy_wans"	
 				disable_policy $policy "$policy_wans"
 			fi
 		fi
@@ -456,6 +545,13 @@ metric()
 		wait_for_change "/tmp/stats.json"
 		test=$(get_stat $id $stat_name $metric_name)
 
+		# Important assumption here!!! 
+		# VPNs and some other interfaces sometimes report a latency of 0
+		# Setting the test results to -1 will allow the logic below to skip this interface during the WAN checks
+		if [ $stat_name = "latency" ] && [ $test = 0] ; then
+			test=-1
+		fi
+
 		result="down"
 		if [ $test -ne -1 ] ; then
 			case $operator in
@@ -504,15 +600,19 @@ up()
 
 	while [ 1 ] ; do
 		network_flush_cache
-		if network_is_up $interface ; then
+		offline=$(is_offline $interfaceId)
+		if network_is_up $interface  && [ "$offline" = "false" ]; then
+			logMessage "$interface is up"
 			#echo up > $result_file
 			result="up"
 		else
 			#echo down > $result_file
+			logMessage "$interface is down"
 			result="down"
 		fi
 
 		if [ ! $result = $status ] ; then
+			logMessage "Updating $interface file with new status result:$result..."
 			echo $result > $result_file
 			status=$result
 		fi
@@ -553,8 +653,9 @@ test()
 	mkdir -p $result_dir
 	while [ 1 ] ; do
 		for i in $(seq 0 9) ; do
+			logMessage "Flushing cache and looking for interface: $interface..."
 			network_flush_cache
-			if network_is_up $interface ; then
+			if network_is_up $interface  && [ "$offline" = "false" ]; then
 
 				network_get_device device $interface
 				network_get_ipaddr ip_address $interface
@@ -600,9 +701,13 @@ test()
 			fi
 
 			sleep $interval
+			logMessage "WAN-Manager test interval running"
 		done
 	done
 }
+
+check_for_table ip wan-routing
+check_for_table ip6 wan-routing
 
 trap 'handle_term' TERM INT
 rm -rf /tmp/wan_status/*

@@ -16,6 +16,7 @@ proto_openvpn_init_config() {
 	proto_config_add_string "config"
 	proto_config_add_string "authfile"
 	proto_config_add_string "wanif"
+	proto_config_add_string "wanif6"
 	proto_config_add_defaults
 }
 
@@ -35,8 +36,8 @@ proto_openvpn_setup() {
 
 	local dev_type opts
 
-	local ifname config authfile wanif $PROTO_DEFAULT_OPTIONS
-	json_get_vars ifname config authfile wanif $PROTO_DEFAULT_OPTIONS
+	local ifname config authfile wanif wanif6 $PROTO_DEFAULT_OPTIONS
+	json_get_vars ifname config authfile wanif wanif6 $PROTO_DEFAULT_OPTIONS
 
 	[ -n "$ifname" ] || get_config_param ifname "$config" dev
 	[ -z "$ifname" ] && {
@@ -65,19 +66,34 @@ proto_openvpn_setup() {
 		append opts "--auth-user-pass $authfile"
 	}
 
-	[ -z "$wanif" ] && {
+	[ -z "$wanif" ] || [ -z "$wanif6" ] && {
 		append opts "--nobind"
 	}
 
-	[ -n "$wanif" ] && {
-		local ipaddr
-		if ! network_get_ipaddr ipaddr "$wanif"; then
+	[ -n "$wanif" ] || [ -n "$wanif6" ] && {
+		local ipaddr ip6addr
+
+		network_get_ipaddr ipaddr "$wanif"
+		network_get_ipaddr6 ip6addr "$wanif6"
+
+		if [ -z "$ipaddr" ] && [ -z "$ip6addr" ]; then
 			proto_notify_error "$cfg" "NO_WAN_LINK"
 			exit
 		fi
-		append opts "--bind --local $ipaddr"
-	}
 
+		[ -n "$ipaddr" ] && {
+			append opts "--bind --local $ipaddr"
+		}
+
+		# Currently we are unable to bind to interfaces
+		# on both an IPv4 and IPv6 address. 
+		# This should be resolved in OpenVPN versions (>2.5):
+		# https://community.openvpn.net/openvpn/ticket/556?__cf_chl_jschl_tk__=ab3c77c30fe2d267e1c2bd>                
+		[ -z "$ipaddr" ] && [ -n "$ip6addr" ] && {
+			append opts "--bind --local $ip6addr"
+		}
+	}
+	
 	proto_run_command "$cfg" /usr/sbin/openvpn \
 		--syslog "openvpn($cfg)" \
 		--status "/var/run/openvpn.${cfg}.status" \

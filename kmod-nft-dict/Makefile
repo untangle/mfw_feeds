@@ -5,7 +5,7 @@ PKG_NAME:=nft-dict
 PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=Brett Mastbergen <bmastbergen@untangle.com>
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/untangle/nft_dict.git
+PKG_SOURCE_URL:=git@github.com:untangle/nft_dict.git
 
 include ../version.mk
 
@@ -28,7 +28,7 @@ define KernelPackage/nft-dict/description
 endef
 
 define Build/Compile
-	$(KERNEL_MAKE) SUBDIRS="$(PKG_BUILD_DIR)" modules
+	$(KERNEL_MAKE) M="$(PKG_BUILD_DIR)" modules
 endef
 
 $(eval $(call KernelPackage,nft-dict))

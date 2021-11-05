@@ -4,12 +4,12 @@ PKG_NAME:=sync-settings
 PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/untangle/sync-settings.git
+PKG_SOURCE_URL:=git@github.com:untangle/sync-settings.git
 
 include ../version.mk
 
 include $(INCLUDE_DIR)/package.mk
-include ../../packages/lang/python/python3-package.mk
+include $(TOPDIR)/feeds/packages/lang/python/python3-package.mk
 
 define Package/sync-settings
   SECTION:=lang
@@ -18,7 +18,7 @@ define Package/sync-settings
   TITLE:=Library for manipulating MFW system settings
   URL:=https://github.com/untangle/sync-settings
   PKG_BUILD_DEPENDS:=python3 python3-urllib3
-  DEPENDS:= +diffutils +tc +kmod-sched-core +kmod-sched-cake +kmod-ifb +kmod-sched-connmark\
+  DEPENDS:= +diffutils +tc +kmod-sched +kmod-sched-cake +kmod-ifb +kmod-sched-connmark\
 	  +uuidgen +jsonschema +kmod-nft-fib +openvpn-proto +wireguard +wan-manager +speedtest-cli\
 	  +python3 +python3-urllib3
 endef

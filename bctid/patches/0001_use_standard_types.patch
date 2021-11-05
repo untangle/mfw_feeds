@@ -1,0 +1,15 @@
+diff --git a/src/src/IsisSdkCore/SocketClient.cpp b/src/src/IsisSdkCore/SocketClient.cpp
+index 4957397..df63e08 100644
+--- a/src/src/IsisSdkCore/SocketClient.cpp
++++ b/src/src/IsisSdkCore/SocketClient.cpp
+@@ -36,8 +36,8 @@ static void SetSocketTimeout
+ #else
+ 	struct timeval tv
+ 	{
+-		(__time_t)((long)milliseconds / 1000L),
+-		(__suseconds_t)(((long)milliseconds % 1000L) * 1000L)
++		(time_t)((long)milliseconds / 1000L),
++		(suseconds_t)(((long)milliseconds % 1000L) * 1000L)
+ 	};
+ 
+ 	if (setsockopt(sock, SOL_SOCKET, opt, &tv, sizeof tv))

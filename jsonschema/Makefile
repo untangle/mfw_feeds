@@ -10,7 +10,7 @@ PKG_SOURCE_URL:=https://pypi.python.org/packages/58/b9/171dbb07e18c6346090a37f03
 PKG_HASH:=6ff5f3180870836cae40f06fa10419f557208175f13ad7bc26caa77beb1f6e02
 
 include $(INCLUDE_DIR)/package.mk
-include ../../packages/lang/python/python3-package.mk
+include $(TOPDIR)/feeds/packages/lang/python/python3-package.mk
 
 define Package/jsonschema
   SUBMENU:=Python3

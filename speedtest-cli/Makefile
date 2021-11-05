@@ -8,14 +8,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=speedtest-cli
-PKG_VERSION:=2.1.2
+PKG_VERSION:=2.1.3
 PKG_RELEASE:=1
 PKG_LICENSE:=Apache-2.0
 PKG_LICENSE_FILES:=LICENSE
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/sivel/$(PKG_NAME)/archive/v$(PKG_VERSION)
-PKG_HASH:=a877142eec0ee8dda86519c36fe789480ed6fa603b016b620affd77fbf79b0d9
+PKG_HASH:=45e3ca21c3ce3c339646100de18db8a26a27d240c29f1c9e07b6c13995a969be
 
 include $(INCLUDE_DIR)/package.mk
 

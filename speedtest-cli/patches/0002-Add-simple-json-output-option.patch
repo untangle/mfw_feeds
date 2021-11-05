@@ -1,21 +1,6 @@
-From f4493148191a96b27c92e7f4bad42ae2bb12eacd Mon Sep 17 00:00:00 2001
-From: Brett Mastbergen <bmastbergen@untangle.com>
-Date: Fri, 15 Nov 2019 14:40:57 -0500
-Subject: [PATCH 2/2] Add --simple-json output option
-
-This just prints ping, download(kbps), and upload(kbps) values
-as json:
-
-{"ping":57,"download":57184,"upload":5429}
----
- speedtest.py | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
-
-diff --git a/speedtest.py b/speedtest.py
-index a469481..c13ee2d 100755
 --- a/speedtest.py
 +++ b/speedtest.py
-@@ -1731,6 +1731,9 @@ def parse_args():
+@@ -1735,6 +1735,9 @@
      parser.add_argument('--simple', action='store_true', default=False,
                          help='Suppress verbose output, only show basic '
                               'information')
@@ -25,7 +10,7 @@ index a469481..c13ee2d 100755
      parser.add_argument('--csv', action='store_true', default=False,
                          help='Suppress verbose output, only show basic '
                               'information in CSV format. Speeds listed in '
-@@ -1851,12 +1854,12 @@ def shell():
+@@ -1855,12 +1858,12 @@
      if debug:
          DEBUG = True
  
@@ -40,7 +25,7 @@ index a469481..c13ee2d 100755
          machine_format = True
      else:
          machine_format = False
-@@ -1962,7 +1965,7 @@ def shell():
+@@ -1966,7 +1969,7 @@
  
      printer('Results:\n%r' % results.dict(), debug=True)
  
@@ -49,7 +34,7 @@ index a469481..c13ee2d 100755
          results.share()
  
      if args.simple:
-@@ -1976,6 +1979,11 @@ def shell():
+@@ -1980,6 +1983,11 @@
          printer(results.csv(delimiter=args.csv_delimiter))
      elif args.json:
          printer(results.json())
@@ -61,6 +46,3 @@ index a469481..c13ee2d 100755
  
      if args.share and not machine_format:
          printer('Share results: %s' % results.share())
--- 
-2.11.0
-

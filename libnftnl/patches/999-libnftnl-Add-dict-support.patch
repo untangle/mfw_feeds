@@ -1,25 +1,25 @@
-From 87fff0b0097f46b3aa520722bfffbb218b2fa817 Mon Sep 17 00:00:00 2001
+From 7f1578063dccdde47af261c8938af09b8845c29a Mon Sep 17 00:00:00 2001
 From: Brett Mastbergen <bmastbergen@untangle.com>
 Date: Thu, 17 May 2018 15:41:18 -0400
 Subject: [PATCH] libnftnl: Add dict support (w/ ct id)
 
 ---
  include/libnftnl/expr.h             |  17 ++
- include/linux/netfilter/nf_tables.h |  25 ++
+ include/linux/netfilter/nf_tables.h |  25 +++
  src/Makefile.am                     |   2 +
- src/expr/cmp.c                      |  13 +
- src/expr/ctid.c                     | 192 +++++++++++++++
- src/expr/dict.c                     | 465 ++++++++++++++++++++++++++++++++++++
+ src/expr/cmp.c                      |  11 ++
+ src/expr/ctid.c                     | 143 ++++++++++++++
+ src/expr/dict.c                     | 361 ++++++++++++++++++++++++++++++++++++
  src/expr_ops.c                      |   6 +
- 7 files changed, 720 insertions(+)
+ 7 files changed, 565 insertions(+)
  create mode 100644 src/expr/ctid.c
  create mode 100644 src/expr/dict.c
 
 diff --git a/include/libnftnl/expr.h b/include/libnftnl/expr.h
-index 76df942..d476e8b 100644
+index 3e0f5b0..a72f487 100644
 --- a/include/libnftnl/expr.h
 +++ b/include/libnftnl/expr.h
-@@ -191,6 +191,23 @@ enum {
+@@ -212,6 +212,23 @@ enum {
  };
  
  enum {
@@ -44,10 +44,10 @@ index 76df942..d476e8b 100644
  	NFTNL_EXPR_QUEUE_TOTAL,
  	NFTNL_EXPR_QUEUE_FLAGS,
 diff --git a/include/linux/netfilter/nf_tables.h b/include/linux/netfilter/nf_tables.h
-index 2edccfe..e6e7fce 100644
+index 03fd1b7..2eb1e12 100644
 --- a/include/linux/netfilter/nf_tables.h
 +++ b/include/linux/netfilter/nf_tables.h
-@@ -1443,4 +1443,29 @@ enum nft_ng_types {
+@@ -1700,6 +1700,31 @@ enum nft_ng_types {
  };
  #define NFT_NG_MAX	(__NFT_NG_MAX - 1)
  
@@ -76,12 +76,14 @@ index 2edccfe..e6e7fce 100644
 +
 +#define NFTA_CTID_MAX (__NFTA_CTID_MAX - 1)
 +
- #endif /* _LINUX_NF_TABLES_H */
+ enum nft_tunnel_key_ip_attributes {
+ 	NFTA_TUNNEL_KEY_IP_UNSPEC,
+ 	NFTA_TUNNEL_KEY_IP_SRC,
 diff --git a/src/Makefile.am b/src/Makefile.am
-index 578b7d3..9ee27a5 100644
+index f16422c..b19d582 100644
 --- a/src/Makefile.am
 +++ b/src/Makefile.am
-@@ -37,6 +37,8 @@ libnftnl_la_SOURCES = utils.c		\
+@@ -36,6 +36,8 @@ libnftnl_la_SOURCES = utils.c		\
  		      expr/fwd.c	\
  		      expr/limit.c	\
  		      expr/log.c	\
@@ -91,32 +93,30 @@ index 578b7d3..9ee27a5 100644
  		      expr/dynset.c	\
  		      expr/immediate.c	\
 diff --git a/src/expr/cmp.c b/src/expr/cmp.c
-index b26d0eb..985fffc 100644
+index 86d7842..49f5cbe 100644
 --- a/src/expr/cmp.c
 +++ b/src/expr/cmp.c
-@@ -287,3 +287,16 @@ struct expr_ops expr_ops_cmp = {
+@@ -218,3 +218,14 @@ struct expr_ops expr_ops_cmp = {
+ 	.build		= nftnl_expr_cmp_build,
  	.snprintf	= nftnl_expr_cmp_snprintf,
- 	.json_parse	= nftnl_expr_cmp_json_parse,
  };
 +
 +struct expr_ops expr_ops_scmp = {
 +	.name		= "scmp",
 +	.alloc_len	= sizeof(struct nftnl_expr_cmp),
 +	.max_attr	= NFTA_CMP_MAX,
-+	.cmp		= nftnl_expr_cmp_cmp,
 +	.set		= nftnl_expr_cmp_set,
 +	.get		= nftnl_expr_cmp_get,
 +	.parse		= nftnl_expr_cmp_parse,
 +	.build		= nftnl_expr_cmp_build,
 +	.snprintf	= nftnl_expr_cmp_snprintf,
-+	.json_parse	= nftnl_expr_cmp_json_parse,
 +};
 diff --git a/src/expr/ctid.c b/src/expr/ctid.c
 new file mode 100644
-index 0000000..a44cad7
+index 0000000..41d0148
 --- /dev/null
 +++ b/src/expr/ctid.c
-@@ -0,0 +1,192 @@
+@@ -0,0 +1,143 @@
 +/*
 + * (C) 2012-2013 by Pablo Neira Ayuso <pablo@netfilter.org>
 + *
@@ -219,39 +219,6 @@ index 0000000..a44cad7
 +	return 0;
 +}
 +
-+static int nftnl_expr_ctid_json_parse(struct nftnl_expr *e, json_t *root,
-+				       struct nftnl_parse_err *err)
-+{
-+#ifdef JSON_PARSING
-+	uint32_t reg;
-+
-+	if (nftnl_jansson_parse_reg(root, "dreg", NFTNL_TYPE_U32, &reg, err) == 0)
-+		nftnl_expr_set_u32(e, NFTNL_EXPR_CTID_DREG, reg);
-+
-+	return 0;
-+err:
-+	errno = EINVAL;
-+	return -1;
-+#else
-+	errno = EOPNOTSUPP;
-+	return -1;
-+#endif
-+}
-+
-+
-+static int
-+nftnl_expr_ctid_export(char *buf, size_t size, const struct nftnl_expr *e,
-+		     int type)
-+{
-+	struct nftnl_expr_ctid *ctid = nftnl_expr_data(e);
-+	NFTNL_BUF_INIT(b, buf, size);
-+
-+	if (e->flags & (1 << NFTNL_EXPR_CTID_DREG))
-+		nftnl_buf_u32(&b, type, ctid->dreg, DREG);
-+
-+	return nftnl_buf_done(&b);
-+}
-+
 +static int
 +nftnl_expr_ctid_snprintf_default(char *buf, size_t size,
 +			       const struct nftnl_expr *e)
@@ -277,44 +244,28 @@ index 0000000..a44cad7
 +		return nftnl_expr_ctid_snprintf_default(buf, len, e);
 +	case NFTNL_OUTPUT_XML:
 +	case NFTNL_OUTPUT_JSON:
-+		return nftnl_expr_ctid_export(buf, len, e, type);
 +	default:
 +		break;
 +	}
 +	return -1;
 +}
 +
-+static bool nftnl_expr_ctid_cmp(const struct nftnl_expr *e1,
-+			      const struct nftnl_expr *e2)
-+{
-+	struct nftnl_expr_ctid *c1 = nftnl_expr_data(e1);
-+	struct nftnl_expr_ctid *c2 = nftnl_expr_data(e2);
-+	bool eq = true;
-+
-+	if (e1->flags & (1 << NFTNL_EXPR_CTID_DREG))
-+		eq &= (c1->dreg == c2->dreg);
-+
-+	return eq;
-+}
-+
 +struct expr_ops expr_ops_ctid = {
 +	.name		= "ctid",
 +	.alloc_len	= sizeof(struct nftnl_expr_ctid),
 +	.max_attr	= NFTA_CTID_MAX,
-+	.cmp		= nftnl_expr_ctid_cmp,
 +	.set		= nftnl_expr_ctid_set,
 +	.get		= nftnl_expr_ctid_get,
 +	.parse		= nftnl_expr_ctid_parse,
 +	.build		= nftnl_expr_ctid_build,
 +	.snprintf	= nftnl_expr_ctid_snprintf,
-+	.json_parse	= nftnl_expr_ctid_json_parse,
 +};
 diff --git a/src/expr/dict.c b/src/expr/dict.c
 new file mode 100644
-index 0000000..4b041ee
+index 0000000..bc9d95d
 --- /dev/null
 +++ b/src/expr/dict.c
-@@ -0,0 +1,465 @@
+@@ -0,0 +1,361 @@
 +#include <stdio.h>
 +#include <stdint.h>
 +#include <string.h>
@@ -594,60 +545,6 @@ index 0000000..4b041ee
 +	return 0;
 +}
 +
-+static int nftnl_expr_dict_json_parse(struct nftnl_expr *e, json_t *root,
-+					struct nftnl_parse_err *err)
-+{
-+#ifdef JSON_PARSING
-+	const char *field, *value, *table;
-+	uint32_t sreg, dreg, type, len, size, set, flush;
-+
-+	if (nftnl_jansson_parse_val(root, "sreg", NFTNL_TYPE_U32,
-+				    &sreg, err) == 0)
-+		nftnl_expr_set_u32(e, NFTNL_EXPR_DICT_SREG, sreg);
-+
-+	if (nftnl_jansson_parse_val(root, "dreg", NFTNL_TYPE_U32,
-+				    &dreg, err) == 0)
-+		nftnl_expr_set_u32(e, NFTNL_EXPR_DICT_DREG, dreg);
-+
-+	if (nftnl_jansson_parse_val(root, "type", NFTNL_TYPE_U32,
-+				    &type, err) == 0)
-+		nftnl_expr_set_u32(e, NFTNL_EXPR_DICT_TYPE, type);
-+
-+	if (nftnl_jansson_parse_val(root, "len", NFTNL_TYPE_U32,
-+				    &len, err) == 0)
-+		nftnl_expr_set_u32(e, NFTNL_EXPR_DICT_LEN, len);
-+
-+	if (nftnl_jansson_parse_val(root, "size", NFTNL_TYPE_U32,
-+				    &size, err) == 0)
-+		nftnl_expr_set_u32(e, NFTNL_EXPR_DICT_SIZE, size);
-+
-+	table = nftnl_jansson_parse_str(root, "table", err);
-+	if (table != NULL)
-+		nftnl_expr_set_str(e, NFTNL_EXPR_DICT_TABLE, table);
-+
-+	field = nftnl_jansson_parse_str(root, "field", err);
-+	if (field != NULL)
-+		nftnl_expr_set_str(e, NFTNL_EXPR_DICT_FIELD, field);
-+
-+	value = nftnl_jansson_parse_str(root, "value", err);
-+	if (value != NULL)
-+		nftnl_expr_set_str(e, NFTNL_EXPR_DICT_VALUE, value);
-+
-+	if (nftnl_jansson_parse_val(root, "set", NFTNL_TYPE_U32,
-+				    &set, err) == 0)
-+		nftnl_expr_set_u32(e, NFTNL_EXPR_DICT_SET, set);
-+
-+	if (nftnl_jansson_parse_val(root, "flush", NFTNL_TYPE_U32,
-+				    &set, err) == 0)
-+		nftnl_expr_set_u32(e, NFTNL_EXPR_DICT_FLUSH, flush);
-+
-+	return 0;
-+#else
-+	errno = EOPNOTSUPP;
-+	return -1;
-+#endif
-+}
-+
 +static int nftnl_expr_dict_snprintf_default(char *buf, size_t size,
 +					   const struct nftnl_expr *e)
 +{
@@ -695,45 +592,6 @@ index 0000000..4b041ee
 +	return offset;
 +}
 +
-+static int nftnl_expr_dict_export(char *buf, size_t size,
-+				 const struct nftnl_expr *e, int type)
-+{
-+	struct nftnl_expr_dict *dict = nftnl_expr_data(e);
-+	NFTNL_BUF_INIT(b, buf, size);
-+
-+	if (e->flags & (1 << NFTNL_EXPR_DICT_SREG))
-+		nftnl_buf_u32(&b, type, dict->sreg, SREG);
-+
-+	if (e->flags & (1 << NFTNL_EXPR_DICT_DREG))
-+		nftnl_buf_u32(&b, type, dict->dreg, DREG);
-+
-+	if (e->flags & (1 << NFTNL_EXPR_DICT_TYPE))
-+		nftnl_buf_u32(&b, type, dict->type, TYPE);
-+
-+	if (e->flags & (1 << NFTNL_EXPR_DICT_LEN))
-+		nftnl_buf_u32(&b, type, dict->len, LEN);
-+
-+	if (e->flags & (1 << NFTNL_EXPR_DICT_SIZE))
-+		nftnl_buf_u32(&b, type, dict->size, SIZE);
-+
-+	if (e->flags & (1 << NFTNL_EXPR_DICT_TABLE))
-+		nftnl_buf_str(&b, type, dict->table, "table");
-+
-+	if (e->flags & (1 << NFTNL_EXPR_DICT_FIELD))
-+		nftnl_buf_str(&b, type, dict->field, "field");
-+
-+	if (e->flags & (1 << NFTNL_EXPR_DICT_VALUE))
-+		nftnl_buf_str(&b, type, dict->value, "value");
-+
-+	if (e->flags & (1 << NFTNL_EXPR_DICT_SET))
-+		nftnl_buf_u32(&b, type, dict->set, SET);
-+
-+	if (e->flags & (1 << NFTNL_EXPR_DICT_FLUSH))
-+		nftnl_buf_u32(&b, type, dict->flush, FLUSH);
-+
-+	return nftnl_buf_done(&b);
-+}
-+
 +static int
 +nftnl_expr_dict_snprintf(char *buf, size_t len, uint32_t type,
 +			uint32_t flags, const struct nftnl_expr *e)
@@ -743,7 +601,6 @@ index 0000000..4b041ee
 +		return nftnl_expr_dict_snprintf_default(buf, len, e);
 +	case NFTNL_OUTPUT_XML:
 +	case NFTNL_OUTPUT_JSON:
-+		return nftnl_expr_dict_export(buf, len, e, type);
 +	default:
 +		break;
 +	}
@@ -759,51 +616,41 @@ index 0000000..4b041ee
 +	xfree(dict->value);
 +}
 +
-+static bool nftnl_expr_dict_cmp(const struct nftnl_expr *e1,
-+				     const struct nftnl_expr *e2)
-+{
-+	struct nftnl_expr_dict *l1 = nftnl_expr_data(e1);
-+	struct nftnl_expr_dict *l2 = nftnl_expr_data(e2);
-+	return (l1->sreg == l2->sreg) && (l1->dreg == l2->dreg) && (l1->type == l2->type) && (l1->size == l2->size) && !strcmp(l1->table, l2->table) && !strcmp(l1->field, l2->field) && !strcmp(l1->value, l2->value) && (l1->set == l2->set) && (l1->flush == l2->flush);
-+}
-+
 +struct expr_ops expr_ops_dict = {
 +	.name		= "dict",
 +	.alloc_len	= sizeof(struct nftnl_expr_dict),
 +	.max_attr	= NFTA_DICT_MAX,
 +	.free		= nftnl_expr_dict_free,
-+	.cmp		= nftnl_expr_dict_cmp,
 +	.set		= nftnl_expr_dict_set,
 +	.get		= nftnl_expr_dict_get,
 +	.parse		= nftnl_expr_dict_parse,
 +	.build		= nftnl_expr_dict_build,
 +	.snprintf	= nftnl_expr_dict_snprintf,
-+	.json_parse	= nftnl_expr_dict_json_parse,
 +};
 diff --git a/src/expr_ops.c b/src/expr_ops.c
-index 041bd35..719ff5b 100644
+index 3538dd6..f532fa3 100644
 --- a/src/expr_ops.c
 +++ b/src/expr_ops.c
-@@ -34,6 +34,9 @@ extern struct expr_ops expr_ops_dynset;
- extern struct expr_ops expr_ops_hash;
+@@ -37,6 +37,9 @@ extern struct expr_ops expr_ops_hash;
  extern struct expr_ops expr_ops_fib;
  extern struct expr_ops expr_ops_flow;
+ extern struct expr_ops expr_ops_socket;
 +extern struct expr_ops expr_ops_dict;
 +extern struct expr_ops expr_ops_ctid;
 +extern struct expr_ops expr_ops_scmp;
- 
- static struct expr_ops expr_ops_notrack = {
- 	.name	= "notrack",
-@@ -71,6 +74,9 @@ static struct expr_ops *expr_ops[] = {
- 	&expr_ops_fib,
+ extern struct expr_ops expr_ops_synproxy;
+ extern struct expr_ops expr_ops_tunnel;
+ extern struct expr_ops expr_ops_osf;
+@@ -81,6 +84,9 @@ static struct expr_ops *expr_ops[] = {
  	&expr_ops_objref,
  	&expr_ops_flow,
+ 	&expr_ops_socket,
 +	&expr_ops_dict,
 +	&expr_ops_ctid,
 +	&expr_ops_scmp,
- 	NULL,
- };
- 
+ 	&expr_ops_synproxy,
+ 	&expr_ops_tunnel,
+ 	&expr_ops_osf,
 -- 
 2.11.0
 
