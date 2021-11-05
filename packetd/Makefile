@@ -22,7 +22,7 @@ define Package/packetd
   CATEGORY:=Network
   SUBMENU:=Firewall
   TITLE:=Userspace packet processing daemon
-  URL:=https://github.com/untangle/packetd
+  URL:=git@github.com/untangle/packetd
   PKG_BUILD_DEPENDS:=golang
   DEPENDS:=+libnetfilter-conntrack +libnetfilter-queue +libnetfilter-log +geoip-database \
 	  +iptables-mod-nfqueue +kmod-nft-dict +libnftnl +libsodium + libzmq-curve

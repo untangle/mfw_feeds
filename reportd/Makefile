@@ -21,7 +21,7 @@ define Package/reportd
   SECTION:=utils
   CATEGORY:=Utilities
   TITLE:=Report daemon for logging and database interaction
-  URL:=https://github.com/untangle/reportd
+  URL:=git@github.com/untangle/reportd
   PKG_BUILD_DEPENDS:=golang
   DEPENDS:=+libsodium +libzmq-curve
 

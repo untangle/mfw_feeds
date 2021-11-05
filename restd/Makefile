@@ -21,7 +21,7 @@ define Package/restd
   SECTION:=utils
   CATEGORY:=Utilities
   TITLE:=REST engine for processing API calls from the UI
-  URL:=https://github.com/untangle/restd
+  URL:=git@github.com/untangle/restd
   PKG_BUILD_DEPENDS:=golang
   DEPENDS:=+libsodium +libzmq-curve
 
