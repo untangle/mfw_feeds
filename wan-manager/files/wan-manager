@@ -346,6 +346,10 @@ best_of()
 		wans=""
 		policy_wans=""
 		for d in $policy_dir/* ; do
+			# $(d##*/) is extracting the last directory in the string path cut on 2nd field to get the numerical wan ID
+			# ex:
+			# assume d = /tmp/wan_status/policy-822f5c96-e04b-4248-aea4-7cbd5d4a8af5/wan-2
+			# then id = 2
 			id=$(echo ${d##*/} | cut -d '-' -f 2)
 			policy_wans="$wans $id"
 			if wan_is_up $policy $id ; then
