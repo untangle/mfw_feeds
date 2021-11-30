@@ -14,7 +14,7 @@ define Package/admin
   SECTION:=ui
   CATEGORY:=User Interface
   TITLE:=MFW admin interface
-  URL:=https://github.com/untangle/mfw_admin
+  URL:=git@github.com:untangle/mfw_admin.git
   PKG_BUILD_DEPENDS:=wget
 endef
 
