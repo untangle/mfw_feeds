@@ -41,11 +41,15 @@ wait_for_change()
 	inotifywait -r -qq -e create,modify $files
 }
 
+# is_offline is used to determine the interface stats offline status
+# $1 - the interface ID
+# $2 - the interface family to check
 is_offline()
 {                                                                                                                                                                                      
 		local offline
 
 		id=$1
+		family=$2
 		json_load_file /tmp/stats.json
 		if json_is_a interfaces array ; then
 				json_select interfaces
@@ -54,7 +58,12 @@ is_offline()
 						json_select $intf
 						json_get_var interfaceId interfaceId
 						if [ $id = $interfaceId ] ; then
-								json_get_var offline offline
+								logMessage "is_offline: getting offline status for $id and family: $family"
+								if [ $family = "ipv6" ] ; then
+									json_get_var offline6 offline
+								else
+									json_get_var offline offline
+								fi
 						fi
 						json_select ..
 				done
@@ -174,14 +183,20 @@ get_stat()
 	echo $test
 }
 
+# wan_is_up searches through the policy directory
+# to find out if specific WANs are currently down
+# $1 - the policy to use
+# $2 - the interface ID
+# $3 - the IP family type
 wan_is_up()
 {
 	policy=$1
 	id=$2
+	family=$3
 
 	test_dir="/tmp/wan_status/$policy/wan-$id"
 
-	! find $test_dir -type f | xargs grep down > /dev/null
+	! find $test_dir -type f -iname $family | xargs grep down > /dev/null
 }
 
 disable_policy()
@@ -243,10 +258,12 @@ determinePolicyWans()
 		# then id = 2
 		id=$(echo $fileName | cut -d '-' -f 2)	
 		policy_wans="$wans $id"
-		if wan_is_up $policy $id ; then
+		if wan_is_up $policy $id "ipv4"; then
 			wans="$wans $id"
 		fi
 	done
+
+	logMessage "determinePolicyWans: policy_wans: $policy_wans wans: $wans"
 }
 
 jump_policy()
@@ -340,7 +357,7 @@ specific_wan()
 
 	status="init"
 
-	if wan_is_up $policy $id ; then
+	if wan_is_up $policy $id "ipv4"; then
 		result="up"
 	else
 		result="down"
@@ -631,14 +648,21 @@ metric()
 	fi
 }
 
+# up is used to determine which interfaces should be used in a policy calculation
+# based on connectivity
+# $1 - policy to store the interface status with
+# $2 - interfaceId to store the status files in
+# $3 - the openwrt interface name 
+# $4 - the ip family of the interface
 up()
 {
 	policy=$1
 	interfaceId=$2
 	interface=$3
+	family=$4
 
 	result_dir="/tmp/wan_status/$policy/wan-$interfaceId"
-	result_file="$result_dir/up"
+	result_file="$result_dir/$family"
 
 	status="init"
 
@@ -652,7 +676,7 @@ up()
 	logMessage "$interface and $result_file current status is $status"
 
 	network_flush_cache
-	offline=$(is_offline $interfaceId)
+	offline=$(is_offline $interfaceId $family)
 	if network_is_up $interface  && [ "$offline" = "false" ]; then
 		logMessage "$interface is up"
 		#echo up > $result_file
