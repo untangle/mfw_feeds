@@ -215,6 +215,40 @@ disable_policy()
 	rm $TMPFILE
 }
 
+# determinePolicyWans is used to determine which wans and policy wans are available based on 
+# wans associated with the policy directories, and all wans
+# $1 - the policy directory
+# $2 - wans
+# $3 - policy related wans
+# $4 - caller type, for logging
+determinePolicyWans() 
+{
+	policy_dir=$1
+	wans=$2
+	policy_wans=$3
+
+	for d in $policy_dir/* ; do
+		logMessage "determinePolicyWans: found file: $d"
+		fileName=$(echo ${d##*/})
+
+		# Ignore the status files in the policy directory
+		if [ $fileName == "status" ] ; then
+			logMessage "determinePolicyWans: skipping file: $d"
+			continue
+		fi
+
+		# $(d##*/) is extracting the last directory in the string path cut on 2nd field to get the numerical wan ID
+		# ex:
+		# assume d = /tmp/wan_status/policy-822f5c96-e04b-4248-aea4-7cbd5d4a8af5/wan-2
+		# then id = 2
+		id=$(echo $fileName | cut -d '-' -f 2)	
+		policy_wans="$wans $id"
+		if wan_is_up $policy $id ; then
+			wans="$wans $id"
+		fi
+	done
+}
+
 jump_policy()
 {
 	policy=$1
@@ -335,36 +369,23 @@ best_of()
 	mkdir -p $policy_dir
 
 	status="init"
-
-	## If the policy_status already exists, lets see what the previous status was
-	if [ -f $status_file ] ; then
-		status=$(head -n 1 $status_file)
-	fi
-
-	logMessage "$policy and $status_file current status is $status"
-
 	current_best_wan=-1
-
 	best_wan=-1
 	best_stat=-1
 
+	## If the status file already exists, lets see what the previous status was
+	if [ -f $status_file ] ; then
+		. $status_file
+	fi
+
+	logMessage "best_of: $policy and $status_file current status: $status, best_wan: $best_wan, best_stat: $best_stat"
+
 	wans=""
 	policy_wans=""
-	for d in $policy_dir/* ; do
-		# $(d##*/) is extracting the last directory in the string path cut on 2nd field to get the numerical wan ID
-		# ex:
-		# assume d = /tmp/wan_status/policy-822f5c96-e04b-4248-aea4-7cbd5d4a8af5/wan-2
-		# then id = 2
-		id=$(echo ${d##*/} | cut -d '-' -f 2)
-		policy_wans="$wans $id"
 
-		logMessage "best_of: policy_wans: $policy_wans id: $id"
+	determinePolicyWans $policy_dir $wans $policy_wans
 
-		if wan_is_up $policy $id ; then
-			wans="$wans $id"
-			logMessage "best_of: wans up: $wans"
-		fi
-	done
+	logMessage "best_of: wans: $wans policy_wans: $policy_wans"
 
 	for wan in $wans ; do
 		stat=$(get_stat $wan $stat_name $metric_name)
@@ -431,7 +452,10 @@ best_of()
 		fi
 	fi
 	status=$result
-	echo $status > $status_file
+	echo "status=$status" > $status_file
+	echo "best_wan=$current_best_wan" >> $status_file
+	echo "best_stat=$best_stat" >> $status_file
+	echo "current_best_wan=$current_best_wan" >> $status_file
 	
 }
 
@@ -450,26 +474,19 @@ balance()
 
 	## If the policy_status already exists, lets see what the previous status was
 	if [ -f $status_file ] ; then
-		status=$(head -n 1 $status_file)
+		. $status_file
 	fi
 
-	logMessage "$policy and $status_file current status is $status"
+	logMessage "balance: $policy and $status_file current status is $status"
 
 	wans=""
 	policy_wans=""
 	total_weight=0
 	new_balance_string=""
-	for d in $policy_dir/* ; do
-		# $(d##*/) is extracting the last directory in the string path cut on 2nd field to get the numerical wan ID
-		# ex:
-		# assume d = /tmp/wan_status/policy-822f5c96-e04b-4248-aea4-7cbd5d4a8af5/wan-2
-		# then id = 2
-		id=$(echo ${d##*/} | cut -d '-' -f 2)		
-		policy_wans="$wans $id"
-		if wan_is_up $policy $id ; then
-			wans="$wans $id"
-		fi
-	done
+
+	determinePolicyWans $policy_dir $wans $policy_wans
+
+	logMessage "balance: wans: $wans policy_wans: $policy_wans"
 
 	total_latency=0
 	if [ $algorithm = "LATENCY" ] ; then
@@ -523,7 +540,8 @@ balance()
 		fi
 	fi
 	status=$result
-	echo $status > $status_file
+	echo "status=$status" > $status_file
+	echo "balance_string=$balance_string" >> $status_file
 }
 
 attribute()
