@@ -470,8 +470,6 @@ best_of()
 	fi
 	status=$result
 	echo "status=$status" > $status_file
-	echo "best_wan=$current_best_wan" >> $status_file
-	echo "best_stat=$best_stat" >> $status_file
 	echo "current_best_wan=$current_best_wan" >> $status_file
 	
 }
