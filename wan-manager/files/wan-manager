@@ -331,9 +331,18 @@ best_of()
 	operator=$4
 
 	policy_dir="/tmp/wan_status/$policy"
+	status_file="$policy_dir/status"
 	mkdir -p $policy_dir
 
 	status="init"
+
+	## If the policy_status already exists, lets see what the previous status was
+	if [ -f $status_file ] ; then
+		status=$(head -n 1 $status_file)
+	fi
+
+	logMessage "$policy and $status_file current status is $status"
+
 	current_best_wan=-1
 
 	best_wan=-1
@@ -346,10 +355,14 @@ best_of()
 		# ex:
 		# assume d = /tmp/wan_status/policy-822f5c96-e04b-4248-aea4-7cbd5d4a8af5/wan-2
 		# then id = 2
-		id=$(echo ${d##*/} | cut -d '-' -f 2)		
+		id=$(echo ${d##*/} | cut -d '-' -f 2)
 		policy_wans="$wans $id"
+
+		logMessage "best_of: policy_wans: $policy_wans id: $id"
+
 		if wan_is_up $policy $id ; then
 			wans="$wans $id"
+			logMessage "best_of: wans up: $wans"
 		fi
 	done
 
@@ -418,6 +431,7 @@ best_of()
 		fi
 	fi
 	status=$result
+	echo $status > $status_file
 	
 }
 
@@ -429,9 +443,17 @@ balance()
 
 	policy_dir="/tmp/wan_status/$policy"
 	mkdir -p $policy_dir
+	status_file="$policy_dir/status"
 
 	status="init"
 	balance_string=""
+
+	## If the policy_status already exists, lets see what the previous status was
+	if [ -f $status_file ] ; then
+		status=$(head -n 1 $status_file)
+	fi
+
+	logMessage "$policy and $status_file current status is $status"
 
 	wans=""
 	policy_wans=""
@@ -501,6 +523,7 @@ balance()
 		fi
 	fi
 	status=$result
+	echo $status > $status_file
 }
 
 attribute()
@@ -541,6 +564,13 @@ metric()
 	result_dir="/tmp/wan_status/$policy/wan-$id"
 	result_file="$result_dir/${stat_name}_${metric_name}_${operator}_${val}"
 	mkdir -p $result_dir
+	
+	## If the status file already exists, lets see what the previous status was
+	if [ -f $result_file ] ; then
+		status=$(head -n 1 $result_file)
+	fi
+
+	logMessage "$policy and $result_file current status is $status"
 
 	test=$(get_stat $id $stat_name $metric_name)
 
@@ -596,6 +626,13 @@ up()
 
 	mkdir -p $result_dir
 
+	## If the result_file already exists, lets see what the previous status was
+	if [ -f $result_file ] ; then
+		status=$(head -n 1 $result_file)
+	fi
+
+	logMessage "$interface and $result_file current status is $status"
+
 	network_flush_cache
 	offline=$(is_offline $interfaceId)
 	if network_is_up $interface  && [ "$offline" = "false" ]; then
@@ -645,6 +682,14 @@ test()
 	result_file="$result_dir/${criteria}_${host}_${interval}_${timeout}_${threshold}"
 
 	mkdir -p $result_dir
+
+	## If the result_file already exists, lets see what the previous status was
+	if [ -f $result_file ] ; then
+		status=$(head -n 1 $result_file)
+	fi
+
+	logMessage "$policy and $result_file current status is $status"
+
 	for i in $(seq 0 9) ; do
 		logMessage "Flushing cache and looking for interface: $interface..."
 		network_flush_cache
