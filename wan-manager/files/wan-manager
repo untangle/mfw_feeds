@@ -14,6 +14,9 @@ logMessage()
 	fi
 }
 
+# check_for_table checks for nft tables to exist
+# $1 - ip version type
+# $2 - table name to check for
 check_for_table()
 {
 	ipCheck=$1
@@ -26,6 +29,7 @@ check_for_table()
 	fi
 }
 
+# handle_term is used to handle the sigterm signal
 handle_term()
 {
 	for i in `pgrep -P $$ `
@@ -34,6 +38,8 @@ handle_term()
 	done
 }
 
+# wait_for_change will use inotify to wait for specific files to change
+# $1 - the files to wait for
 wait_for_change()
 {
 	files=$1
@@ -69,9 +75,14 @@ is_offline()
 				done
 				json_select ..
 		fi
+
+		logMessage "is_offline: offline status for $id family: $family is $offline"
+
 		echo $offline
 }
 
+# get_wan_bandwidth is used to gather the QOS bandwidth from settings
+# $1 - the interface id
 get_wan_bandwidth()
 {
 	id=$1
@@ -97,7 +108,9 @@ get_wan_bandwidth()
 	echo $ret
 }
 
-
+# get_static_weight is used to get the WAN weight from the settings file, per policy
+# $1 - policy name
+# $2 - interface id
 get_static_weight()
 {
 	policy=$1
@@ -137,6 +150,10 @@ get_static_weight()
 	echo $ret
 }
 
+# get_stat is used to retrieve specific stats from the /tmp/stats.json file, per interface id
+# $1 - interface id
+# $2 - the stat name to look for (ie: ping, latency, etc.)
+# $3 - the metric name to look for (ie: 1_minute, 10_minute, etc.)
 get_stat()
 {
 	id=$1
@@ -199,6 +216,9 @@ wan_is_up()
 	! find $test_dir -type f -iname $family | xargs grep down > /dev/null
 }
 
+# disable_policy is used to disable specific policies when a wan is down
+# $1 - policy to disable
+# $2 - the WANs involved
 disable_policy()
 {
 	policy=$1
@@ -266,6 +286,10 @@ determinePolicyWans()
 	logMessage "determinePolicyWans: policy_wans: $policy_wans wans: $wans"
 }
 
+# jump_policy is used to insert jump rules for specific policies
+# $1 - policy associated with the chain
+# $2 - the interface id of the wan to use
+# $3 - the wans included in this policy
 jump_policy()
 {
 	policy=$1
@@ -306,6 +330,11 @@ jump_policy()
 	rm $TMPFILE
 }
 
+# balance_policy is used to insert rules for balance policy types
+# $1 - the policy
+# $2 - the wans associated with this policy
+# $3 - the total weight of all wans in the policy
+# #4 - the generated balance string used in the vmap decision
 balance_policy()
 {
 	policy=$1
@@ -347,6 +376,9 @@ balance_policy()
 	rm $TMPFILE
 }
 
+# specific_wan is used to send traffic to a specific wan policy
+# $1 - the associated policy and policy id
+# $2 - the interface id
 specific_wan()
 {
 	policy=$1
@@ -374,6 +406,11 @@ specific_wan()
 
 }
 
+# best_of is used to insert route rules for wans that fall into a specific best_of metric
+# $1 - the policy name
+# $2 - the stat name to test with
+# $3 - the metric name to test with
+# $4 - the operator to test with
 best_of()
 {
 	policy=$1
@@ -474,6 +511,9 @@ best_of()
 	
 }
 
+# balance is used to balance a group of wans using a specific balancing algorithm
+# $1 - the policy associated
+# $2 - the balance algorithm to use (ie: LATENCY, WEIGHTED, AVAILABLE_BANDWIDTH)
 balance()
 {
 
@@ -559,6 +599,11 @@ balance()
 	echo "balance_string=$balance_string" >> $status_file
 }
 
+# attribute is used to insert policy rules associated to a wan with specific attributes
+# $1 - the policy 
+# $2 - the interface id
+# $3 - the interface name
+# $4 - the attribute to test for
 attribute()
 {
 	policy=$1
@@ -580,6 +625,14 @@ attribute()
 	echo $result > $result_file
 }
 
+# metric is used to insert policy rules that check specific metrics against interfaces
+# $1 - the policy
+# $2 - the interface id
+# $3 - the interface name
+# $4 - the stat name to use in the metric calculation
+# $5 - the metric name to use in the metric calculation
+# $6 - the operator to use in the metric calculation
+# $7 - the metric value to test against in the metric calculation
 metric()
 {
 	policy=$1
@@ -692,6 +745,15 @@ up()
 	fi
 }
 
+# test is used to insert policy rules for specific connectivity testing types or methods on the wan
+# $1 - the policy to use
+# $2 - the interface id for the policy
+# $3 - the interface name
+# $4 - the criteria type to use (ping, http, arp, dns)
+# $5 - the interval of when to run the tests
+# $6 - the timeout of when to fail the test
+# $7 - the failure threshold of when to fail the tests
+# $8 - the host to run the connectivity tests against
 test()
 {
 	policy=$1
@@ -782,10 +844,14 @@ test()
 	done
 }
 
+# wan-manager main entry point, check for wan-routing tables before continuing
 check_for_table ip wan-routing
 check_for_table ip6 wan-routing
 
+# create term handler and run the handle_term callback
 trap 'handle_term' TERM INT
+
+# cleanup old wan_status files
 rm -rf /tmp/wan_status/*
 
 # Wait for stats.json to change, and then run every policy once (vs having each policy wait for change every time)
