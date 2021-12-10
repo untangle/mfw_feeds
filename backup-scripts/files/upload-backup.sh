@@ -3,7 +3,6 @@
 # Constants
 TIMEOUT=1200
 VERBOSE=false
-UID=INVALID
 BACKUP_FILE=mfw_`date -Iseconds`.backup
 URL='https://boxbackup.untangle.com/boxbackup/backup.php'
 
@@ -94,8 +93,10 @@ function getHTTPStatus() {
 # returns the return of CURL
 function callCurl() {
   debug "Calling CURL.  Dumping headers to $2"
-  debug "curl $URL -k -F uid=$SERVER_UID -F uploadedfile=@$1 -F md5=$md5 --dump-header $2 --max-time $TIMEOUT"
-  #curl "$URL" -k -F uid="$SERVER_UID" -F uploadedfile=@$1 -F md5="$md5" --dump-header $2 --max-time $TIMEOUT > /dev/null 2>&1
+  md5=`md5sum $1 | awk '{ print $1 }'`
+  debug "Backup file MD5: $md5"
+  debug "curl $URL -k -F uid=$UID -F uploadedfile=@$1 -F md5=$md5 --dump-header $2 --max-time $TIMEOUT"
+  curl "$URL" -k -F uid="$SERVER_UID" -F uploadedfile=@$1 -F md5="$md5" --dump-header $2 --max-time $TIMEOUT > /dev/null 2>&1
   return $?
 }
 
@@ -147,7 +148,7 @@ debug "HTTP status code $RETURN_CODE"
 
 # Remove the header file
 debug "Remove header file $HEADER_FILE"
-#rm -f $HEADER_FILE
+rm -f $HEADER_FILE
 
 if [ ! -z "$RETURN_CODE" ] ; then
     # Evaluate HTTP status code
