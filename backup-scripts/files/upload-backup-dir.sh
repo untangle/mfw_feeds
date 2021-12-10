@@ -3,7 +3,7 @@
 # Constants
 TIMEOUT=1200
 VERBOSE=false
-BACKUP_FILE=mfw_`date -Iseconds`.backup.gz
+BACKUP_FILE=mfw_`date -Iseconds`.backup
 URL='https://boxbackup.untangle.com/boxbackup/backup.php'
 
 function debug() {
@@ -16,15 +16,66 @@ function err() {
   echo $* >> /dev/stderr
 }
 
+# $1 = tar file
+# $2 = dir with backups files
+function tarBackupFiles() 
+{
+    debug "Taring files in $2 into tar $2"
+    tar zcfh $1 -C $2 backup_files 
+    TAR_EXIT=$?
+    debug "Done creating tar with return code $TAR_EXIT"
+}
+
+function backupSettings()
+{
+    # create a tmp directory to store settings
+    temp=`mktemp -d -t ut-backup-files.XXXXXXXXXX`
+    mkdir -p $temp/etc/config
+
+    # copy settings files to tmp directory
+    # only match specific versions without the date/version info so we don't backup old files
+    # use -L so symlinks are dereferenced
+    cp /etc/config/settings.json $temp/etc/config 
+    
+    # tar up important files
+    tar zcfh $1 -C $temp etc/config 
+
+    # remove tmp dir
+    rm -rf $temp
+}
+
+# $1 = dir to put backup files
+function backupToDir()
+{
+    outdir=$1
+
+    datestamp=$(date '+%Y%m%d%H%M')
+
+    # create a tarball of settings files
+    backupSettings $outdir/backup_files/files-$datestamp.tar.gz
+
+    # save the version of this backup
+    cp /etc/os-release $outdir/backup_files
+}
+
 function createBackup() {
-  debug "Backing up settings to gunzip file"
-  TEMP_DIR=`mktemp -d -t ut-backup.XXXXXXX`
+  debug "Backing up settings to directory"
+  DUMP_DIR=`mktemp -d -t ut-backup.XXXXXXXXXX`
+  mkdir $DUMP_DIR/backup_files
+  backupToDir $DUMP_DIR
 
-  cp /etc/config/settings.json $TEMP_DIR
-  gzip $TEMP_DIR/settings.json
-  mv $TEMP_DIR/settings.json.gz ./$BACKUP_FILE   
+  # Tar the contents of the temp directory
+  TAR_FILE=`mktemp -t ut-backup.XXXXXXXXXX`
+  tarBackupFiles $TAR_FILE $DUMP_DIR
 
-  rm -r $TEMP_DIR
+  #debug "Remove dump dir"
+  rm -rf $DUMP_DIR
+
+  debug "Gzipping $TAR_FILE"
+  gzip $TAR_FILE
+
+  #debug "Copy bundle to $BACKUP_FILE"
+  mv $TAR_FILE.gz $BACKUP_FILE
 }
 
 # Gets the HTTP status code from the output of CURL.  Note
