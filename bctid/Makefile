@@ -66,6 +66,9 @@ define Package/bctid/install
 	sed -i -e  's/\(LocalDatabaseDirectory=\).*/\1\/usr\/share\/bctid/' $(1)/usr/share/bctid/bcti.cfg
 	sed -i -e  's/\(TLDPath=\).*/\1\/usr\/share\/bctid\/public_suffix_list.dat/' $(1)/usr/share/bctid/bcti.cfg
 
+	# Upper the connection pool to 25
+	sed -i -e  's/\(ThreadPoolSize=\).*/\125/' $(1)/usr/share/bctid/bcti.cfg
+	sed -i -e  's/\(ConnectionPoolSize=\).*/\125/' $(1)/usr/share/bctid/bcti.cfg
 endef
 
 $(eval $(call BuildPackage,bctid))
