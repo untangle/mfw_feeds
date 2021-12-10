@@ -17,7 +17,7 @@ define Package/backup-scripts
   SUBMENU:=Cloud
   TITLE:=Backup scripts for MFW
   URL:=https://github.com/untangle/mfw_feeds
-  DEPENDS:=
+  DEPENDS:= +curl
 endef
 
 define Package/backup-scripts/description
