@@ -14,6 +14,9 @@ logMessage()
 	fi
 }
 
+# check_for_table checks for nft tables to exist
+# $1 - ip version type
+# $2 - table name to check for
 check_for_table()
 {
 	ipCheck=$1
@@ -26,6 +29,7 @@ check_for_table()
 	fi
 }
 
+# handle_term is used to handle the sigterm signal
 handle_term()
 {
 	for i in `pgrep -P $$ `
@@ -34,6 +38,8 @@ handle_term()
 	done
 }
 
+# wait_for_change will use inotify to wait for specific files to change
+# $1 - the files to wait for
 wait_for_change()
 {
 	files=$1
@@ -41,11 +47,15 @@ wait_for_change()
 	inotifywait -r -qq -e create,modify $files
 }
 
+# is_offline is used to determine the interface stats offline status
+# $1 - the interface ID
+# $2 - the interface family to check
 is_offline()
 {                                                                                                                                                                                      
 		local offline
 
 		id=$1
+		family=$2
 		json_load_file /tmp/stats.json
 		if json_is_a interfaces array ; then
 				json_select interfaces
@@ -54,15 +64,25 @@ is_offline()
 						json_select $intf
 						json_get_var interfaceId interfaceId
 						if [ $id = $interfaceId ] ; then
-								json_get_var offline offline
+								logMessage "is_offline: getting offline status for $id and family: $family"
+								if [ $family = "ipv6" ] ; then
+									json_get_var offline6 offline
+								else
+									json_get_var offline offline
+								fi
 						fi
 						json_select ..
 				done
 				json_select ..
 		fi
+
+		logMessage "is_offline: offline status for $id family: $family is $offline"
+
 		echo $offline
 }
 
+# get_wan_bandwidth is used to gather the QOS bandwidth from settings
+# $1 - the interface id
 get_wan_bandwidth()
 {
 	id=$1
@@ -88,7 +108,9 @@ get_wan_bandwidth()
 	echo $ret
 }
 
-
+# get_static_weight is used to get the WAN weight from the settings file, per policy
+# $1 - policy name
+# $2 - interface id
 get_static_weight()
 {
 	policy=$1
@@ -128,6 +150,10 @@ get_static_weight()
 	echo $ret
 }
 
+# get_stat is used to retrieve specific stats from the /tmp/stats.json file, per interface id
+# $1 - interface id
+# $2 - the stat name to look for (ie: ping, latency, etc.)
+# $3 - the metric name to look for (ie: 1_minute, 10_minute, etc.)
 get_stat()
 {
 	id=$1
@@ -174,16 +200,25 @@ get_stat()
 	echo $test
 }
 
+# wan_is_up searches through the policy directory
+# to find out if specific WANs are currently down
+# $1 - the policy to use
+# $2 - the interface ID
+# $3 - the IP family type
 wan_is_up()
 {
 	policy=$1
 	id=$2
+	family=$3
 
 	test_dir="/tmp/wan_status/$policy/wan-$id"
 
-	! find $test_dir -type f | xargs grep down > /dev/null
+	! find $test_dir -type f -iname $family | xargs grep down > /dev/null
 }
 
+# disable_policy is used to disable specific policies when a wan is down
+# $1 - policy to disable
+# $2 - the WANs involved
 disable_policy()
 {
 	policy=$1
@@ -215,6 +250,46 @@ disable_policy()
 	rm $TMPFILE
 }
 
+# determinePolicyWans is used to determine which wans and policy wans are available based on 
+# wans associated with the policy directories, and all wans
+# $1 - the policy directory
+# $2 - wans
+# $3 - policy related wans
+# $4 - caller type, for logging
+determinePolicyWans() 
+{
+	policy_dir=$1
+	wans=$2
+	policy_wans=$3
+
+	for d in $policy_dir/* ; do
+		logMessage "determinePolicyWans: found file: $d"
+		fileName=$(echo ${d##*/})
+
+		# Ignore the status files in the policy directory
+		if [ $fileName == "status" ] ; then
+			logMessage "determinePolicyWans: skipping file: $d"
+			continue
+		fi
+
+		# $(d##*/) is extracting the last directory in the string path cut on 2nd field to get the numerical wan ID
+		# ex:
+		# assume d = /tmp/wan_status/policy-822f5c96-e04b-4248-aea4-7cbd5d4a8af5/wan-2
+		# then id = 2
+		id=$(echo $fileName | cut -d '-' -f 2)	
+		policy_wans="$wans $id"
+		if wan_is_up $policy $id "ipv4"; then
+			wans="$wans $id"
+		fi
+	done
+
+	logMessage "determinePolicyWans: policy_wans: $policy_wans wans: $wans"
+}
+
+# jump_policy is used to insert jump rules for specific policies
+# $1 - policy associated with the chain
+# $2 - the interface id of the wan to use
+# $3 - the wans included in this policy
 jump_policy()
 {
 	policy=$1
@@ -255,6 +330,11 @@ jump_policy()
 	rm $TMPFILE
 }
 
+# balance_policy is used to insert rules for balance policy types
+# $1 - the policy
+# $2 - the wans associated with this policy
+# $3 - the total weight of all wans in the policy
+# #4 - the generated balance string used in the vmap decision
 balance_policy()
 {
 	policy=$1
@@ -296,6 +376,9 @@ balance_policy()
 	rm $TMPFILE
 }
 
+# specific_wan is used to send traffic to a specific wan policy
+# $1 - the associated policy and policy id
+# $2 - the interface id
 specific_wan()
 {
 	policy=$1
@@ -306,7 +389,7 @@ specific_wan()
 
 	status="init"
 
-	if wan_is_up $policy $id ; then
+	if wan_is_up $policy $id "ipv4"; then
 		result="up"
 	else
 		result="down"
@@ -323,6 +406,11 @@ specific_wan()
 
 }
 
+# best_of is used to insert route rules for wans that fall into a specific best_of metric
+# $1 - the policy name
+# $2 - the stat name to test with
+# $3 - the metric name to test with
+# $4 - the operator to test with
 best_of()
 {
 	policy=$1
@@ -331,27 +419,27 @@ best_of()
 	operator=$4
 
 	policy_dir="/tmp/wan_status/$policy"
+	status_file="$policy_dir/status"
 	mkdir -p $policy_dir
 
 	status="init"
 	current_best_wan=-1
-
 	best_wan=-1
 	best_stat=-1
 
+	## If the status file already exists, lets see what the previous status was
+	if [ -f $status_file ] ; then
+		. $status_file
+	fi
+
+	logMessage "best_of: $policy and $status_file current status: $status, best_wan: $best_wan, best_stat: $best_stat"
+
 	wans=""
 	policy_wans=""
-	for d in $policy_dir/* ; do
-		# $(d##*/) is extracting the last directory in the string path cut on 2nd field to get the numerical wan ID
-		# ex:
-		# assume d = /tmp/wan_status/policy-822f5c96-e04b-4248-aea4-7cbd5d4a8af5/wan-2
-		# then id = 2
-		id=$(echo ${d##*/} | cut -d '-' -f 2)		
-		policy_wans="$wans $id"
-		if wan_is_up $policy $id ; then
-			wans="$wans $id"
-		fi
-	done
+
+	determinePolicyWans $policy_dir $wans $policy_wans
+
+	logMessage "best_of: wans: $wans policy_wans: $policy_wans"
 
 	for wan in $wans ; do
 		stat=$(get_stat $wan $stat_name $metric_name)
@@ -418,9 +506,14 @@ best_of()
 		fi
 	fi
 	status=$result
+	echo "status=$status" > $status_file
+	echo "current_best_wan=$current_best_wan" >> $status_file
 	
 }
 
+# balance is used to balance a group of wans using a specific balancing algorithm
+# $1 - the policy associated
+# $2 - the balance algorithm to use (ie: LATENCY, WEIGHTED, AVAILABLE_BANDWIDTH)
 balance()
 {
 
@@ -429,25 +522,26 @@ balance()
 
 	policy_dir="/tmp/wan_status/$policy"
 	mkdir -p $policy_dir
+	status_file="$policy_dir/status"
 
 	status="init"
 	balance_string=""
+
+	## If the policy_status already exists, lets see what the previous status was
+	if [ -f $status_file ] ; then
+		. $status_file
+	fi
+
+	logMessage "balance: $policy and $status_file current status is $status"
 
 	wans=""
 	policy_wans=""
 	total_weight=0
 	new_balance_string=""
-	for d in $policy_dir/* ; do
-		# $(d##*/) is extracting the last directory in the string path cut on 2nd field to get the numerical wan ID
-		# ex:
-		# assume d = /tmp/wan_status/policy-822f5c96-e04b-4248-aea4-7cbd5d4a8af5/wan-2
-		# then id = 2
-		id=$(echo ${d##*/} | cut -d '-' -f 2)		
-		policy_wans="$wans $id"
-		if wan_is_up $policy $id ; then
-			wans="$wans $id"
-		fi
-	done
+
+	determinePolicyWans $policy_dir $wans $policy_wans
+
+	logMessage "balance: wans: $wans policy_wans: $policy_wans"
 
 	total_latency=0
 	if [ $algorithm = "LATENCY" ] ; then
@@ -501,8 +595,15 @@ balance()
 		fi
 	fi
 	status=$result
+	echo "status=$status" > $status_file
+	echo "balance_string=$balance_string" >> $status_file
 }
 
+# attribute is used to insert policy rules associated to a wan with specific attributes
+# $1 - the policy 
+# $2 - the interface id
+# $3 - the interface name
+# $4 - the attribute to test for
 attribute()
 {
 	policy=$1
@@ -524,6 +625,14 @@ attribute()
 	echo $result > $result_file
 }
 
+# metric is used to insert policy rules that check specific metrics against interfaces
+# $1 - the policy
+# $2 - the interface id
+# $3 - the interface name
+# $4 - the stat name to use in the metric calculation
+# $5 - the metric name to use in the metric calculation
+# $6 - the operator to use in the metric calculation
+# $7 - the metric value to test against in the metric calculation
 metric()
 {
 	policy=$1
@@ -541,6 +650,13 @@ metric()
 	result_dir="/tmp/wan_status/$policy/wan-$id"
 	result_file="$result_dir/${stat_name}_${metric_name}_${operator}_${val}"
 	mkdir -p $result_dir
+	
+	## If the status file already exists, lets see what the previous status was
+	if [ -f $result_file ] ; then
+		status=$(head -n 1 $result_file)
+	fi
+
+	logMessage "$policy and $result_file current status is $status"
 
 	test=$(get_stat $id $stat_name $metric_name)
 
@@ -583,21 +699,35 @@ metric()
 	fi
 }
 
+# up is used to determine which interfaces should be used in a policy calculation
+# based on connectivity
+# $1 - policy to store the interface status with
+# $2 - interfaceId to store the status files in
+# $3 - the openwrt interface name 
+# $4 - the ip family of the interface
 up()
 {
 	policy=$1
 	interfaceId=$2
 	interface=$3
+	family=$4
 
 	result_dir="/tmp/wan_status/$policy/wan-$interfaceId"
-	result_file="$result_dir/up"
+	result_file="$result_dir/$family"
 
 	status="init"
 
 	mkdir -p $result_dir
 
+	## If the result_file already exists, lets see what the previous status was
+	if [ -f $result_file ] ; then
+		status=$(head -n 1 $result_file)
+	fi
+
+	logMessage "$interface and $result_file current status is $status"
+
 	network_flush_cache
-	offline=$(is_offline $interfaceId)
+	offline=$(is_offline $interfaceId $family)
 	if network_is_up $interface  && [ "$offline" = "false" ]; then
 		logMessage "$interface is up"
 		#echo up > $result_file
@@ -615,6 +745,15 @@ up()
 	fi
 }
 
+# test is used to insert policy rules for specific connectivity testing types or methods on the wan
+# $1 - the policy to use
+# $2 - the interface id for the policy
+# $3 - the interface name
+# $4 - the criteria type to use (ping, http, arp, dns)
+# $5 - the interval of when to run the tests
+# $6 - the timeout of when to fail the test
+# $7 - the failure threshold of when to fail the tests
+# $8 - the host to run the connectivity tests against
 test()
 {
 	policy=$1
@@ -645,6 +784,14 @@ test()
 	result_file="$result_dir/${criteria}_${host}_${interval}_${timeout}_${threshold}"
 
 	mkdir -p $result_dir
+
+	## If the result_file already exists, lets see what the previous status was
+	if [ -f $result_file ] ; then
+		status=$(head -n 1 $result_file)
+	fi
+
+	logMessage "$policy and $result_file current status is $status"
+
 	for i in $(seq 0 9) ; do
 		logMessage "Flushing cache and looking for interface: $interface..."
 		network_flush_cache
@@ -697,10 +844,14 @@ test()
 	done
 }
 
+# wan-manager main entry point, check for wan-routing tables before continuing
 check_for_table ip wan-routing
 check_for_table ip6 wan-routing
 
+# create term handler and run the handle_term callback
 trap 'handle_term' TERM INT
+
+# cleanup old wan_status files
 rm -rf /tmp/wan_status/*
 
 # Wait for stats.json to change, and then run every policy once (vs having each policy wait for change every time)
