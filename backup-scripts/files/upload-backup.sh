@@ -1,10 +1,13 @@
 #!/bin/ash
 
+. /usr/share/libubox/jshn.sh
+
 # Constants
 TIMEOUT=1200
 VERBOSE=false
 BACKUP_FILE=mfw_`date -Iseconds`.backup.gz
 URL='https://boxbackup.untangle.com/boxbackup/backup.php'
+
 
 function debug() {
   if [ "true" == $VERBOSE ]; then
@@ -49,6 +52,39 @@ function callCurl() {
   return $?
 }
 
+function checkLicense() {
+  json_init
+  json_load_file /etc/config/licenses.json
+  if json_is_a list array
+  then
+    json_select list
+    idx=1
+
+    while json_is_a $idx object 
+    do
+      json_select $idx
+      json_get_var licenseName name 
+      debug "License found for: " $licenseName
+
+      json_select ..
+      idx=$(( idx + 1 ))
+    done
+
+    idx=$(( idx - 1 ))
+    debug "Total licenses: $idx"
+  else 
+    debug "Invalid license json array, not backing up"
+    exit 1   
+  fi
+  
+  if [ "$idx" -eq 0 ]; then
+    debug "No licenses, not completing back up"
+    exit 0
+  fi 
+
+  debug "Licenses found, completing backup"
+}
+
 ####################################
 # "Main" logic starts here
 
@@ -57,6 +93,9 @@ while getopts "v" opt; do
     v) VERBOSE=true;;
   esac
 done
+
+# determine if license correct
+checkLicense
 
 # get uid
 UID=`cat /etc/config/uid`
@@ -75,21 +114,17 @@ CURL_RET=$?
 debug "CURL returned $CURL_RET"
 
 # Check CURL return codes
-if [ $CURL_RET -eq 7 ]; then
+if [ $CURL_RET -ne 0 ]; then
   # A machine that exists, wrong port (e.g. http://localhost:800/)
   # or machine cannot be contacted then CURL returns 7
-  err "CURL returned 7, indicating that the URL $URL could not be contacted"
-  rm -f $HEADER_FILE
-  exit 4
-fi
-
-if [ $CURL_RET -eq 28 ]; then
+  #
   # When CURL times out, it returns 28.
-  err "CURL returned 28, indicating a timeout when contacting the URL $URL"
+  #
+  # when CURL errors out, response is non zero 
+  err "CURL returned $CURL_RET"
   rm -f $HEADER_FILE
-  exit 5
+  exit 2
 fi
-
 
 # Get the HTTP status code from the CURL header file
 RETURN_CODE=`getHTTPStatus $HEADER_FILE`
