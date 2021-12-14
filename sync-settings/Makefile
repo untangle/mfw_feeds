@@ -5,9 +5,10 @@ PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=git@github.com:untangle/sync-settings.git
-PKG_SOURCE_VERSION:=36d0e5f8f1c0fba956c4cfecedb335ef45594dbd
 
 include ../version.mk
+
+PKG_SOURCE_VERSION:=98d9921c280bcaccbce732e902869b838532550d
 
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/python/python3-package.mk
