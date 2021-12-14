@@ -8,4 +8,8 @@ boot() {
     if [ -d /etc/config/startup.d/ ] ; then
        	run-parts /etc/config/startup.d/
 	fi
+
+	if [ -f /etc/config/zzz-reload-system ] ; then
+		/etc/config/zzz-reload-system
+	fi
 }
