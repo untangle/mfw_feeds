@@ -8,7 +8,7 @@ PKG_SOURCE_URL:=git@github.com:untangle/sync-settings.git
 
 include ../version.mk
 
-PKG_SOURCE_VERSION:=98d9921c280bcaccbce732e902869b838532550d
+PKG_SOURCE_VERSION:=0a203967a1b6e57941cb33054242062b6f535522
 
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/python/python3-package.mk
