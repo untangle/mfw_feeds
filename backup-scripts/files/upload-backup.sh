@@ -8,17 +8,19 @@ VERBOSE=false
 BACKUP_FILE=mfw_`date -Iseconds`.backup.gz
 URL='https://boxbackup.untangle.com/boxbackup/backup.php'
 
-
+# Debug function
 function debug() {
   if [ "true" == $VERBOSE ]; then
     echo $*
   fi
 }
 
+# Error function
 function err() {
   echo $* >> /dev/stderr
 }
 
+# Create backup coping settings file to a temp dir
 function createBackup() {
   debug "Backing up settings to gunzip file"
   TEMP_DIR=`mktemp -d -t ut-backup.XXXXXXX`
@@ -52,21 +54,26 @@ function callCurl() {
   return $?
 }
 
+# Check has any licenses. IF has any licenses, can run autobackup. 
 function checkLicense() {
+  # Load file
   json_init
   json_load_file /etc/config/licenses.json
+
+  # if is an array, then continue
   if json_is_a list array
   then
-    json_select list
-    idx=1
+    json_select "list"
+    local idx=1
 
+    # keep track of number of licenses 
     while json_is_a $idx object 
     do
-      json_select $idx
+      json_select "$idx"
       json_get_var licenseName name 
       debug "License found for: " $licenseName
 
-      json_select ..
+      json_select ".."
       idx=$(( idx + 1 ))
     done
 
@@ -76,13 +83,35 @@ function checkLicense() {
     debug "Invalid license json array, not backing up"
     exit 1   
   fi
-  
+
+  # if total is 0, then no licenses found  
   if [ "$idx" -eq 0 ]; then
     debug "No licenses, not completing back up"
     exit 0
   fi 
 
   debug "Licenses found, completing backup"
+}
+
+# check if autobackup is enabled
+function checkEnable() {
+  json_init
+  json_load_file /etc/config/settings.json
+
+  json_select system
+  if json_get_type Type autoBackup && [ "$Type" == object ] 
+  then
+    json_select autoBackup
+    json_get_var enabled enabled
+    
+    if [ "$enabled" -eq 0 ]; then
+      debug "Auto backup not enabled"
+      exit 0 
+    fi
+  else
+    debug "Couldn't find enable status"
+    exit 1
+  fi
 }
 
 ####################################
@@ -93,6 +122,9 @@ while getopts "v" opt; do
     v) VERBOSE=true;;
   esac
 done
+
+# determine if enabled
+checkEnable
 
 # determine if license correct
 checkLicense
