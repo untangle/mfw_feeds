@@ -5,8 +5,8 @@ START=15
 STOP=15
 
 boot() {
-    if [ -d /etc/config/startup.d/ ] ; then
-       	run-parts /etc/config/startup.d/
+    if [ -d /etc/config/setup.d/ ] ; then
+       	run-parts /etc/config/setup.d/
 	fi
 
 	if [ -f /etc/config/zzz-reload-system ] ; then

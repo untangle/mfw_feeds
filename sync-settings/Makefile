@@ -42,12 +42,14 @@ define Package/sync-settings/install
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) files/$(PKG_NAME).init $(1)/etc/init.d/$(PKG_NAME)
 	$(INSTALL_DIR) $(1)/etc/config/startup.d
+	$(INSTALL_DIR) $(1)/etc/config/setup.d
 	$(INSTALL_BIN) files/020-sshd-config $(1)/etc/config/startup.d
 	$(INSTALL_BIN) files/nftables-rules.init $(1)/etc/init.d/nftables-rules
 	$(INSTALL_BIN) files/qos.init $(1)/etc/init.d/qos
 	$(INSTALL_BIN) files/uid.init $(1)/etc/init.d/uid
 	$(INSTALL_BIN) files/serial.init $(1)/etc/init.d/serial
 	$(INSTALL_BIN) files/startup.init $(1)/etc/init.d/startup
+	$(INSTALL_BIN) files/setup.init $(1)/etc/init.d/setup
 	$(INSTALL_BIN) files/untangle-board-name.init $(1)/etc/init.d/untangle-board-name
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
 	$(INSTALL_BIN) files/ifupdown.hotplug $(1)/etc/hotplug.d/iface/20-ifupdown
