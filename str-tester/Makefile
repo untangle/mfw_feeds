@@ -8,6 +8,15 @@ PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/untangle/mfw_feeds.git
 
 PKG_VERSION:=1.0
+
+PKG_NAME_NO_DASH = $(subst -,_,$(PKG_NAME))
+PKG_SOURCE_VERSION := 1.0 
+
+PKG_VERSION := 1.0
+
+PKG_SOURCE_SUBDIR := $(PKG_NAME)-$(PKG_VERSION)
+PKG_SOURCE := $(PKG_NAME)-$(PKG_SOURCE_VERSION)-$(PKG_VERSION).tar.xz
+
 include $(INCLUDE_DIR)/package.mk
 
 include $(INCLUDE_DIR)/../feeds/packages/lang/golang/golang-package.mk
