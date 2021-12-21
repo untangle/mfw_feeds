@@ -13,7 +13,7 @@ start_service() {
     # procd_set_param env GODEBUG=schedtrace=30000,scheddetail=1
 
     # command
-    procd_set_param command /usr/bin/client-license-service -l /etc/config/licenses.json -p sdwan -u `cat /etc/config/uid`
+    procd_set_param command /usr/bin/client-license-service -l /etc/config/licenses.json -p mfw -u `cat /etc/config/uid`
     # restart indefinitely if crashed, 5 seconds between attempts
     procd_set_param respawn 3600 5 0
 
