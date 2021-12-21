@@ -20,6 +20,7 @@ define Package/str-tester
   TITLE:=Testing string optimization
   URL:=https://github.com/untangle/mfw_feeds
   DEPENDS:=
+  PKG_BUILD_DEPENDS:=golang
 endef
 
 define Package/str-tester/description
