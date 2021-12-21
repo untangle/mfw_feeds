@@ -7,8 +7,7 @@ PKG_SOURCE_PROTO:=git
 # FIXME: we really don't need *any* source from git right now
 PKG_SOURCE_URL:=https://github.com/untangle/mfw_feeds.git
 
-include ../version.mk
-
+PKG_VERSION:=1.0
 include $(INCLUDE_DIR)/package.mk
 
 include $(INCLUDE_DIR)/../feeds/packages/lang/golang/golang-package.mk
