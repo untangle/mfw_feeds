@@ -34,7 +34,7 @@ define Package/str-tester/description
 endef
 
 define Build/Compile
-	cd files ; \
+	cd $(PKG_BUILD_DIR)/files ; \
 	export GOPATH=$(GO_PKG_BUILD_DIR) \
                         GOCACHE=$(GO_PKG_CACHE_DIR) \
                         GOTMPDIR=$(GO_PKG_TMP_DIR) \
@@ -42,7 +42,7 @@ define Build/Compile
                         CC=$(TARGET_CC) \
                         CXX=$(TARGET_CXX) \
                         $(call GoPackage/Environment) ; \
-	go build str_tester.go 
+	go build str_tester.go -o str-tester
 endef
 
 define Package/str-tester/install
