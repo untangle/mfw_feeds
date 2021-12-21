@@ -7,15 +7,13 @@ PKG_SOURCE_PROTO:=git
 # FIXME: we really don't need *any* source from git right now
 PKG_SOURCE_URL:=https://github.com/untangle/mfw_feeds.git
 
+PKG_NAME_NO_DASH = $(subst -,_,$(PKG_NAME))
+PKG_SOURCE_VERSION:=str-tester 
+
 PKG_VERSION:=1.0
 
-PKG_NAME_NO_DASH = $(subst -,_,$(PKG_NAME))
-PKG_SOURCE_VERSION := 1.0 
-
-PKG_VERSION := 1.0
-
-PKG_SOURCE_SUBDIR := $(PKG_NAME)-$(PKG_VERSION)
-PKG_SOURCE := $(PKG_NAME)-$(PKG_SOURCE_VERSION)-$(PKG_VERSION).tar.xz
+PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_SOURCE_VERSION)-$(PKG_VERSION).tar.xz
 
 include $(INCLUDE_DIR)/package.mk
 
