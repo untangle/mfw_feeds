@@ -3,6 +3,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=str-tester
 PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=Dirk Morris <dmorris@untangle.com>
+PKG_VERSION:=1.0
 
 include $(INCLUDE_DIR)/package.mk
 
