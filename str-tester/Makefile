@@ -35,7 +35,7 @@ define Build/Compile
                         CC=$(TARGET_CC) \
                         CXX=$(TARGET_CXX) \
                         $(call GoPackage/Environment) ; \
-	go build str_tester.go -o $(PKG_BUILD_DIR)/str-tester
+	go build -o $(PKG_BUILD_DIR)/str-tester str_tester.go
 endef
 
 define Package/str-tester/install
