@@ -8,7 +8,7 @@ PKG_SOURCE_URL:=git@github.com:untangle/mfw_ui.git
 
 include ../version.mk
 
-PKG_VERSION:=1.0
+PKG_VERSION:=5c822878cf715fdd93c476d189bb740ffddb8431
 
 include $(INCLUDE_DIR)/package.mk
 

@@ -8,6 +8,8 @@ PKG_SOURCE_URL:=git@github.com:untangle/packetd.git
 
 include ../version.mk
 
+PKG_VERSION:=5405c1618588947627860fc27d03f178d66c0592
+
 GO_PKG:=github.com/untangle/packetd
 GO_PKG_INSTALL_EXTRA:=packetd_rules Makefile
 

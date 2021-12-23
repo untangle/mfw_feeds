@@ -9,7 +9,7 @@ PKG_SOURCE_URL:=https://github.com/untangle/mfw_feeds.git
 
 include ../version.mk
 
-PKG_VERSION:1.0
+PKG_VERSION:4e17a70dd1539c6c27e31720b780af51a5d49792
 
 include $(INCLUDE_DIR)/package.mk
 

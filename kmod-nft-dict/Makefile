@@ -9,8 +9,6 @@ PKG_SOURCE_URL:=git@github.com:untangle/nft_dict.git
 
 include ../version.mk
 
-PKG_VERSION:=1.0
-
 include $(INCLUDE_DIR)/package.mk
 
 define KernelPackage/nft-dict

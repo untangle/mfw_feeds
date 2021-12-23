@@ -8,7 +8,7 @@ PKG_SOURCE_URL:=git@github.com:untangle/client-license-service.git
 
 include ../version.mk
 
-PKG_VERSION:=1.0
+PKG_VERSION:=11fa3e141fe9d3bf4195b20af55ae51d4a94fc55
 
 include $(INCLUDE_DIR)/package.mk
 
