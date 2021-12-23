@@ -10,6 +10,8 @@ PKG_HASH:=skip
 
 include ../version.mk
 
+PKG_VERSION:=1.0 
+
 include $(INCLUDE_DIR)/package.mk
 
 define Package/container

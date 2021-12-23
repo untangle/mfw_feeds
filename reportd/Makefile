@@ -8,6 +8,8 @@ PKG_SOURCE_URL:=git@github.com:untangle/reportd.git
 
 include ../version.mk
 
+PKG_VERSION:=1.0
+
 GO_PKG:=github.com/untangle/reportd
 GO_PKG_INSTALL_EXTRA:=Makefile
 

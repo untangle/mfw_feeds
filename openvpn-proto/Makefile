@@ -9,6 +9,8 @@ PKG_SOURCE_URL:=https://github.com/untangle/mfw_feeds.git
 
 include ../version.mk
 
+PKG_VERSION:=1.0
+
 include $(INCLUDE_DIR)/package.mk
 
 define Package/openvpn-proto
