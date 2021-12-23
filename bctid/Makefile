@@ -11,7 +11,7 @@ PKG_SOURCE_URL:=git@github.com:untangle/bctid.git
 
 include ../version.mk
 
-PKG_VERSION:=608e0645ff48ce83765ddaeb24f79173fd767ea8
+PKG_VERSION:=b533e3afb76c340e2e3de319756a2790b4fc8ed7
 
 include $(INCLUDE_DIR)/package.mk
 
