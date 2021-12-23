@@ -8,7 +8,7 @@ PKG_SOURCE_URL:=git@github.com:untangle/restd.git
 
 include ../version.mk
 
-PKG_VERSION:=a1a01da20356c0bc4bc41ed9f5b80eb3d1efa611
+PKG_VERSION:=18461fc04faa817f4a1cdbb6242b32db5b4140cb
 
 GO_PKG:=github.com/untangle/restd
 GO_PKG_INSTALL_EXTRA:=Makefile
