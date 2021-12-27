@@ -38,7 +38,7 @@ if [[ -f "/tmp/sysinfo/untangle_board_name" ]] ; then
 fi
 
 UID="`cat /etc/config/uid | tr -d '[ \t\r\n]'`"
-DEVICE="`grep DEVICE_MANUFACTURER_URL /etc/os-release | sed -rn 's/.*sdwan-(.*?)-Packages.*/\1/p'`"
+DEVICE="`grep DEVICE_MANUFACTURER_URL /etc/os-release | sed -rn 's/.*(mfw|sdwan)-(.*?)-Packages.*/\2/p'`"
 
 # ash doesn't let us use ${!var} to determine variable values, so we need to do
 # this eval echo hack to find out if the value of the arg is non-null
