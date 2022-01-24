@@ -30,6 +30,8 @@ define Package/classd/install
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/classd $(1)/usr/bin/
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libnavl.so* $(1)/usr/lib/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/share/untangle-classd/protolist.csv $(1)/usr/share/untangle-classd/
+  $(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) files/classd.init $(1)/etc/init.d/classd
 endef
 
 $(eval $(call BuildPackage,classd))
