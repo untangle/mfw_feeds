@@ -22,7 +22,7 @@ start_service() {
         BOARD="`cat /tmp/sysinfo/untangle_board_name | tr -d '[ \t\r\n]'`"
     fi
     # todo: find number of devices
-    procd_set_param command /usr/bin/client-license-service -l /etc/config/licenses.json -p mfw -u `cat /etc/config/uid` -v ${VERSION} -m ${BOARD} -d 0 -a ${IS_APPLIANCE}
+    procd_set_param command /usr/bin/client-license-service -l /etc/config/licenses.json -p mfw -u `cat /etc/config/uid` -v ${VERSION} -m ${BOARD} -a ${IS_APPLIANCE}
     # restart indefinitely if crashed, 5 seconds between attempts
     procd_set_param respawn 3600 5 0
 
