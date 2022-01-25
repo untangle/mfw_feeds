@@ -12,17 +12,17 @@ include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/cmake.mk
 
 define Package/classd
-  SECTION:=ui
-  CATEGORY:=Network
-  SUBMENU:=Firewall
-  TITLE:=Userspace classification daemon
-  URL:=https://github.com/untangle/classd
-  PKG_BUILD_DEPENDS:=libstdcpp
-  DEPENDS:=+libstdcpp
+	SECTION:=ui
+	CATEGORY:=Network
+	SUBMENU:=Firewall
+	TITLE:=Userspace classification daemon
+	URL:=https://github.com/untangle/classd
+	PKG_BUILD_DEPENDS:=libstdcpp
+	DEPENDS:=+libstdcpp
 endef
 
 define Package/classd/description
-  Userspace classification daemon
+	Userspace classification daemon
 endef
 
 define Package/classd/install
