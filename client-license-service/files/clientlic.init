@@ -13,7 +13,16 @@ start_service() {
     # procd_set_param env GODEBUG=schedtrace=30000,scheddetail=1
 
     # command
-    procd_set_param command /usr/bin/client-license-service -l /etc/config/licenses.json -p mfw -u `cat /etc/config/uid`
+    VERSION="`grep VERSION_ID /etc/os-release | sed -rn 's/.*v(\d{1,2}\.\d{1,2}\.?\d{0,2}).*/\1/p'`"
+    BOARD="`cat /tmp/sysinfo/board_name | tr -d '[ \t\r\n]'`"
+    IS_APPLIANCE='false'
+
+    if [[ -f "/tmp/sysinfo/untangle_board_name" ]] ; then
+        IS_APPLIANCE='true'
+        BOARD="`cat /tmp/sysinfo/untangle_board_name | tr -d '[ \t\r\n]'`"
+    fi
+
+    procd_set_param command /usr/bin/client-license-service -l /etc/config/licenses.json -p mfw -u `cat /etc/config/uid` -v ${VERSION} -m ${BOARD} -a ${IS_APPLIANCE}
     # restart indefinitely if crashed, 5 seconds between attempts
     procd_set_param respawn 3600 5 0
 
