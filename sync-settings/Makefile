@@ -20,7 +20,7 @@ define Package/sync-settings
   PKG_BUILD_DEPENDS:=python3 python3-urllib3 python3-pyroute2
   DEPENDS:= +diffutils +tc +kmod-sched +kmod-sched-cake +kmod-ifb +kmod-sched-connmark\
 	  +uuidgen +jsonschema +kmod-nft-fib +openvpn-proto +wireguard +wan-manager +speedtest-cli\
-	  +python3 +python3-urllib3 +python3-pyroute2 +strongswan-default
+	  +python3 +python3-urllib3 +python3-pyroute2 +strongswan-default +kmod-ip-vti +vti
 endef
 
 define Package/sync-settings/description
