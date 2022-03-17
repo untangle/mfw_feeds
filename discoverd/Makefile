@@ -23,7 +23,7 @@ define Package/discoverd
   TITLE:=Host discovery daemon
   URL:=https://github.com/untangle/discoverd
   PKG_BUILD_DEPENDS:=golang
-  DEPENDS:=+libsodium +libzmq-curve
+  DEPENDS:=+libsodium +libzmq-curve +nmap +lldpd
 
 endef
 
