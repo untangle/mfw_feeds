@@ -34,9 +34,7 @@ define Build/Compile
                         CC=$(TARGET_CC) \
                         CXX=$(TARGET_CXX) \
                         $(call GoPackage/Environment) ; \
-	go mod tidy; \
-	go mod vendor; \
-	go build --mod=vendor -ldflags "-X 'main.Version=${VERSION}' -X 'main.IsDev=no'" -o build/client-license-service
+  make build
 endef
 
 define Package/client-license-service/install

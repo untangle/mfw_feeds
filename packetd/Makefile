@@ -46,7 +46,7 @@ define Build/Compile
                         CC=$(TARGET_CC) \
                         CXX=$(TARGET_CXX) \
                         $(call GoPackage/Environment) ; \
-	make
+	make build
 endef
 
 define Package/packetd/install
