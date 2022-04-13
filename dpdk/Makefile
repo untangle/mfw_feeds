@@ -17,13 +17,13 @@ PKG_MAINTAINER:=Zbynek Kocur <zbynek.kocur@fel.cvut.cz>
 PKG_LICENSE:=BSD-3-Clause
 PKG_LICENSE_FILES:=COPYING
 
-PKG_BUILD_DEPENDS:=meson/host python3-pyelftools libexecinfo
+PKG_BUILD_DEPENDS:=meson/host python3/host python3-pyelftools/host libexecinfo-dev/host
 PKG_INSTALL:=1
 
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/devel/meson/meson.mk
 
-MESON_ARGS+=-Denable_docs=false
+MESON_ARGS+=-Denable_docs=false -Dexamples=all
 CFLAGS+=-D_GNU_SOURCE
 
 # Possible place for CPU ARCH tune:
@@ -42,7 +42,7 @@ CONFIG_TARGET_SUBTARGET:="native"
 define Package/libdpdk
   SECTION:=libs
   CATEGORY:=Libraries
-  DEPENDS:=+libnuma +libpcap +libopenssl +zlib +kmod-vfio-pci +kmod-uio_pci_generic +kmod-amd_iommu_v2
+  DEPENDS:=+libnuma +libpcap +libopenssl +zlib +kmod-vfio-pci +kmod-uio_pci_generic +kmod-amd_iommu_v2 +libexecinfo-dev +python3-pyelftools
   TITLE:=Set of libraries and drivers for fast packet processing
   URL:=https://www.dpdk.org
 endef
