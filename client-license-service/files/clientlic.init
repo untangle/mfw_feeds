@@ -16,13 +16,14 @@ start_service() {
     VERSION="`grep VERSION_ID /etc/os-release | sed -rn 's/.*v(\d{1,2}\.\d{1,2}\.?\d{0,2}).*/\1/p'`"
     BOARD="`cat /tmp/sysinfo/board_name | tr -d '[ \t\r\n]'`"
     IS_APPLIANCE='false'
-
+    
     if [[ -f "/tmp/sysinfo/untangle_board_name" ]] ; then
         IS_APPLIANCE='true'
         BOARD="`cat /tmp/sysinfo/untangle_board_name | tr -d '[ \t\r\n]'`"
+        SERIAL="`cat /etc/config/serial | tr -d '[ \t\r\n]'`"
     fi
 
-    procd_set_param command /usr/bin/client-license-service -l /etc/config/licenses.json -p mfw -u `cat /etc/config/uid` -v ${VERSION} -m ${BOARD} -a ${IS_APPLIANCE}
+    procd_set_param command /usr/bin/client-license-service -l /etc/config/licenses.json -p mfw -u `cat /etc/config/uid` -v ${VERSION} -m ${BOARD} -a ${IS_APPLIANCE} -sn ${SERIAL}
     # restart indefinitely if crashed, 5 seconds between attempts
     procd_set_param respawn 3600 5 0
 
