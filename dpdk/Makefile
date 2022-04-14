@@ -19,6 +19,7 @@ PKG_LICENSE_FILES:=COPYING
 
 PKG_BUILD_DEPENDS:=meson/host python3/host libexecinfo-dev/host
 
+export PYTHONPATH=/home/mfw/openwrt/staging_dir/target-x86_64_musl/root-x86/usr/lib64/python3.7/site-packages
 HOST_PYTHON3_PACKAGE_BUILD_DEPENDS:="python3-pyelftools"
 
 PKG_INSTALL:=1
