@@ -17,7 +17,10 @@ PKG_MAINTAINER:=Zbynek Kocur <zbynek.kocur@fel.cvut.cz>
 PKG_LICENSE:=BSD-3-Clause
 PKG_LICENSE_FILES:=COPYING
 
-PKG_BUILD_DEPENDS:=meson/host python3/host python3-pyelftools/host libexecinfo-dev/host
+PKG_BUILD_DEPENDS:=meson/host python3/host libexecinfo-dev/host
+
+HOST_PYTHON3_PACKAGE_BUILD_DEPENDS:="python3-pyelftools"
+
 PKG_INSTALL:=1
 
 include $(INCLUDE_DIR)/package.mk
