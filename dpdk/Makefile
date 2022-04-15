@@ -17,7 +17,7 @@ PKG_MAINTAINER:=Zbynek Kocur <zbynek.kocur@fel.cvut.cz>
 PKG_LICENSE:=BSD-3-Clause
 PKG_LICENSE_FILES:=COPYING
 
-PKG_BUILD_DEPENDS:=meson/host python3/host libexecinfo-dev/host
+PKG_BUILD_DEPENDS:=meson/host python3/host libexecinfo-dev/host libatomic/host libelf1/host
 
 export PYTHONPATH=$(STAGING_DIR_ROOT)/usr/lib64/python3.7/site-packages
 HOST_PYTHON3_PACKAGE_BUILD_DEPENDS:="python3-pyelftools"
@@ -46,7 +46,7 @@ CONFIG_TARGET_SUBTARGET:="native"
 define Package/libdpdk
   SECTION:=libs
   CATEGORY:=Libraries
-  DEPENDS:=+libnuma +libpcap +libopenssl +zlib +kmod-vfio-pci +kmod-uio_pci_generic +kmod-amd_iommu_v2 +libexecinfo-dev +python3-pyelftools
+  DEPENDS:=+libnuma +libpcap +libopenssl +zlib +kmod-vfio-pci +kmod-uio_pci_generic +kmod-amd_iommu_v2 +libexecinfo-dev +python3-pyelftools +libelf1 +libatomic
   TITLE:=Set of libraries and drivers for fast packet processing
   URL:=https://www.dpdk.org
 endef
