@@ -31,4 +31,4 @@ endef
 
 $(eval $(call Py3Package,python3-pyelftools))
 $(eval $(call BuildPackage,python3-pyelftools))
-#$(eval $(call BuildPackage,python3-pyelftools-src))
+$(eval $(call BuildPackage,python3-pyelftools-src))
