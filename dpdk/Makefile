@@ -69,6 +69,20 @@ define Package/dpdk-tools/description
 It supports many processor architectures and both FreeBSD and Linux.
 endef
 
+define Package/dpdk-examples
+  SECTION:=libs
+  CATEGORY:=Libraries
+  DEPENDS:=+libdpdk
+  TITLE:=DPDK Example Programs
+  URL:=https://www.dpdk.org
+endef
+
+define Package/dpdk-examples/description
+	This package contains all the dpdk examples, which will be installed into /usr/bin/dpdk-examples/
+	DPDK is a set of libraries and drivers for fast packet processing.
+	It supports many processor architectures and both FreeBSD and Linux.
+endef
+
 define Build/InstallDev
 	$(INSTALL_DIR) $(1)/usr/include
 	$(CP) $(PKG_INSTALL_DIR)/usr/include/rte_*.h $(1)/usr/include/
@@ -96,5 +110,12 @@ define Package/dpdk-tools/install
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/dpdk-proc-info $(1)/usr/bin/
 endef
 
+define Package/dpdk-examples/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_DIR) $(1)/usr/bin/dpdk-examples/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt-build/examples/*/*.* $(1)/usr/bin/dpdk-examples/
+endef
+
 $(eval $(call BuildPackage,libdpdk))
 $(eval $(call BuildPackage,dpdk-tools))
+$(eval $(call BuildPackage,dpdk-examples))
