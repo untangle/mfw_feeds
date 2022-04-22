@@ -42,11 +42,12 @@ CFLAGS+=-D_GNU_SOURCE
 # native - works on all x86_64 platforms
 #
 CONFIG_TARGET_SUBTARGET:="native"
+MESON_CPU:="native"
 
 define Package/libdpdk
   SECTION:=libs
   CATEGORY:=Libraries
-  DEPENDS:=+libnuma +libpcap +libopenssl +zlib +kmod-vfio-pci +kmod-uio_pci_generic +kmod-amd_iommu_v2 +python3-pyelftools +libelf1 +libatomic
+  DEPENDS:=+libnuma +libpcap +libopenssl +zlib +jansson +python3-pyelftools +libelf1 +libatomic
   TITLE:=Set of libraries and drivers for fast packet processing
   URL:=https://www.dpdk.org
 endef
@@ -59,7 +60,7 @@ endef
 define Package/dpdk-tools
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+libdpdk +@KERNEL_HUGETLB_PAGE +python3-light
+  DEPENDS:=+libdpdk +@KERNEL_HUGETLB_PAGE +python3-light +pciutils
   TITLE:=Set of tools for fast packet processing based on DPDK
   URL:=https://www.dpdk.org
 endef
@@ -105,7 +106,7 @@ endef
 		
 define Package/dpdk-tools/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/dpdk-devbind.py $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/dpdk-devbind.py $(1)/usr/bin/dpdk-devbind
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/dpdk-pdump $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/dpdk-proc-info $(1)/usr/bin/
 endef
