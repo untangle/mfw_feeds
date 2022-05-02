@@ -52,6 +52,11 @@ done
 
 ARGS="version=${VERSION}&fullVersion=${FULL_VERSION}&board=${BOARD}&uid=${UID}"
 URL="https://updates.untangle.com/api/v1/releases/${DEVICE}/latest?${ARGS}"
+TRANSLATED_URL=$(wget -qO- "http://127.0.0.1/api/uri/geturiwithpath/uri=$URL")
+if [ "$TRANSLATED_URL" != "" ] ; then
+    URL=$TRANSLATED_URL
+fi
+
 OUTPUT="/tmp/upgrade.json"
 SIMULATE=0
 
