@@ -385,15 +385,22 @@ specific_wan()
 	id=$2
 
 	policy_dir="/tmp/wan_status/$policy"
+	status_file="$policy_dir/status"
 	mkdir -p $policy_dir
 
 	status="init"
+	## If the status file already exists, lets see what the previous status was
+	if [ -f $status_file ] ; then
+		. $status_file
+	fi
 
 	if wan_is_up $policy $id "ipv4"; then
 		result="up"
 	else
 		result="down"
 	fi
+
+	logMessage "specific_wan: policy=$policy wan=$wan result:$result status:$status"
 
 	if [ ! $result = $status ] ; then
 		status=$result
@@ -403,6 +410,9 @@ specific_wan()
 			disable_policy $policy "$id"
 		fi
 	fi
+
+	# Write the current status
+	echo "status=$status" > $status_file
 
 }
 
