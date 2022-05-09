@@ -518,7 +518,7 @@ best_of()
 	status=$result
 	echo "status=$status" > $status_file
 	echo "current_best_wan=$current_best_wan" >> $status_file
-	
+	sync
 }
 
 # balance is used to balance a group of wans using a specific balancing algorithm
@@ -724,6 +724,7 @@ up()
 
 	result_dir="/tmp/wan_status/$policy/wan-$interfaceId"
 	result_file="$result_dir/$family"
+	interface_file="$result_dir/${family}_interface"
 
 	status="init"
 
@@ -740,11 +741,9 @@ up()
 	offline=$(is_offline $interfaceId $family)
 	if network_is_up $interface  && [ "$offline" = "false" ]; then
 		logMessage "$interface is up"
-		#echo up > $result_file
 		result="up"
 	else
 		#echo down > $result_file
-		logMessage "$interface is down"
 		result="down"
 	fi
 
@@ -752,7 +751,101 @@ up()
 		logMessage "Updating $interface file with new status result:$result..."
 		echo $result > $result_file
 		status=$result
+		echo $interface > $interface_file
 	fi
+}
+
+ipsec_vpn_up()
+{
+	#
+	# Manage ipsec interfaces and change to reflect WAN policy changes
+	#
+	policy=$1
+	interfaceId=$2
+	interfaceName=$3
+	family=$4
+	remote_gateway=$5
+
+	logMessage "ipsec_vpn: policy=$policy, interfaceId=$interfaceId, interfaceName=$interfaceName, family=$family, remote_gateway=$remote_gateway"	
+
+	# Read the current policy status
+	policy_dir="/tmp/wan_status/$policy"
+	status_file="$policy_dir/status"
+
+	status="init"
+	current_best_wan=-1
+	logMessage "ipsec_vpn: getting policy=$policy reading $status_file"
+	if [ -f $status_file ] ; then
+		logMessage "ipsec_vpn: getting policy=$policy status"
+		. $status_file
+	fi
+
+	logMessage "ipsec_vpn: policy=$policy, status=$status, current_best_wan=$current_best_wan"	
+	if [ "$status" != "up" ] ; then
+		# No policy status
+		return
+	fi
+	if [ $current_best_wan -eq -1 ] ; then
+		# Indeterminte WAN
+		return
+	fi
+
+	# Get information for the current WAN
+	interface=$(cat "/tmp/wan_status/$policy/wan-$current_best_wan/${family}_interface")
+	network_get_ipaddr ip_address $interface
+	network_get_device interface_device $interface
+
+	# Look at current left and if same, continue
+	current_left_address=$(ip xfrm policy | grep "dst $remote_gateway" | head -1 | cut -d' ' -f3)
+
+	logMessage "ipsec_vpn: interface_name=$interface, interface_device=$interface_device, ip_address=$ip_address, current_left_address=$current_left_address"
+	if [ "$ip_address" = "$current_left_address" ]; then
+		# WAN has not changed so no need to change.
+		return
+	fi
+	#
+	# WAN changed.
+	#
+	# Stop ipsec
+	ipsec stop
+	# Flush current state
+	ip xfrm state flush
+
+	# Walk through WANs associated with policies to get identifier into WAN priority tables.
+	# Delete WAN priority routes.
+	for entry in ${policy_dir}/wan-*; do
+		del_interface=$(cat "/tmp/wan_status/$policy/wan-$current_best_wan/${family}_interface")
+		network_get_device del_interface_device $interface
+		del_interfaceId=$(echo $entry | cut -d/ -f5 | cut -d- -f2)
+		if [ "$del_interfaceId" = "$current_best_wan" ] ; then
+			continue
+		fi
+		logMessage "ipsec_vpn: DELETE ip route add table wanp.$del_interfaceId $remote_gateway/32"
+		ip route delete table wanp.$del_interfaceId $remote_gateway/32 2>/dev/null
+	done
+	# Add WAN priority for remote gateway for currently active WAN.
+	logMessage "ipsec_vpn: ADD ip route add table wanp.$current_best_wan $remote_gateway/32 dev $interface_device"
+	ip route add table wanp.$current_best_wan $remote_gateway/32 src $ip_address dev $interface_device 2>/dev/null
+
+	# Change IPSEC tunnel vti interface's local WAN address and device.
+	network_get_device ipsec_device $interfaceName
+	logMessage "ipsec_vpn: CHANGE tunnel ipsec_device=$ipsec_device to local address to ip_address=$ip_address, interface_device=$interface_device"
+	ip tunnel change $ipsec_device local $ip_address dev $interface_device
+
+	# Update live ipsec
+	ipsec_live_name=/var/ipsec/ipsec.conf
+	ipsec_temp_name=$(mktemp /tmp/ipsec.confXXXXXX)
+	# Looking for our remote gateway, modify the left side to reflect the new WAN IP address.
+	awk '/right='$remote_gateway'/{sub(/left=.*/, "left='$ip_address'", last)} NR>1{print last} {last=$0} END {print last}' \
+		$ipsec_live_name > $ipsec_temp_name \
+		&& mv $ipsec_temp_name $ipsec_live_name
+
+	# Bring IPSec back up
+	ipsec restart
+
+	# NOTE: Yes, stopping all of IPSec and bringing it back up seems extreme as it will
+	# force a restart to all non-effected tunnels.  However, this seems to be the most
+	# reliable way to perform this kind of failover change.
 }
 
 # test is used to insert policy rules for specific connectivity testing types or methods on the wan
