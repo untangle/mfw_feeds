@@ -496,8 +496,6 @@ is_wan_up()
 	is_wan_up_by_family __ipv4_up $policy $id ipv4
 	is_wan_up_by_family __ipv6_up $policy $id ipv6
 
-	# echo "__ipv4_up=$__ipv4_up, __ipv6_up=$__ipv6_up"
-
 	if [ "$__ipv4_up" = "true" ] || [ "$__ipv6_up" = "true" ] ; then
 		__up=true
 	fi
@@ -825,9 +823,6 @@ criteria_up()
 		echo $new_status > $status_file
 	fi
 
-	# log_status_message "$log_state" "$__function_name:" \
-	# 	"policy=$policy, interfaceId=$interfaceId, interface=$interface, family=$family, status=$status->$new_status" \
-	# 	"policy=$policy, interfaceId=$interfaceId, interface=$interface, family=$family, status=$new_status"
 	log_status_message "$log_state" "$__function_name:" \
 		"policy=$policy, interface=${interfaceId}/$interface/$family, status=$status->$new_status" \
 		"policy=$policy, interface=${interfaceId}/$interface/$family, status=$new_status"
@@ -871,9 +866,6 @@ criteria_attribute()
 		echo $new_status > $status_file
 	fi
 
-	# log_status_message "$log_state" "$__function_name:" \
-	# 	"policy=$policy, interfaceId=$interfaceId, interface=$interface, family=$family, key=$key, value=$value, status=$status->$new_status" \
-	# 	"policy=$policy, interfaceId=$interfaceId, interface=$interface, family=$family, key=$key, value=$value, status=$new_status"
 	log_status_message "$log_state" "$__function_name:" \
 		"policy=$policy, interface=$interfaceId/$interface/$family, attribute=$key,$value, status=$status->$new_status" \
 		"policy=$policy, interface=$interfaceId/$interface/$family, attribute=$key,$value, status=$new_status"
@@ -953,13 +945,9 @@ criteria_metric()
 	log_state="status"
 	if [ "$new_status" != "$status" ] ; then
 		log_state="change"
-		# echo $new_status > $status_file
 		echo $new_status > $status_file
 	fi
 
-	# log_status_message "$log_state" "$__function_name:" \
-	# 	"policy=$policy, interfaceId=$interfaceId, interface=$interface, family=$family, stat_name=$stat_name, metric_name=$metric_name, operator=$operator, val=$val, status=$status->$new_status" \
-	# 	"policy=$policy, interfaceId=$interfaceId, interface=$interface, family=$family, stat_name=$stat_name, metric_name=$metric_name, operator=$operator, val=$val, status=$new_status"
 	log_status_message "$log_state" "$__function_name:" \
 		"policy=$policy, interface=$interfaceId/$interface/$family, statistic=$stat_name/$metric_name/$operator/$val, status=$status->$new_status" \
 		"policy=$policy, interfaceId=$interface/$interface/$family, statistic=$stat_name/$metric_name/$operator/$val, status=$new_status"
@@ -1094,9 +1082,6 @@ criteria_connectivity()
 		echo $new_status > $status_file
 	fi
 
-	# log_status_message "$log_state" "$__function_name:" \
-	# 	"policy=$policy, interfaceId=$interfaceId, interface=$interface, family=$family, criteria=$criteria, interval=$interval, timeout=$timeout, threshold=$threshold, host=$host, status=$status->$new_status" \
-	# 	"policy=$policy, interfaceId=$interfaceId, interface=$interface, family=$family, criteria=$criteria, interval=$interval, timeout=$timeout, threshold=$threshold, host=$host, status=$new_status"
 	log_status_message "$log_state" "$__function_name:" \
 		"policy=$policy, interface=$interfaceId/$interface/$family, test=$criteria/$interval/$timeout/$threshold/$host, status=$status->$new_status" \
 		"policy=$policy, interface=$interfaceId/$interface/$family, test=$criteria/$interval/$timeout/$threshold/$host, status=$new_status"
@@ -1333,9 +1318,6 @@ policy_best_of_ipsec_vpn()
 			if [ "$wan_interface_id" = "$current_best_wan" ] ; then
 				continue
 			fi
-
-			# get_openwrt_interface_name del_interface $del_interfaceId $family
-			# network_get_device del_interface_device $del_interface
 			log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: DELETE ip route add table wanp.$wan_interface_id $remoteGateway/32"
 			ip route delete table wanp.$wan_interface_id $remoteGateway/32 2>/dev/null
 		done
@@ -1379,10 +1361,6 @@ policy_balance()
 	local __function_name="policy_balance"
 	local policy=$1
 	local algorithm=$2
-
-	# policy_dir="/tmp/wan_status/$policy"
-	# mkdir -p $policy_dir
-	# status_file="$policy_dir/status"
 
 	local policy_path
 	get_policy_path policy_path $policy
@@ -1428,7 +1406,6 @@ policy_balance()
 		elif [ $algorithm = "BANDWIDTH" ] ; then
 			get_wan_bandwidth weight $wan
 		fi
-		# echo "weight=$weight"
 
 		if [ $weight -eq 0 ] ; then
 			continue
@@ -1453,9 +1430,6 @@ policy_balance()
 		new_status="up"
 	fi
 
-	# echo "$new_status vs $status"
-	# echo "[$balance_string] vs [$new_balance_string]"
-
 	local log_state="status"
 	if [ "$new_status" != "$status" ] || [ "$balance_string" != "$new_balance_string" ] ; then
 		local log_state="change"
@@ -1471,51 +1445,10 @@ policy_balance()
 		echo "status=$new_status" > $status_file
 		echo "balance_string=\"$new_balance_string\"" >> $status_file
 	fi
-	echo "log_state=$log_state"
 	log_status_message "$log_state" "$__function_name:" \
 		"policy=$policy, status=$status->$new_status" \
 		"policy=$policy, status=$status" \
 		"balance_string='$balance_string' -> '$new_balance_string'"
-
-	# if [ "$new_status" != "$status" ] || [ "$balance_string" != "$new_balance_string" ] ; then
-	# 	# Balance policy messages always change due to the ever changing balance string, so
-	# 	# only log in debug mode.  Otherwise, just log init/up/down transitions.
-	# 	if [ "$status" = "init" ] ; then
-	# 		if [ "$DEBUG" = true ]; then
-	# 			log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: initializing policy=$policy, status=$new_status, balance_string='$new_balance_string'"
-	# 		else
-	# 			log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: initializing policy=$policy, status=$new_status"
-	# 		fi
-	# 	else 
-	# 		if [ $new_status = "up" ] ; then
-	# 			if [ "$DEBUG" = true ]; then
-	# 				log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: updating policy=$policy, status=$status -> $new_status, balance_string='$balance_string' -> '$new_balance_string'"
-	# 			else
-	# 				if [ "$new_status" != "$status" ]; then
-	# 					log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: updating policy=$policy, status=$status -> $new_status"
-	# 				elif [ "$ALLOW_LOG_UPDATE" == "true" ]; then
-	# 					log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: policy=$policy, status=$new_status"
-	# 				fi
-	# 			fi
-	# 		else
-	# 			log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: disabling policy=$policy, policy_wans=$policy_wans"
-	# 		fi
-	# 	fi
-	# 	if [ "$new_status" = "down" ] ; then
-	# 		if [ $status != "down" ] ; then
-	# 			disable_policy $policy "$policy_wans"
-	# 		fi
-	# 	else
-	# 		if [ ! $status = "up" ] || [ "$new_balance_string" != "$balance_string" ] ; then
-	# 			balance_policy $policy "$policy_wans" $total_weight "$new_balance_string"
-	# 		fi
-	# 	fi
-	# 	echo "status=$new_status" > $status_file
-	# 	echo "balance_string=\"$new_balance_string\"" >> $status_file
-	# elif [ "$ALLOW_LOG_UPDATE" == "true" ]; then
-	# 	log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: policy=$policy, status=$new_status"
-	# fi
-
 }
 
 ##
