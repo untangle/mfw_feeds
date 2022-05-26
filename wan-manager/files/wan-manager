@@ -1124,12 +1124,12 @@ policy_specific_wan()
 	local log_state="status"
 	if [ "$new_status" != "$status" ] ; then
 		local log_state="change"
-		if [ $status = "up" ] ; then
+		echo "status=$new_status" > $status_file
+		if [ $new_status = "up" ] ; then
 			jump_policy $policy $id "$id"
 		else
 			disable_policy $policy "$id"
 		fi
-		echo "status=$new_status" > $status_file
 	fi
 	log_status_message "$log_state" "$__function_name:" \
 		"policy=$policy, status=$status->$new_status" \
@@ -1230,13 +1230,13 @@ policy_best_of()
 	local log_state="status"
 	if [ "$new_status" != "$status" ] || [ ! $current_best_wan -eq $new_best_wan ] ; then
 		log_state="change"
+		echo "status=$new_status" > $status_file
+		echo "current_best_wan=$new_best_wan" >> $status_file
 		if [ "$new_status" = "up" ] ; then
-			jump_policy $policy $best_wan "$policy_wans"
+			jump_policy $policy $new_best_wan "$policy_wans"
 		else
 			disable_policy $policy "$policy_wans"
 		fi
-		echo "status=$new_status" > $status_file
-		echo "current_best_wan=$new_best_wan" >> $status_file
 	fi
 	log_status_message "$log_state" "$__function_name:" \
 		"policy=$policy, status=$status->$new_status, best_wan=$current_best_wan->$new_best_wan" \
@@ -1433,6 +1433,8 @@ policy_balance()
 	local log_state="status"
 	if [ "$new_status" != "$status" ] || [ "$balance_string" != "$new_balance_string" ] ; then
 		local log_state="change"
+		echo "status=$new_status" > $status_file
+		echo "balance_string=\"$new_balance_string\"" >> $status_file
 		if [ "$new_status" = "down" ] ; then
 			if [ $status != "down" ] ; then
 				disable_policy $policy "$policy_wans"
@@ -1442,8 +1444,6 @@ policy_balance()
 				balance_policy $policy "$policy_wans" $total_weight "$new_balance_string"
 			fi
 		fi
-		echo "status=$new_status" > $status_file
-		echo "balance_string=\"$new_balance_string\"" >> $status_file
 	fi
 	log_status_message "$log_state" "$__function_name:" \
 		"policy=$policy, status=$status->$new_status" \
