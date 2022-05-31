@@ -1314,16 +1314,8 @@ policy_best_of_ipsec_vpn()
 		local wans
 		get_policy_wans_and_up_wans policy_wans wans $policy
 
-		for wan_interface_id in $policy_wans ; do
-			if [ "$wan_interface_id" = "$current_best_wan" ] ; then
-				continue
-			fi
-			log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: DELETE ip route add table wanp.$wan_interface_id $remoteGateway/32"
-			ip route delete table wanp.$wan_interface_id $remoteGateway/32 2>/dev/null
-		done
-		# Add WAN priority for remote gateway for currently active WAN.
-		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: ADD ip route add table wanp.$current_best_wan $remoteGateway/32 dev $interface_device"
-		ip route add table wanp.$current_best_wan $remoteGateway/32 src $ip_address dev $interface_device 2>/dev/null
+		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: CHANGE ip route change table wan.priority $remoteGateway/32 src $ip_address dev $interface_device"
+		ip route change table wan.priority $remoteGateway/32 src $ip_address dev $interface_device
 
 		# Change IPSEC tunnel vti interface's local WAN address and device.
 		network_get_device ipsec_device $interfaceName
