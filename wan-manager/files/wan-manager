@@ -771,10 +771,11 @@ settings_get_ipsec_remote_gateway(){
 			json_select ipsec
 			json_select remote
 			json_get_var __remoteGateway gateway
+			break
 		fi
 		json_select ..
 	done
-	
+
 	eval "$__return_remoteGateway=$__remoteGateway"
 }
 
