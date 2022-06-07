@@ -1266,6 +1266,10 @@ policy_best_of_ipsec_vpn()
 		log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: policy=$policy, interfaceId=$interfaceId, unable to get remote gateway address"
 		return 
 	fi
+	if [ "$remoteGateway" = "%any" ] ; then
+		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, interfaceId=$interfaceId, remote gateway address is %any"
+		return
+	fi
 	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, interfaceId=$interfaceId, interfaceName=$interfaceName, family=$family, remoteGateway=$remoteGateway"	
 
 	local policy_path
@@ -1305,7 +1309,6 @@ policy_best_of_ipsec_vpn()
 		# WAN changed.
 		#
 		log_state="change"
-		# log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: changed policy=$policy. switching to interface_device=$interface_device, left ip_address=$current_left_address -> $ip_address"
 
 		# Stop ipsec
 		ipsec stop 2>/dev/null
@@ -1321,7 +1324,8 @@ policy_best_of_ipsec_vpn()
 		get_policy_wans_and_up_wans policy_wans wans $policy
 
 		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: CHANGE ip route change table wan.priority $remoteGateway/32 src $ip_address dev $interface_device"
-		ip route change table wan.priority $remoteGateway/32 src $ip_address dev $interface_device
+		# ip route change table wan.priority $remoteGateway/32 src $ip_address dev $interface_device
+		ip route change table wan.priority $remoteGateway/32 dev $interface_device
 
 		# Change IPSEC tunnel vti interface's local WAN address and device.
 		network_get_device ipsec_device $interfaceName
