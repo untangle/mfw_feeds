@@ -1292,6 +1292,11 @@ policy_best_of_ipsec_vpn()
 
 	# Look at current left and if same, continue
 	current_left_address=$(ip xfrm policy | grep "dst $remoteGateway" | head -1 | cut -d' ' -f3)
+    if [ "$current_left_address" = "dst" ] || [ "$current_left_address" = "" ] ; then
+		# No found in policies
+		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: unable to find appropriate remoteGateway=$remoteGateway"
+        return
+    fi
 
 	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: current_best_interface_name=$current_best_interface_name, interface_device=$interface_device, ip_address=$ip_address, current_left_address=$current_left_address"
 	log_state="status"
