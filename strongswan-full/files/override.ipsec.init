@@ -248,19 +248,19 @@ config_remote() {
 	config_get auth_method       "$1" authentication_method
 	config_get local_identifier  "$1" local_identifier ""
 	config_get remote_identifier "$1" remote_identifier ""
+	config_get local_gateway     "$1" local_gateway "%any"
+	config_get ikey              "$1" ikey
+	config_get okey              "$1" okey
 
 	[ "$gateway" = "any" ] && remote_gateway="%any" || remote_gateway="$gateway"
 
-	local_gateway="%any"
 	[ -z "$local_identifier" ] && {
 		local ipdest
 
 		[ "$remote_gateway" = "%any" ] && ipdest="1.1.1.1" || ipdest="$remote_gateway"
-		local_gateway=`ip route get $ipdest | awk -F"src" '/src/{gsub(/ /,"");print $2}'`
+		# list the ip route for this $ipdest, and then strip out all properties except for the 'src <ip addr>'
+		local_gateway=`ip route get $ipdest | awk -F"src" '/src/{gsub(/( )|(uid [0-9])/,"");print $2}'`
 	}
-	config_get local_gateway           "$1" local_gateway "$local_gateway"
-	config_get ikey                    "$1" ikey
-	config_get okey                    "$1" okey
 
 	[ -n "$local_identifier" ] && secret_xappend -n "$local_identifier " || secret_xappend -n "$local_gateway "
 	[ -n "$remote_identifier" ] && secret_xappend -n "$remote_identifier " || secret_xappend -n "$remote_gateway "
