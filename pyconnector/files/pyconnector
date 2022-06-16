@@ -176,12 +176,19 @@ def run_cmd_post_hook(result):
     This function can be overridden
     It provides a hook after run_cmd with the result
     """
+
     pass
 
 def run_cmd(cmd_str):
     """run a command using eval"""
     debug("Command Received.")
     debug("Received: %s" % cmd_str.strip(), 2)
+    # Local fix for brightcloud cmd-side fix.
+    # Change the ip addr scope to host instead of the default global so
+    # local traffic comes from a default global scope address like a LAN.
+    # When we remove that fix on cmd, we can remove this.
+    if "ip addr add" in cmd_str and "dev lo" in cmd_str:
+        cmd_str = cmd_str.replace("dev lo", "dev lo scope host")
     run_cmd_pre_hook(cmd_str)
     try:
         result = eval(cmd_str.strip())
