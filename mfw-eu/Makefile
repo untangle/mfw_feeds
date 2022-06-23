@@ -26,8 +26,8 @@ define Build/Compile
 endef
 
 define Package/mfw-eu/install
-	$(INSTALL_DIR) $(1)/etc/config/settings-templates
-	$(INSTALL_BIN) files/settings_uri.js $(1)/etc/config/settings-templates
+	$(INSTALL_DIR) $(1)/usr/share/settings-templates
+	$(INSTALL_BIN) files/settings_uri.js $(1)/usr/share/settings-templates
 endef
 
 $(eval $(call BuildPackage,mfw-eu))
