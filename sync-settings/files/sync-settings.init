@@ -12,7 +12,7 @@ boot() {
         logger -t "sync-settings" "Creating /etc/config/settings.json"
         /usr/bin/sync-settings -c -n -v force=true | logger -t "sync-settings"
     else
-        /usr/bin/sync-settings -n -v force=true | logger -t "sync-settings"
+        /usr/bin/sync-settings -u -n -v force=true | logger -t "sync-settings"
     fi
 
     # ensure we have an up to date defaults.json file
