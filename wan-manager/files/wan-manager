@@ -1323,10 +1323,6 @@ policy_best_of_ipsec_vpn()
 		local wans
 		get_policy_wans_and_up_wans policy_wans wans $policy
 
-		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: CHANGE ip route change table wan.priority $remoteGateway/32 src $ip_address dev $interface_device"
-		# ip route change table wan.priority $remoteGateway/32 src $ip_address dev $interface_device
-		ip route change table wan.priority $remoteGateway/32 dev $interface_device
-
 		# Change IPSEC tunnel vti interface's local WAN address and device.
 		network_get_device ipsec_device $interfaceName
 		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: CHANGE tunnel ipsec_device=$ipsec_device to local address to ip_address=$ip_address, interface_device=$interface_device"
