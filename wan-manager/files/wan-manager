@@ -538,6 +538,11 @@ disable_policy()
 		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: nft -f Failed to disable policy: $policy All Wans:$wans Retval: $retval, trying again..."
 	done
 	rm $TMPFILE
+
+	# We flush the conntrack table, so that sessions which were marked for the now offline WAN interface can
+	# be re-established. Ideally we should only flush the connections that are associated with the
+	# particular WAN
+	conntrack -F
 }
 
 # get_policy_wans_and_up_wans
