@@ -7,6 +7,10 @@ TIMEOUT=1200
 VERBOSE=false
 BACKUP_FILE=mfw_`date -Iseconds`.backup.gz
 URL='https://boxbackup.untangle.com/boxbackup/backup.php'
+TRANSLATED_URL=$(wget -qO- "http://127.0.0.1/api/uri/geturiwithpath/uri=$URL")
+if [ "$TRANSLATED_URL" != "" ] ; then
+    URL=$TRANSLATED_URL
+fi
 
 # Debug function
 function debug() {
