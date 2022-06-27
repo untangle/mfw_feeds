@@ -823,8 +823,8 @@ criteria_up()
 	if [ "$new_status" != "$status" ] ; then
 		log_state="change"
 		echo $new_status > $status_file
-		if [ "$new_status eq "down ] ; then
-			# An interface went from up to down.
+		if [ "$new_status" = "down" ] ; then
+			# An interface went down.
 			# We flush the conntrack table, so that sessions which were marked for the now offline WAN interface can
 			# be re-established. Ideally we should only flush the connections that are associated with the
 			# particular WAN interface.
