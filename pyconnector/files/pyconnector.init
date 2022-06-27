@@ -6,6 +6,28 @@ STOP=99
 
 USE_PROCD=1
 
+get_translated_host()
+{
+    # Lookup host as a uri and return just host
+    local __return_host=$1
+    local uri=$2
+
+    if case $uri in https*) false;; esac; then
+        # Only host - add https:// for lookup
+        uri="https://"$uri"/"
+    fi
+    translated_url=$(wget -qO- "http://127.0.0.1/api/uri/geturiwithpath/uri=$uri")
+    if [ "translated_url" != "" ] ; then
+        server=$translated_url
+    fi
+    # Strip leading https://
+    host=${server##https://}
+    # Strip trailing path
+    host=${host%%/*}
+
+	eval "$__return_host=$host"
+}
+
 start_service() {
     CLOUD=`jsonfilter -i /etc/config/current.json -e '@["system"]["cloud"]'`
     # If there are no cloud settings, just enable cloud access
@@ -18,9 +40,16 @@ start_service() {
 
     if [ $ENABLED = "true" ] ; then
         SERVERS=`jsonfilter -i /etc/config/current.json -e '@["system"]["cloud"]["cloudServers"]' | tr -d ',"[]'`
+
         for server in $SERVERS ; do
+            host=
+            get_translated_host host $server
+            if [ "$host" == "" ] ; then
+                continue
+            fi
+
             procd_open_instance
-	        procd_set_param command /usr/bin/pyconnector -s $server
+	        procd_set_param command /usr/bin/pyconnector -s $host
 	        procd_set_param stdout 1
 	        procd_set_param stderr 1
 

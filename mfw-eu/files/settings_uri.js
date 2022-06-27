@@ -18,6 +18,9 @@
         },{
             "uri": "https://boxbackup.untangle.com/boxbackup/backup.php",
             "host": "boxbackup-eu.untangle.com"
+        },{
+            "uri": "https://cmd.untangle.com/",
+            "host": "cmd-eu.untangle.com"
         }]
     }
 }
