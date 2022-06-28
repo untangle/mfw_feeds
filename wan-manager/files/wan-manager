@@ -538,7 +538,6 @@ disable_policy()
 		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: nft -f Failed to disable policy: $policy All Wans:$wans Retval: $retval, trying again..."
 	done
 	rm $TMPFILE
-
 }
 
 # get_policy_wans_and_up_wans
