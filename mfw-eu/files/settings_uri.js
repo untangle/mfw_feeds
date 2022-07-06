@@ -13,9 +13,6 @@
             "uri": "https://www.untangle.com/cmd/account/",
             "host": "eu.untangle.com"
         },{
-            "uri": "https://www.untangle.com/legal",
-            "host": "eu.untangle.com"
-        },{
             "uri": "https://boxbackup.untangle.com/boxbackup/backup.php",
             "host": "boxbackup-eu.untangle.com"
         },{
