@@ -1299,7 +1299,12 @@ policy_best_of_ipsec_vpn()
 	if [ "$current_left_address" = "dst" ] || [ "$current_left_address" = "" ] ; then
 		# No found in policies
 		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: unable to find appropriate remoteGateway=$remoteGateway"
-		return
+		if [ "$ALLOW_LOG_UPDATE" == "false" ]; then
+			# Likely the first time in if we're not in polices; give ipsec a chance to start.
+			return
+		fi
+		# If ALLOW_LOG_UPDATE is true, we've given enough time for the primary to come up so its time to
+		# try another WAN.
 	fi
 
 	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: current_best_interface_name=$current_best_interface_name, interface_device=$interface_device, ip_address=$ip_address, current_left_address=$current_left_address"
