@@ -28,36 +28,36 @@ define Package/sync-settings/description
 	This module is a Library for manipulating MFW system settings.
 endef
 
-define Build/Compile
-	$(call Build/Compile/Py3Mod,., \
-		install --prefix="/usr" --root="$(PKG_INSTALL_DIR)", )
-endef
-
-define Package/sync-settings/install
-	$(INSTALL_DIR) $(1)$(PYTHON3_PKG_DIR)
+define Py3Package/sync-settings/install
+	# bin
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(CP) \
-		$(PKG_INSTALL_DIR)$(PYTHON3_PKG_DIR)/* \
-		$(1)$(PYTHON3_PKG_DIR)/
-	$(CP) $(PKG_INSTALL_DIR)/usr/bin/* $(1)/usr/bin
-	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) files/$(PKG_NAME).init $(1)/etc/init.d/$(PKG_NAME)
-	$(INSTALL_DIR) $(1)/etc/config/startup.d
-	$(INSTALL_DIR) $(1)/etc/config/setup.d
-	$(INSTALL_BIN) files/020-sshd-config $(1)/etc/config/startup.d
-	$(INSTALL_BIN) files/nftables-rules.init $(1)/etc/init.d/nftables-rules
-	$(INSTALL_BIN) files/qos.init $(1)/etc/init.d/qos
-	$(INSTALL_BIN) files/uid.init $(1)/etc/init.d/uid
-	$(INSTALL_BIN) files/serial.init $(1)/etc/init.d/serial
-	$(INSTALL_BIN) files/startup.init $(1)/etc/init.d/startup
-	$(INSTALL_BIN) files/setup.init $(1)/etc/init.d/setup
-	$(INSTALL_BIN) files/untangle-board-name.init $(1)/etc/init.d/untangle-board-name
-	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
-	$(INSTALL_BIN) files/ifupdown.hotplug $(1)/etc/hotplug.d/iface/20-ifupdown
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/sync-settings $(1)/usr/bin
 	$(INSTALL_BIN) files/speedtest.sh $(1)/usr/bin
 	$(INSTALL_BIN) files/wwan_status.sh $(1)/usr/bin
 	$(INSTALL_BIN) files/nft_debug $(1)/usr/bin
 	$(INSTALL_BIN) files/check-for-usb-reset.sh $(1)/usr/bin
+
+	# init.d
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) files/$(PKG_NAME).init $(1)/etc/init.d/$(PKG_NAME)
+	$(INSTALL_BIN) files/nftables-rules.init $(1)/etc/init.d/nftables-rules
+	$(INSTALL_BIN) files/qos.init $(1)/etc/init.d/qos
+	$(INSTALL_BIN) files/serial.init $(1)/etc/init.d/serial
+	$(INSTALL_BIN) files/setup.init $(1)/etc/init.d/setup
+	$(INSTALL_BIN) files/startup.init $(1)/etc/init.d/startup
+	$(INSTALL_BIN) files/uid.init $(1)/etc/init.d/uid
+	$(INSTALL_BIN) files/untangle-board-name.init $(1)/etc/init.d/untangle-board-name
+
+	# config/startup.d
+	$(INSTALL_DIR) $(1)/etc/config/startup.d
+	$(INSTALL_BIN) files/020-sshd-config $(1)/etc/config/startup.d
+
+	# FIXME: nothing under config/setup.d?
+	$(INSTALL_DIR) $(1)/etc/config/setup.d
+
+	# hotplug.d/iface
+	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
+	$(INSTALL_BIN) files/ifupdown.hotplug $(1)/etc/hotplug.d/iface/20-ifupdown
 endef
 
 $(eval $(call Py3Package,$(PKG_NAME)))
