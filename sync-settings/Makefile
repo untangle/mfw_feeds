@@ -21,7 +21,7 @@ define Package/sync-settings
   DEPENDS:= +diffutils +tc +kmod-sched +kmod-sched-cake +kmod-ifb +kmod-sched-connmark \
 	  +uuidgen +python3-jsonschema +kmod-nft-fib +openvpn-proto +wan-manager +speedtest-cli \
 	  +python3 +python3-urllib3 +python3-pyroute2 +strongswan-default +strongswan-mod-gcm \
-	  +jq +nmap-ssl +lldpd
+	  +jq +nmap-ssl +lldpd +kmod-wireguard +wireguard-tools
 endef
 
 define Package/sync-settings/description
