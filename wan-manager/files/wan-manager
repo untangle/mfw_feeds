@@ -1,93 +1,305 @@
 #!/bin/sh
-
+##
+## Include libraries
+##
 . /lib/functions/network.sh
 . /usr/share/libubox/jshn.sh
 
+##
+## Global variables
+##
+## Calling name
+COMMAND_NAME=$0
+# Our pid
+COMMAND_PID=$$
+# Debug mode for messages and other output
 DEBUG=false
+# If true, run in interative mode, otherwise in dameon mode.
+INTERACTIVE=false
+# If non empty, log debug messages that match substring.  Commonly used to watch substring.
+LOG_WATCH=
 
-# logMessage is used to log a normal stdout message to the logger
-# @param $1 - the message to log
-logMessage() 
+## Utility-specific variables
+# In this interval, allow status messages to be logged.
+ALLOW_LOG_UPDATE_INTERVAL=60 
+# Root path for wan status tree
+WAN_MANAGER_STATUS_PATH=/tmp/wan_status
+
+##
+## Process command line arguments
+##
+while getopts "d:i:l:v:" flag; do
+    case "${flag}" in
+        d) DEBUG=${OPTARG} ;;
+        i) INTERACTIVE=${OPTARG} ;;
+        l) LOG_WATCH=${OPTARG} ;;
+        v) eval "${OPTARG}" ;;
+    esac
+done
+shift $((OPTIND-1))
+
+##
+## Utilities
+##
+
+# Always log messages of this priority
+LOG_MESSAGE_PRIORITY_ANY=0
+# Only log messages if DEBUG=true
+LOG_MESSAGE_PRIORITY_DEBUG=1
+if [ "$INTERACTIVE" = "true" ] ; then
+	# In interactive mode use echo
+	LOGGER_COMMAND="echo"
+	LOGGER_TIMESTAMP=date
+else
+	# LOGGER_COMMAND="logger -t wan-manager"
+	LOGGER_COMMAND="logger -t wan-manager"
+	LOGGER_TIMESTAMP=
+fi
+
+# log_message
+# Log a message to specified LOGGER_COMMAND
+#
+# @param $1    Priority (see above)
+# @param $2    Message
+log_message()
 {
-	if [ "$DEBUG" = true ] ; then
-		logger -t wan-manager "$1"
+	local __function_name="log_message"
+	local priority=$1
+	local message=$2
+
+	if [ $priority = $LOG_MESSAGE_PRIORITY_DEBUG ] ; then
+		if [ "$DEBUG" = true ]; then
+			# Only log if DEBUG is enabled
+			$LOGGER_COMMAND $(eval $LOGGER_TIMESTAMP) "debug  $message"
+		fi
+		if [ "$LOG_WATCH" != "" ] && [ -z "${message##*$LOG_WATCH*}" ]; then
+			# Message matches logwatchOnly log if DEBUG is enabled
+			$LOGGER_COMMAND $(eval $LOGGER_TIMESTAMP) "debug  $message"
+		fi
+	elif [ $priority = $LOG_MESSAGE_PRIORITY_ANY ]; then
+		# Always log these messages
+		if [ "$DEBUG" = true ] || [ "$LOG_WATCH" != "" ] ; then
+			# In interactive mode, provide space separation from debug prefix.
+			$LOGGER_COMMAND $(eval $LOGGER_TIMESTAMP) "any    $message"
+		else
+			$LOGGER_COMMAND $(eval $LOGGER_TIMESTAMP) "$message"
+		fi
 	fi
 }
 
-# check_for_table checks for nft tables to exist
-# $1 - ip version type
-# $2 - table name to check for
+# log_status_message
+# Log a status message with debug and any priorities
+#
+# @param $1    State which can be "change" or "status".
+# @param $2    Prefix for the message, typically the function name.
+# @param $3    Changed message, usually reflecting transitions like "status=up->down"
+# @param $4    Stats message with fields like "status=up"
+# @param $5    Extra information to log in debug or watch mode
+log_status_message(){
+	local state=$1
+	local prefix=$2
+	local change_message=$3
+	local status_message=$4
+	local debug_append_message=$5
+
+	local __message
+
+	local log_watch=false
+	if [ "$LOG_WATCH" != "" ] && [ -z "${prefix##*$LOG_WATCH*}" ]; then
+		log_watch=true
+	fi
+
+	if [ "$state" = "change" ] ; then
+		__message=$change_message
+		if [ "$DEBUG" = "true" ] || [ "$log_watch" = "true" ]; then
+			__message="$__message $debug_append_message"
+		fi
+		log_message $LOG_MESSAGE_PRIORITY_ANY "$prefix state=$state, $__message"
+	else
+		__message=$status_message
+		if [ "$DEBUG" = "true" ] || [ "$log_watch" = "true" ]; then
+			__message="$__message $debug_append_message"
+		fi
+		if [ "$DEBUG" == "true" ] || [ "$ALLOW_LOG_UPDATE" == "true" ]; then
+			log_message $LOG_MESSAGE_PRIORITY_ANY "$prefix state=$state, $__message"
+		fi
+	fi
+
+}
+
+# Allow initial status first time in
+ALLOW_LOG_UPDATE=true
+ALLOW_LOG_UPDATE_START=$(date +%s)
+# check_allow_log_update
+# Check for $ALLOW_LOG_UPDATE_INTERVAL if reached, set $ALLOW_LOG_UPDATE to true,
+# allowing those who wish to log at this interval to do so.
+# 
+# This is used to:
+# - Log policy status period regardless of change 
+# - Log policy status for polices that otherwise log a lot like balance.
+check_allow_log_update()
+{
+	local __function_nane="check_allow_log_update"
+	local currentTime=$(date +%s)
+	local elapsedTime=$((currentTime - $ALLOW_LOG_UPDATE_START))
+	if [ $elapsedTime -gt $ALLOW_LOG_UPDATE_INTERVAL ]; then
+		ALLOW_LOG_UPDATE_START=$(date +%s)
+		ALLOW_LOG_UPDATE=true
+	else
+		ALLOW_LOG_UPDATE=false
+	fi
+}
+
+# get_policy_path
+# Retrieve the path for the specified policy.
+#
+# @param $1           Path variable to update.
+# @param $policyId    Policy id
+get_policy_path(){
+	local __function_name="get_policy_path"
+	local __return_path=$1
+	local policyId=$2
+
+	local path=$WAN_MANAGER_STATUS_PATH/$policyId
+	if [ ! -d $path ] ; then
+		mkdir -p $path
+	fi
+
+	eval "$__return_path=$path"
+}
+
+# get_wan_path
+# Retrieve the path for the WAN under the specified policy.
+#
+# @param $1           Path variable to update.
+# @param $policyId    Policy id
+# @param $policyId    WAN interface id
+get_wan_path(){
+	local __function_name="get_wan_path"
+	local __return_path=$1
+	local policyId=$2
+	local interfaceId=$3
+	local family=$4
+
+	local policyPath
+	get_policy_path policyPath $policyId
+
+	local path=$policyPath/wan-$interfaceId/$family
+	if [ ! -d $path ] ; then
+		mkdir -p $path
+	fi
+
+	eval "$__return_path=$path"
+}
+
+# check_for_table
+# Verifies requried nft tables to exists
+#
+# @param $1    nft ip version type (ip or ipv6)
+# @param $2    Table name to check
 check_for_table()
 {
-	ipCheck=$1
-	tableCheck=$2
-	output=`nft list table $ipCheck $tableCheck`
-	retval=$?
+	local __function_name="check_for_table"
+	local ip_check=$1
+	local table_check=$2
+
+	local output=`nft list table $ip_check $table_check`
+	local retval=$?
 	if [ $retval -ne 0 ]; then
-		echo "NFT does not have a required table for wan-manager"
+		echo "$__function_name: NFT does not have a required table for wan-manager"
 		exit 1
 	fi
 }
 
-# handle_term is used to handle the sigterm signal
+# handle_term
+# Process signterm signal to exit
 handle_term()
 {
-	for i in `pgrep -P $$ `
+	local __function_name="handle_term"
+	for i in `pgrep -P $COMMAND_PID `
 	do
 		kill -9 $i
 	done
 }
 
-# wait_for_change will use inotify to wait for specific files to change
-# $1 - the files to wait for
+# wait_for_change
+# Use inotify to wait for specific files to change
+#
+# @param $1    Comma separated lsit of files to monitor
 wait_for_change()
 {
-	files=$1
+	local __function_name="wait_for_change"
+	local files=$1
 
 	inotifywait -r -qq -e create,modify $files
 }
 
-# is_offline is used to determine the interface stats offline status
-# $1 - the interface ID
-# $2 - the interface family to check
+# is_offline
+# Determine the interface stats offline status from stats generator.
+#
+# @param $1    Return value of true or false
+# @param $2    Numeric interface id
+# @param $3    IP family (ipv4 or ipv6)
 is_offline()
-{                                                                                                                                                                                      
-		local offline
+{
+	local __function_name="is_offline"
+	local __return_offline=$1
+	local id=$2
+	local family=$3
 
-		id=$1
-		family=$2
-		json_load_file /tmp/stats.json
-		if json_is_a interfaces array ; then
-				json_select interfaces
-				json_get_keys interfaces
-				for intf in $interfaces; do
-						json_select $intf
-						json_get_var interfaceId interfaceId
-						if [ $id = $interfaceId ] ; then
-								logMessage "is_offline: getting offline status for $id and family: $family"
-								if [ $family = "ipv6" ] ; then
-									json_get_var offline6 offline
-								else
-									json_get_var offline offline
-								fi
-						fi
-						json_select ..
-				done
-				json_select ..
-		fi
+	local __offline=true
+	local interfaceId
 
-		logMessage "is_offline: offline status for $id family: $family is $offline"
+	json_load_file /tmp/stats.json
+	if json_is_a interfaces array ; then
+			json_select interfaces
+			json_get_keys interfaces
+			for intf in $interfaces; do
+					json_select $intf
+					json_get_var interfaceId interfaceId
+					if [ $id = $interfaceId ] ; then
+							if [ $family = "ipv6" ] ; then
+								json_get_var __offline offline6
+							else
+								json_get_var __offline offline
+							fi
+							if [ "$__offline" = "" ] ; then
+								# If variable not found, consider it offline
+								__offline=true
+							fi
+					fi
+					json_select ..
+			done
+			json_select ..
+	fi
 
-		echo $offline
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: offline status for $id family: $family is $__offline"
+	eval "$__return_offline=$__offline"
 }
 
-# get_wan_bandwidth is used to gather the QOS bandwidth from settings
-# $1 - the interface id
+# get_wan_bandwidth
+# Gather QOS bandwidth from settings.
+# If not found, run speedtest on interface.
+#
+# Running speedtest can take between 20-30 seconds, so after running,
+# store values in a file of the format $last_speedtest_download_$device=weight
+# so that on subsequent wan-manager retarts, we can save time and use those.
+#
+# @param $1	   Return value of weight as a number
+# @param $2    Numeric interface id
+# @param $3    Short policy identifier
 get_wan_bandwidth()
 {
-	id=$1
+	local __function_name="get_wan_bandwidth"
+	local __return_weight=$1
+	local id=$2
+	local policy=$3
 
-	ret=0
+	local __settingsWeight=0
+	local network
+	local interfaces
+	local i
+	local interfaceId
 
 	json_load_file /etc/config/current.json
 	json_select network
@@ -97,26 +309,38 @@ get_wan_bandwidth()
 		json_select $i
 		json_get_var interfaceId interfaceId
 		if [ $id = $interfaceId ] ; then
-			json_get_var downloadKbps downloadKbps
-			ret=$downloadKbps
+			json_get_var __settingsWeight downloadKbps
 		fi
 		json_select ..
 	done
 	json_select ..
 	json_select ..
 
-	echo $ret
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: id=$id, policy=$policy, weight=$__settingsWeight"
+	eval "$__return_weight=$__settingsWeight"
 }
 
-# get_static_weight is used to get the WAN weight from the settings file, per policy
-# $1 - policy name
-# $2 - interface id
+# get_static_weight
+# Get the WAN weight from the settings file, per policy
+#
+# @param $1	   Return value of weight as a number
+# @param $2    Short policy name
+# @param $3    Numeric interface id
+# !!! something to indicate this is from settings
 get_static_weight()
 {
-	policy=$1
-	id=$2
+	local __function_name="get_static_weight"
+	local __return_weight=$1
+	local policy=$2
+	local id=$3
 
-	ret=0
+	local __weight=0
+	local wan
+	local policies
+	local policyId
+	local interfaces
+	local i
+	local interfaceId
 
 	json_load_file /etc/config/current.json
 	json_select wan
@@ -126,17 +350,17 @@ get_static_weight()
 		json_select $p
 		json_get_var policyId policyId
 		policyIdString="policy-$policyId"
-		if [ $policy = $policyIdString ] ; then
+		if [ -z "${policyIdString##*$policy*}" ]; then
+			# Substring match on short policy id to full policy id
 			json_select interfaces
 			json_get_keys interfaces
 			for i in $interfaces ; do
 				json_select $i
 				json_get_var interfaceId interfaceId
 				if [ $interfaceId -eq 0 ] ; then
-					ret=1
+					__weight=1
 				elif [ $id = $interfaceId ] ; then
-					json_get_var weight weight
-					ret=$weight
+					json_get_var __weight weight
 				fi
 				json_select ..
 			done
@@ -147,20 +371,31 @@ get_static_weight()
 	json_select ..
 	json_select ..
 
-	echo $ret
+	eval "$__return_weight=$__weight"
 }
 
-# get_stat is used to retrieve specific stats from the /tmp/stats.json file, per interface id
-# $1 - interface id
-# $2 - the stat name to look for (ie: ping, latency, etc.)
-# $3 - the metric name to look for (ie: 1_minute, 10_minute, etc.)
+# get_stat
+# Retrieve specific stats from the /tmp/stats.json file, per interface id
+# 
+# @param $1	   Return value of metric
+# @param $2    Numeric interface id
+# @param $3    Statistic name to look for (ie: ping, latency, etc.)
+# @param $4    Metric name to look for (ie: 1_minute, 10_minute, etc.)
 get_stat()
 {
-	id=$1
-	stat_name=$2
-	metric_name=$3
+	local __function_name="get_stat"
+	local __return_stat=$1
+	local id=$2
+	local stat_name=$3
+	local metric_name=$4
 
-	test=0
+	local stat_value=0
+	local interfacves
+	local interfaceId
+	local name
+	local metrics
+	local metric
+	local name
 
 	json_load_file /tmp/stats.json
 	if json_is_a interfaces array ; then
@@ -182,7 +417,7 @@ get_stat()
 							json_select $metric
 							json_get_vars name value
 							if [ $metric_name = $name ] ; then
-								test=$(echo ${value%%.*})
+								stat_value=$(echo ${value%%.*})
 							fi
 							json_select ..
 						done
@@ -197,32 +432,87 @@ get_stat()
 		json_select ..
 	fi
 
-	echo $test
+	eval "$__return_stat=$stat_value"
 }
 
-# wan_is_up searches through the policy directory
-# to find out if specific WANs are currently down
-# $1 - the policy to use
-# $2 - the interface ID
-# $3 - the IP family type
-wan_is_up()
+# is_wan_up_by_family
+# Determine if wan is up by family.
+#
+# @param $1	   Return value of test
+# @param $2    Short policy name
+# @param $3    Numeric interface id
+# @param $4    Ip family
+is_wan_up_by_family()
 {
-	policy=$1
-	id=$2
-	family=$3
+	local __function_name="is_wan_up_by_family"
+	local __is_wan_up_by_family=$1
+	local policy=$2
+	local id=$3
+	local family=$4
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, id=$id, family=$family"
 
-	test_dir="/tmp/wan_status/$policy/wan-$id"
+	local wan_path
+	get_wan_path wan_path $policy $id $family
 
-	! find $test_dir -type f -iname $family | xargs grep down > /dev/null
+	local __up=false
+	
+	local __criteria_found=0
+	local __down_found=0
+	for file in $(find $wan_path -type f); do
+		__criteria_found=$((__criteria_found + 1))
+		grep -q down $file
+		if [ $? -eq 0 ] ; then
+			__down_found=1
+		fi
+	done
+	__up=false
+	if [ $__criteria_found -gt 0 ] && [ $__down_found -eq 0 ] ; then
+		# Only up if we found at least one criteria and no "down" statuses.
+		__up=true
+	fi
+
+	eval "$__is_wan_up_by_family=$__up"
+
 }
 
-# disable_policy is used to disable specific policies when a wan is down
-# $1 - policy to disable
-# $2 - the WANs involved
+# is_wan_up
+# Search through the policy directory to find out if specific WANs are currently down
+#
+# @param $1	   Return value of test
+# @param $2    Short policy name
+# @param $3    Numeric interface id
+is_wan_up()
+{
+	local __function_name="is_wan_up"
+	local __return_wan_up=$1
+	local policy=$2
+	local id=$3
+
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, id=$id"
+
+	local __up
+	local __ipv4_up
+	local __ipv6_up
+	is_wan_up_by_family __ipv4_up $policy $id ipv4
+	is_wan_up_by_family __ipv6_up $policy $id ipv6
+
+	if [ "$__ipv4_up" = "true" ] || [ "$__ipv6_up" = "true" ] ; then
+		__up=true
+	fi
+
+	eval "$__return_wan_up=$__up"
+}
+
+# disable_policy
+# Disable specific policies when a wan is down
+#
+# @param $1    Short name of policy to disable
+# @param $2    Space separated numeric ids of WANs involved
 disable_policy()
 {
-	policy=$1
-	wans=$2
+	local __function_name="disable_policy"
+	local policy=$1
+	local wans=$2
 
 	TMPFILE=`mktemp -t $policy-changeset.XXXXXX`
 
@@ -241,34 +531,44 @@ disable_policy()
 
 	nft -f $TMPFILE
 	retval=$?
-	logMessage "disabling policy: $policy All Wans:$wans Retval: $retval"
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: $policy All Wans:$wans Retval: $retval"
 	while [ $retval -ne 0 ] ; do
 		nft -f $TMPFILE
 		retval=$?
-		logMessage "nft -f Failed to disable policy: $policy All Wans:$wans Retval: $retval, trying again..."
+		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: nft -f Failed to disable policy: $policy All Wans:$wans Retval: $retval, trying again..."
 	done
 	rm $TMPFILE
 }
 
-# determinePolicyWans is used to determine which wans and policy wans are available based on 
-# wans associated with the policy directories, and all wans
-# $1 - the policy directory
-# $2 - wans
-# $3 - policy related wans
-# $4 - caller type, for logging
-determinePolicyWans() 
+# get_policy_wans_and_up_wans
+# Determine which wans and policy wans are available based on wans associated with the policy directories, and all wans
+#
+# @param $1    Return space separatd list of interfaceIds in policy
+# @param $2    Return space separatd list of interfaceIds in policy that are up
+# @param $3    Policy id
+get_policy_wans_and_up_wans() 
 {
-	policy_dir=$1
-	wans=$2
-	policy_wans=$3
+	local __function_name="get_policy_wans_and_up_wans"
+	local __return_policy_wans=$1
+	local __return_up_wans=$2
+	local policy=$3
+
+	local __policy_wans
+	local __up_wans
+
+	local d
+	local policy_dir
+	local fileName
+	local id
+	get_policy_path policy_dir $policy
 
 	for d in $policy_dir/* ; do
-		logMessage "determinePolicyWans: found file: $d"
+		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: found file: $d"
 		fileName=$(echo ${d##*/})
 
 		# Ignore the status files in the policy directory
 		if [ $fileName == "status" ] ; then
-			logMessage "determinePolicyWans: skipping file: $d"
+			log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: skipping file: $d"
 			continue
 		fi
 
@@ -277,24 +577,32 @@ determinePolicyWans()
 		# assume d = /tmp/wan_status/policy-822f5c96-e04b-4248-aea4-7cbd5d4a8af5/wan-2
 		# then id = 2
 		id=$(echo $fileName | cut -d '-' -f 2)	
-		policy_wans="$wans $id"
-		if wan_is_up $policy $id "ipv4"; then
-			wans="$wans $id"
+		__policy_wans="$__policy_wans $id"
+		local wan_up
+		is_wan_up wan_up $policy $id
+		# if is_wan_up $policy $id; then
+		if [ "$wan_up" = "true" ] ; then
+			__up_wans="$__up_wans $id"
 		fi
 	done
 
-	logMessage "determinePolicyWans: policy_wans: $policy_wans wans: $wans"
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy_wans=$__policy_wans wans=$__wans"
+	eval "$__return_policy_wans=\"$__policy_wans\""
+	eval "$__return_up_wans=\"$__up_wans\""
 }
 
-# jump_policy is used to insert jump rules for specific policies
-# $1 - policy associated with the chain
-# $2 - the interface id of the wan to use
-# $3 - the wans included in this policy
+# jump_policy
+# Insert jump rules for specific policies
+#
+# @param $1    Policy associated with the chain
+# @param $2    Interface id of the wan to use
+# @param $3    The wans included in this policy
 jump_policy()
 {
-	policy=$1
-	id=$2
-	wans=$3
+	local __function_name="jump_policy"
+	local policy=$1
+	local id=$2
+	local wans=$3
 
 	TMPFILE=`mktemp -t $policy-changeset.XXXXXX`
 
@@ -321,26 +629,29 @@ jump_policy()
 
 	nft -f $TMPFILE
 	retval=$?
-	logMessage "updating jump_policy for policy:$policy mark for WAN:$id All WANs: $wans; retval: $retval"
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: updating jump_policy for policy:$policy mark for WAN:$id All WANs: $wans; retval: $retval"
 	while [ $retval -ne 0 ] ; do
 		nft -f $TMPFILE
 		retval=$?
-		logMessage "nft -f failed during jump_policy for policy:$policy mark for WAN:$id All WANs: $wans; retval: $retval, trying again..."
+		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: nft -f failed during jump_policy for policy:$policy mark for WAN:$id All WANs: $wans; retval: $retval, trying again..."
 	done
 	rm $TMPFILE
 }
 
-# balance_policy is used to insert rules for balance policy types
-# $1 - the policy
-# $2 - the wans associated with this policy
-# $3 - the total weight of all wans in the policy
-# #4 - the generated balance string used in the vmap decision
+# balance_policy
+# Insert rules for balance policy types
+#
+# @param $1    Policy
+# @param $2    Wans associated with this policy
+# @param $3    Total weight of all wans in the policy
+# @param $4    Generated balance string used in the vmap decision
 balance_policy()
 {
-	policy=$1
-	wans=$2
-	total_weight=$3
-	balance_string=$4
+	local __function_name="balance_policy"
+	local policy=$1
+	local wans=$2
+	local total_weight=$3
+	local balance_string=$4
 
 	TMPFILE=`mktemp -t $policy-changeset.XXXXXX`
 
@@ -367,105 +678,515 @@ balance_policy()
 
 	nft -f $TMPFILE
 	retval=$?
-	logMessage "running balance policy:$policy All Wans:$wans total_weight:$total_weight balance string:$balance_string Retval: $retval"
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: running balance policy:$policy All Wans:$wans total_weight:$total_weight balance string:$balance_string Retval: $retval"
 	while [ $retval -ne 0 ] ; do
 		nft -f $TMPFILE
 		retval=$?
-		logMessage "nft -f failed while running balance policy:$policy All Wans:$wans total_weight:$total_weight balance string:$balance_string Retval: $retval, trying again..."
+		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: nft -f failed while running balance policy:$policy All Wans:$wans total_weight:$total_weight balance string:$balance_string Retval: $retval, trying again..."
 	done
 	rm $TMPFILE
 }
 
-# specific_wan is used to send traffic to a specific wan policy
-# $1 - the associated policy and policy id
-# $2 - the interface id
-specific_wan()
-{
-	policy=$1
-	id=$2
+# get_openwrt_interface_name
+# From the specified interfaceId, return the OpenWrt name.
+# NOTE: This uses the same logic as network_util.get_interface_name()
+#
+# @param $1    Return value of of field.
+# @param $2	   Interface id
+# @param $3	   Family
+get_openwrt_interface_name(){
+	local __function_name="settings_get_interface_field"
+	local __return_name=$1
+	local interface_id=$2
+	local family=$3
 
-	policy_dir="/tmp/wan_status/$policy"
-	status_file="$policy_dir/status"
-	mkdir -p $policy_dir
+	local network
+	local interfaces
+	local i
+	local interfaceId
+	local __name=""
+	local __type=""
+
+	json_load_file /etc/config/current.json
+	json_select network
+	json_select interfaces
+	json_get_keys interfaces
+	for i in $interfaces ; do
+		json_select $i
+		json_get_var interfaceId interfaceId
+		if [ $interface_id = $interfaceId ] ; then
+			json_get_var __name name
+			json_get_var __type type
+		fi
+		json_select ..
+	done
+	
+	if [ "$__name" != "" ] && [ "$__type" != "" ] ; then
+		if [ "$__type" != "IPSEC"  ] && [ "$__type" != "OPENVPN" ] && [ "$__type" != "WIREGUARD" ] && [ "$__type" != "WWAN"  ] ; then
+			if [ "$family" = "ipv6" ] ; then
+				__name="${__name}6"
+			else
+				__name="${__name}4"
+			fi
+		fi
+	fi
+
+	eval "$__return_name=$__name"
+
+}
+
+# settings_get_ipsec_remote_gateway
+# Get ipsec remote gateway address
+#
+# @param $1    Return value of gateway IP address
+# @param $2    Interface Id to match
+# @param $3	   Return value of metric
+settings_get_ipsec_remote_gateway(){
+	local __return_remoteGateway=$1
+	local id=$2
+
+	local network
+	local interfaces
+	local i
+	local interfaceId
+	local type
+	local ipsec
+	local remote
+	local __remoteGateway
+
+	json_load_file /etc/config/current.json
+	json_select network
+	json_select interfaces
+	json_get_keys interfaces
+	for i in $interfaces ; do
+		json_select $i
+		json_get_var interfaceId interfaceId
+		if [ $id = $interfaceId ] ; then
+			json_get_type type ipsec
+			if [ "$type" = "" ] ; then
+				# Not an ipsec interface
+				json_select ..
+				continue
+			fi
+			json_select ipsec
+			json_select remote
+			json_get_var __remoteGateway gateway
+			break
+		fi
+		json_select ..
+	done
+
+	eval "$__return_remoteGateway=$__remoteGateway"
+}
+
+##
+## Criteria
+##
+
+# up
+# Determine which interfaces should be used in a policy calculationbased on connectivity
+#
+# @param $1    Policy id
+# @param $2    Numeric interface id
+# @param $3    OpenWrt interface name 
+# @param $4    Ip family of the interface
+criteria_up()
+{
+	local __function_name="criteria_up"
+	local policy=$1
+	local interfaceId=$2
+	local interface=$3
+	local family=$4
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, interfaceId=$interfaceId, interface=$interface, family=$family"
+
+	local wan_path
+	get_wan_path wan_path $policy $interfaceId $family
+	local status_file="${wan_path}/${__function_name}"
 
 	status="init"
-	## If the status file already exists, lets see what the previous status was
+	if [ -f $status_file ] ; then
+		status=$(head -n 1 $status_file)
+	fi
+
+	network_flush_cache
+	local offline
+	is_offline offline $interfaceId $family
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: $interface and $status_file current status is $status, offline=$offline"
+	if network_is_up $interface  && [ "$offline" = "false" ]; then
+		new_status="up"
+	else
+		new_status="down"
+	fi
+
+	log_state="status"
+	if [ "$new_status" != "$status" ] ; then
+		log_state="change"
+		echo $new_status > $status_file
+	fi
+
+	log_status_message "$log_state" "$__function_name:" \
+		"policy=$policy, interface=${interfaceId}/$interface/$family, status=$status->$new_status" \
+		"policy=$policy, interface=${interfaceId}/$interface/$family, status=$new_status"
+}
+
+# attribute
+# Insert policy rules associated to a wan with specific attributes.
+# IMPORTANT: At this time, these attribute values are pre-calculated!  We just write the result
+#
+# @param $1    Policy id
+# @param $2    Numeric policy id
+# @param $3    Interface name
+# @param $4    IP family
+# @param $5    Attribtute key
+# @param $6    Attribute value to match
+# @param $7    Status to set (up or down)
+criteria_attribute()
+{
+	local __function_name="criteria_attribute"
+	local policy=$1
+	local interfaceId=$2
+	local interface=$3
+	local family=$4
+	local key=$5
+	local value=$6
+	local new_status=$7
+
+	local wan_path
+	get_wan_path wan_path $policy $interfaceId $family
+	local status_file="${wan_path}/${__function_name}_${key}_${value}"
+	status="init"
+	if [ -f $status_file ] ; then
+		status=$(head -n 1 $status_file)
+	fi
+
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, interfaceId=$interfaceId, interface=$interface, attribute=$attribute, family=$family, key=$key, value=$value, new_status=$new_status"
+
+	log_state="status"
+	if [ "$new_status" != "$status" ] ; then
+		log_state="change"
+		echo $new_status > $status_file
+	fi
+
+	log_status_message "$log_state" "$__function_name:" \
+		"policy=$policy, interface=$interfaceId/$interface/$family, attribute=$key,$value, status=$status->$new_status" \
+		"policy=$policy, interface=$interfaceId/$interface/$family, attribute=$key,$value, status=$new_status"
+
+}
+
+# metric
+# Insert policy rules that check specific metrics against interfaces
+#
+# @param $1    Policy id
+# @param $2    Numeric interface id
+# @param $3    Interface name
+# @param $4    Ip family
+# @param $5    Stat name to use in the metric calculation
+# @param $6    Metric name to use in the metric calculation
+# @param $7    Operator to use in the metric calculation
+# @param $8    Metric value to test against in the metric calculation
+criteria_metric()
+{
+	local __function_name="criteria_metric"
+	local policy=$1
+	local interfaceId=$2
+	local interface=$3
+	local family=$4
+	local stat_name=$5
+	local metric_name=$6
+	local operator=$7
+	local val=$8
+
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, interfaceId=$interfaceId, interface=$interface, family=$family, stat_name=$stat_name, metric_name=$metric_name, operator=$operator, val=$val"
+
+	local test=-1
+	local wan_path
+	get_wan_path wan_path $policy $interfaceId $family
+	status_file="$wan_path/${__function_name}_${stat_name}_${metric_name}_${operator}_${val}"	
+	status="init"
+	if [ -f $status_file ] ; then
+		status=$(head -n 1 $status_file)
+	fi
+
+	# get_stat test $interfaceId $stat_name $metric_name
+	get_stat test $interfaceId $stat_name $metric_name
+
+	# Important assumption here!!!
+	# VPNs and some other interfaces sometimes report a latency of 0
+	# Setting the test results to -1 will allow the logic below to skip this interface during the WAN checks
+	if [ $stat_name = "latency" ] && [ $test = 0 ] ; then
+		test=-1
+	fi
+
+	local new_status="down"
+	if [ $test -ne -1 ] ; then
+		case $operator in
+			le)
+				if [ $test -le $val ] ; then
+					new_status="up"
+				fi
+				;;
+			lt)
+				if [ $test -lt $val ] ; then
+					new_status="up"
+				fi
+				;;
+			ge)
+				if [ $test -ge $val ] ; then
+					new_status="up"
+				fi
+				;;
+			gt)
+				if [ $test -gt $val ] ; then
+					new_status="up"
+				fi
+				;;
+		esac
+	fi
+
+	log_state="status"
+	if [ "$new_status" != "$status" ] ; then
+		log_state="change"
+		echo $new_status > $status_file
+	fi
+
+	log_status_message "$log_state" "$__function_name:" \
+		"policy=$policy, interface=$interfaceId/$interface/$family, statistic=$stat_name/$metric_name/$operator/$val, status=$status->$new_status" \
+		"policy=$policy, interfaceId=$interface/$interface/$family, statistic=$stat_name/$metric_name/$operator/$val, status=$new_status"
+}
+
+# connectivity
+# Used to insert policy rules for specific connectivity testing types or methods on the wan
+#
+# @param $1    Policy id
+# @param $2    Numeric interface id
+# @param $3    Interface name
+# @param $4    Ip family
+# @param $5    Criteria type to use (ping, http, arp, dns)
+# @param $6    Interval of when to run the tests
+# @param $7    Timeout of when to fail the test
+# @param $8    Failure threshold of when to fail the tests
+# @param $9    Fost to run the connectivity tests against
+criteria_connectivity()
+{
+	local __function_name="criteria_connectivity"
+	local policy=$1
+	local interfaceId=$2
+	local interface=$3
+	local family=$4
+	local criteria=$5
+	local interval=$6
+	local timeout=$7
+	local threshold=$8
+	local host=$9
+
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, interfaceId=$interfaceId, interface=$interface, family=$family, critera=$critera, interval=$interval, timeout=$timeout, threshold=$threshold, host=$host"
+
+	local device
+	local ip_address
+	local dns_server
+	local gw
+	local status
+	local new_status
+	local offline
+
+	local result0=1
+	local result1=1
+	local result2=1
+	local result3=1
+	local result4=1
+	local result5=1
+	local result6=1
+	local result7=1
+	local result8=1
+	local result9=1
+
+	local wan_path
+	get_wan_path wan_path $policy $interfaceId $family
+	status_file="$wan_path/${__function_name}_${criteria}_${host}_${interval}_${timeout}_${threshold}"
+
+	## If the status_file already exists, lets see what the previous status was
+	local new_status="down"
+	local status="init"
+	if [ -f $status_file ] ; then
+		status=$(head -n 1 $status_file)
+	fi
+
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: $policy and $status_file current status is $status"
+
+	for i in $(seq 0 9) ; do
+		network_flush_cache
+		is_offline offline $interfaceId $family
+		if [ "$offline" = "true" ] ; then
+			# No point in continuing if interface is down
+			new_status="down"
+			break
+		fi
+		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: test interface=$interface, offline=$offline, interval running sequence i=$i"
+		if network_is_up $interface  && [ "$offline" = "false" ]; then
+			log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: testing up and online interface=$interface"
+
+			network_get_device device $interface
+			network_get_ipaddr ip_address $interface
+			network_get_dnsserver dns_server $interface
+			network_get_gateway gw $interface
+
+			case $criteria in
+				ping)
+					if [ "$family" = "ipv4" ] ; then
+						ping -I $device -w $timeout -W $timeout -c 1 $host > /dev/null && let result"$i"=1 || let result"$i"=0
+					fi
+					;;
+				arp)
+					if [ "$family" = "ipv4" ] ; then
+						arping -s $ip_address -I $device -c 1 $gw > /dev/null && let result"$i"=1 || let result"$i"=0
+					fi
+					;;
+				dns)
+					if [ "$family" = "ipv4" ] ; then
+						dig -b $ip_address +tries=3 +timeout=$timeout $dns_server $host > /dev/null && let result"$i"=1 || let result"$i"=0
+					fi
+					;;
+				http)
+					if [ "$family" = "ipv4" ] ; then
+						wget --no-check-certificate --bind-address=$ip_address --header="Wan-Failover-Flag: true" --tries=3 -O /dev/null $host 2> /dev/null && let result"$i"=1 || let result"$i"=0
+					fi
+					;;
+				*)
+					echo "Unknown test $criteria"
+					let result"$i"=0
+					;;
+			esac
+
+			# While it may seem like we should be calculating this outside the loop,
+			# We want to do it inside so if we meet our threshold of failures, we
+			# can stop immediately.
+			count=0
+			for i in $(seq 0 9) ; do
+				eval "temp=\"\$result$i\""
+				if [ $temp -eq 0 ] ; then
+					let count++
+				fi
+			done
+			if [ $count -ge $threshold ] ; then
+				log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: reached failure threshold"
+				new_status="down"
+				break
+			else
+				new_status="up"
+			fi
+		fi
+	done
+
+	log_state="status"
+	if [ "$new_status" != "$status" ] ; then
+		log_state="change"
+		echo $new_status > $status_file
+	fi
+
+	log_status_message "$log_state" "$__function_name:" \
+		"policy=$policy, interface=$interfaceId/$interface/$family, test=$criteria/$interval/$timeout/$threshold/$host, status=$status->$new_status" \
+		"policy=$policy, interface=$interfaceId/$interface/$family, test=$criteria/$interval/$timeout/$threshold/$host, status=$new_status"
+}
+
+##
+## Policies
+##
+
+# specific_wan
+# Send traffic to a specific wan policy
+#
+# @param $1    Policy id
+# @param $2    Interface id
+policy_specific_wan()
+{
+	local __function_name="policy_specific_wan"
+	local policy=$1
+	local id=$2
+
+	# log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy wan=$wan result:$result status:$status"
+
+	local policy_path
+	get_policy_path policy_path $policy
+	status_file="$policy_path/status"
+
+	status="init"
 	if [ -f $status_file ] ; then
 		. $status_file
 	fi
 
-	if wan_is_up $policy $id "ipv4"; then
-		result="up"
+	local wan_up
+	is_wan_up wan_up $policy $id
+	if [ "$wan_up" = "true" ] ; then
+		new_status="up"
 	else
-		result="down"
+		new_status="down"
 	fi
 
-	logMessage "specific_wan: policy=$policy wan=$wan result:$result status:$status"
-
-	if [ ! $result = $status ] ; then
-		status=$result
-		if [ $status = "up" ] ; then
+	local log_state="status"
+	if [ "$new_status" != "$status" ] ; then
+		local log_state="change"
+		echo "status=$new_status" > $status_file
+		if [ $new_status = "up" ] ; then
 			jump_policy $policy $id "$id"
 		else
 			disable_policy $policy "$id"
 		fi
 	fi
-
-	# Write the current status
-	echo "status=$status" > $status_file
+	log_status_message "$log_state" "$__function_name:" \
+		"policy=$policy, status=$status->$new_status" \
+		"policy=$policy, status=$new_status"
 
 }
 
-# best_of is used to insert route rules for wans that fall into a specific best_of metric
-# $1 - the policy name
-# $2 - the stat name to test with
-# $3 - the metric name to test with
-# $4 - the operator to test with
-best_of()
+# best_of
+# Insert route rules for wans that fall into a specific best_of metric
+#
+# @param $1    Policy identifier
+# @param $2    Stat name to test with (e.g.,latency)
+# @param $3    Metric name to test with (e.g.,1_minute)
+# @param $4    Operator to test with (e.g.,le)
+policy_best_of()
 {
-	policy=$1
-	stat_name=$2
-	metric_name=$3
-	operator=$4
+	local __function_name="policy_best_of"
+	local policy=$1
+	local stat_name=$2
+	local metric_name=$3
+	local operator=$4
 
-	policy_dir="/tmp/wan_status/$policy"
-	status_file="$policy_dir/status"
-	mkdir -p $policy_dir
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, stat_name=$stat_name, metric_name=$metric_name, operator=$operator"
 
-	status="init"
-	current_best_wan=-1
-	best_wan=-1
-	best_stat=-1
+	local policy_path
+	get_policy_path policy_path $policy
+	status_file="$policy_path/status"
 
-	## If the status file already exists, lets see what the previous status was
+	# Get current status
+	local status="init"
+	local current_best_wan=-1
 	if [ -f $status_file ] ; then
 		. $status_file
 	fi
 
-	logMessage "best_of: $policy and $status_file current status: $status, best_wan: $best_wan, best_stat: $best_stat"
+	local policy_wans
+	local wans
+	get_policy_wans_and_up_wans policy_wans wans $policy
 
-	wans=""
-	policy_wans=""
-
-	determinePolicyWans $policy_dir $wans $policy_wans
-
-	logMessage "best_of: wans: $wans policy_wans: $policy_wans"
-
+	local best_wan=-1
+	local best_stat=-1
+	local stat
 	for wan in $wans ; do
-		stat=$(get_stat $wan $stat_name $metric_name)
+		get_stat stat $wan $stat_name $metric_name
 
-		logMessage "best_of: comparing best_wan ($best_wan stat: $best_stat) with wan: $wan, stat $stat $stat_name $metric_name"
+		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: wan=$wan, stat=$stat comparing best_wan=$best_wan, best_stat=$best_stat"
 
-		# Important assumption here!!! 
-		# VPNs and some other interfaces sometimes report a latency of 0
-		# If this happens, we should continue and ignore this particular interface during best_of calculations
 		if [ $stat_name = "latency" ] ; then
 			if [ "$stat" = 0 ] || [ "$stat" = -1 ] ; then
+				# NOTE: A latency of 0  means 100% pakcet loss, so ignore during best_of calculations
 				continue
 			fi
 		fi
 
 		if [ $best_wan -eq -1 ] ; then
+			# Initialize
 			best_wan=$wan
 			best_stat=$stat
 		else
@@ -498,81 +1219,195 @@ best_of()
 		fi
 	done
 
+	local new_status=$status
+	local new_best_wan=$current_best_wan
 	if [ $best_wan -eq -1 ] ; then
-		result="down"
+		new_status="down"
 	else
-		result="up"
+		new_status="up"
 	fi
+	new_best_wan=$best_wan
 
-	logMessage "best_of: all_wans:$wans current_best_wan:$current_best_wan best_wan:$best_wan result:$result status:$status"
-	if [ ! $result = $status ] || [ ! $current_best_wan -eq $best_wan ] ; then
-		if [ $result = "up" ] ; then
-			logMessage "best_of: Switching best WAN: current_best_wan: $current_best_wan best_wan: $best_wan result: $result status: $status"
-			jump_policy $policy $best_wan "$policy_wans"
-			current_best_wan=$best_wan
+	local log_state="status"
+	if [ "$new_status" != "$status" ] || [ ! $current_best_wan -eq $new_best_wan ] ; then
+		log_state="change"
+		echo "status=$new_status" > $status_file
+		echo "current_best_wan=$new_best_wan" >> $status_file
+		if [ "$new_status" = "up" ] ; then
+			jump_policy $policy $new_best_wan "$policy_wans"
 		else
-			logMessage "best_of: Disabling policy:$policy with WANs:$policy_wans"	
 			disable_policy $policy "$policy_wans"
 		fi
 	fi
-	status=$result
-	echo "status=$status" > $status_file
-	echo "current_best_wan=$current_best_wan" >> $status_file
-	
+	log_status_message "$log_state" "$__function_name:" \
+		"policy=$policy, status=$status->$new_status, best_wan=$current_best_wan->$new_best_wan" \
+		"policy=$policy, status=$new_status, best_wan=$new_best_wan"
+
 }
 
-# balance is used to balance a group of wans using a specific balancing algorithm
-# $1 - the policy associated
-# $2 - the balance algorithm to use (ie: LATENCY, WEIGHTED, AVAILABLE_BANDWIDTH)
-balance()
+# ipsec_vpn_best_wan
+# Change ipsec connection to best WAN
+#
+# @param $1    Policy identifier
+# @param $2    Numeric interface id
+# @param $3    Interface name
+# @param $4    Ip family for interface
+policy_best_of_ipsec_vpn()
 {
+	local __function_name="policy_best_of_ipsec_vpn"
+	local policy=$1
+	local interfaceId=$2
+	local interfaceName=$3
+	local family=$4
 
-	policy=$1
-	algorithm=$2
+	local remoteGateway
+	settings_get_ipsec_remote_gateway remoteGateway $interfaceId
+	if [ "$remoteGateway" = "" ] ; then
+		log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: policy=$policy, interfaceId=$interfaceId, unable to get remote gateway address"
+		return 
+	fi
+	if [ "$remoteGateway" = "%any" ] ; then
+		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, interfaceId=$interfaceId, remote gateway address is %any"
+		return
+	fi
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, interfaceId=$interfaceId, interfaceName=$interfaceName, family=$family, remoteGateway=$remoteGateway"	
 
-	policy_dir="/tmp/wan_status/$policy"
-	mkdir -p $policy_dir
-	status_file="$policy_dir/status"
+	local policy_path
+	get_policy_path policy_path $policy
+	status_file="$policy_path/status"
 
-	status="init"
-	balance_string=""
-
-	## If the policy_status already exists, lets see what the previous status was
+	local status="init"
+	local current_best_wan=-1
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: getting policy=$policy reading $status_file"
 	if [ -f $status_file ] ; then
 		. $status_file
 	fi
 
-	logMessage "balance: $policy and $status_file current status is $status"
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, status=$status, current_best_wan=$current_best_wan"	
+	if [ "$status" != "up" ] || [ $current_best_wan -eq -1 ]; then
+		# No policy status
+		return
+	fi
 
-	wans=""
-	policy_wans=""
-	total_weight=0
-	new_balance_string=""
+	local current_best_interface_name
+	get_openwrt_interface_name current_best_interface_name $current_best_wan $family
+	network_get_ipaddr ip_address $current_best_interface_name
+	network_get_device interface_device $current_best_interface_name
 
-	determinePolicyWans $policy_dir $wans $policy_wans
+	# Look at current left and if same, continue
+	current_left_address=$(ip xfrm policy | grep "dst $remoteGateway" | head -1 | cut -d' ' -f3)
+	if [ "$current_left_address" = "dst" ] || [ "$current_left_address" = "" ] ; then
+		# No found in policies
+		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: unable to find appropriate remoteGateway=$remoteGateway"
+		if [ "$ALLOW_LOG_UPDATE" == "false" ]; then
+			# Likely the first time in if we're not in polices; give ipsec a chance to start.
+			return
+		fi
+		# If ALLOW_LOG_UPDATE is true, we've given enough time for the primary to come up so its time to
+		# try another WAN.
+	fi
 
-	logMessage "balance: wans: $wans policy_wans: $policy_wans"
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: current_best_interface_name=$current_best_interface_name, interface_device=$interface_device, ip_address=$ip_address, current_left_address=$current_left_address"
+	log_state="status"
+	if [ "$ip_address" != "$current_left_address" ]; then
+		#
+		# WAN changed.
+		#
+		log_state="change"
+
+		# Stop ipsec
+		ipsec stop 2>/dev/null
+		# Flush current state
+		ip xfrm state flush
+
+		# Walk through WANs associated with policies to get identifier into WAN priority tables.
+		# Delete WAN priority routes.
+		local del_interface
+
+		local policy_wans
+		local wans
+		get_policy_wans_and_up_wans policy_wans wans $policy
+
+		# Change IPSEC tunnel vti interface's local WAN address and device.
+		network_get_device ipsec_device $interfaceName
+		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: CHANGE tunnel ipsec_device=$ipsec_device to local address to ip_address=$ip_address, interface_device=$interface_device"
+		ip tunnel change $ipsec_device local $ip_address dev $interface_device
+
+		# Update live ipsec
+		ipsec_live_name=/var/ipsec/ipsec.conf
+		ipsec_temp_name=$(mktemp /tmp/ipsec.confXXXXXX)
+		# Looking for our remote gateway, modify the left side to reflect the new WAN IP address.
+		awk '/right='$remoteGateway'/{sub(/left=.*/, "left='$ip_address'", last)} NR>1{print last} {last=$0} END {print last}' \
+			$ipsec_live_name > $ipsec_temp_name \
+			&& mv $ipsec_temp_name $ipsec_live_name
+
+		# Bring IPSec back up
+		ipsec restart 2>/dev/null
+
+		# NOTE: Yes, stopping all of IPSec and bringing it back up seems extreme as it will
+		# force a restart to all non-effected tunnels.  However, this seems to be the most
+		# reliable way to perform this kind of failover change.
+	fi
+	log_status_message "$log_state" "$__function_name:" \
+		"policy=$policy, interface_device=$interface_device, left ip_address=$current_left_address->$ip_address" \
+		"policy=$policy, current_best_interface_name=$current_best_interface_name, left ip_address$ip_address"
+
+}
+
+# balance
+# Balance a group of wans using a specific balancing algorithm
+#
+# @param $1    Policy id
+# @param $2    Balance algorithm to use (ie: LATENCY, WEIGHTED, AVAILABLE_BANDWIDTH)
+policy_balance()
+{
+	local __function_name="policy_balance"
+	local policy=$1
+	local algorithm=$2
+
+	local policy_path
+	get_policy_path policy_path $policy
+	status_file="$policy_path/status"
+
+	status="init"
+	balance_string=""
+	if [ -f $status_file ] ; then
+		. $status_file
+	fi
+
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: $policy and $status_file current status is $status"
+
+	local total_weight=0
+	local new_balance_string=""
+
+	local policy_wans
+	local wans
+	get_policy_wans_and_up_wans policy_wans wans $policy
+
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: wans: $wans policy_wans: $policy_wans"
 
 	total_latency=0
+	local latency
+	local weight
 	if [ $algorithm = "LATENCY" ] ; then
 		for wan in $wans ; do
-			latency=$(get_stat $wan "latency" "1_minute")
+			get_stat latency $wan "latency" "1_minute"
 			total_latency=$((total_latency + $latency))
 		done
 	fi
 	for wan in $wans ; do
 		if [ $algorithm = "WEIGHTED" ] ; then
-			weight=$(get_static_weight $policy $wan)
+			get_static_weight weight $policy $wan
 		elif [ $algorithm = "LATENCY" ] ; then
-			weight=$(get_stat $wan "latency" "1_minute")
+			get_stat weight $wan "latency" "1_minute"
 			weight=$(($total_latency - $weight))
 			if [ $weight -eq 0 ] ; then
 				weight=100
 			fi
 		elif [ $algorithm = "AVAILABLE_BANDWIDTH" ] ; then
-			weight=$(get_stat $wan "available_bandwidth" "1_minute")
+			get_stat weight $wan "available_bandwidth" "1_minute"
 		elif [ $algorithm = "BANDWIDTH" ] ; then
-			weight=$(get_wan_bandwidth $wan)
+			get_wan_bandwidth weight $wan
 		fi
 
 		if [ $weight -eq 0 ] ; then
@@ -593,284 +1428,80 @@ balance()
 	done
 
 	if [ "$new_balance_string" = "" ] ; then
-		result="down"
-		if [ ! $status = "down" ] ; then
-			disable_policy $policy "$policy_wans"
-		fi
+		new_status="down"
 	else
-		result="up"
-		if [ ! $status = "up" ] || [ ! "$new_balance_string" = "$balance_string" ] ; then
-			balance_policy $policy "$policy_wans" $total_weight "$new_balance_string"
-			balance_string="$new_balance_string"
-		fi
-	fi
-	status=$result
-	echo "status=$status" > $status_file
-	echo "balance_string=$balance_string" >> $status_file
-}
-
-# attribute is used to insert policy rules associated to a wan with specific attributes
-# $1 - the policy 
-# $2 - the interface id
-# $3 - the interface name
-# $4 - the attribute to test for
-attribute()
-{
-	policy=$1
-	id=$2
-	interface=$3
-	attribute=$4
-
-	result_dir="/tmp/wan_status/$policy/wan-$id"
-	if [ $attribute = "NAME" ] ; then
-		contains=$5
-		result=$6
-		result_file="$result_dir/${attribute}_${contains}"
-	else
-		result=$5
-		result_file="$result_dir/$attribute"
-	fi
-	mkdir -p $result_dir
-
-	echo $result > $result_file
-}
-
-# metric is used to insert policy rules that check specific metrics against interfaces
-# $1 - the policy
-# $2 - the interface id
-# $3 - the interface name
-# $4 - the stat name to use in the metric calculation
-# $5 - the metric name to use in the metric calculation
-# $6 - the operator to use in the metric calculation
-# $7 - the metric value to test against in the metric calculation
-metric()
-{
-	policy=$1
-	id=$2
-	interface=$3
-	stat_name=$4
-	metric_name=$5
-	operator=$6
-	val=$7
-
-	status="init"
-
-	test=-1
-
-	result_dir="/tmp/wan_status/$policy/wan-$id"
-	result_file="$result_dir/${stat_name}_${metric_name}_${operator}_${val}"
-	mkdir -p $result_dir
-	
-	## If the status file already exists, lets see what the previous status was
-	if [ -f $result_file ] ; then
-		status=$(head -n 1 $result_file)
+		new_status="up"
 	fi
 
-	logMessage "$policy and $result_file current status is $status"
-
-	test=$(get_stat $id $stat_name $metric_name)
-
-	# Important assumption here!!!
-	# VPNs and some other interfaces sometimes report a latency of 0
-	# Setting the test results to -1 will allow the logic below to skip this interface during the WAN checks
-	if [ $stat_name = "latency" ] && [ $test = 0] ; then
-		test=-1
-	fi
-
-	result="down"
-	if [ $test -ne -1 ] ; then
-		case $operator in
-			le)
-				if [ $test -le $val ] ; then
-					result="up"
-				fi
-				;;
-			lt)
-				if [ $test -lt $val ] ; then
-					result="up"
-				fi
-				;;
-			ge)
-				if [ $test -ge $val ] ; then
-					result="up"
-				fi
-				;;
-			gt)
-				if [ $test -gt $val ] ; then
-					result="up"
-				fi
-				;;
-		esac
-	fi
-
-	if [ ! $result = $status ] ; then
-		echo $result > $result_file
-		status=$result
-	fi
-}
-
-# up is used to determine which interfaces should be used in a policy calculation
-# based on connectivity
-# $1 - policy to store the interface status with
-# $2 - interfaceId to store the status files in
-# $3 - the openwrt interface name 
-# $4 - the ip family of the interface
-up()
-{
-	policy=$1
-	interfaceId=$2
-	interface=$3
-	family=$4
-
-	result_dir="/tmp/wan_status/$policy/wan-$interfaceId"
-	result_file="$result_dir/$family"
-
-	status="init"
-
-	mkdir -p $result_dir
-
-	## If the result_file already exists, lets see what the previous status was
-	if [ -f $result_file ] ; then
-		status=$(head -n 1 $result_file)
-	fi
-
-	logMessage "$interface and $result_file current status is $status"
-
-	network_flush_cache
-	offline=$(is_offline $interfaceId $family)
-	if network_is_up $interface  && [ "$offline" = "false" ]; then
-		logMessage "$interface is up"
-		#echo up > $result_file
-		result="up"
-	else
-		#echo down > $result_file
-		logMessage "$interface is down"
-		result="down"
-	fi
-
-	if [ ! $result = $status ] ; then
-		logMessage "Updating $interface file with new status result:$result..."
-		echo $result > $result_file
-		status=$result
-	fi
-}
-
-# test is used to insert policy rules for specific connectivity testing types or methods on the wan
-# $1 - the policy to use
-# $2 - the interface id for the policy
-# $3 - the interface name
-# $4 - the criteria type to use (ping, http, arp, dns)
-# $5 - the interval of when to run the tests
-# $6 - the timeout of when to fail the test
-# $7 - the failure threshold of when to fail the tests
-# $8 - the host to run the connectivity tests against
-test()
-{
-	policy=$1
-	interfaceId=$2
-	interface=$3
-	criteria=$4
-	interval=$5
-	timeout=$6
-	threshold=$7
-	host=$8
-
-	local device ip_address dns_server gw
-
-	result0=1
-	result1=1
-	result2=1
-	result3=1
-	result4=1
-	result5=1
-	result6=1
-	result7=1
-	result8=1
-	result9=1
-
-	status="init"
-
-	result_dir="/tmp/wan_status/$policy/wan-$interfaceId"
-	result_file="$result_dir/${criteria}_${host}_${interval}_${timeout}_${threshold}"
-
-	mkdir -p $result_dir
-
-	## If the result_file already exists, lets see what the previous status was
-	if [ -f $result_file ] ; then
-		status=$(head -n 1 $result_file)
-	fi
-
-	logMessage "$policy and $result_file current status is $status"
-
-	for i in $(seq 0 9) ; do
-		logMessage "Flushing cache and looking for interface: $interface..."
-		network_flush_cache
-		if network_is_up $interface  && [ "$offline" = "false" ]; then
-
-			network_get_device device $interface
-			network_get_ipaddr ip_address $interface
-			network_get_dnsserver dns_server $interface
-			network_get_gateway gw $interface
-
-			case $criteria in
-				ping)
-					ping -I $device -w $timeout -c 1 $host > /dev/null && let result"$i"=1 || let result"$i"=0
-					;;
-				arp)
-					arping -s $ip_address -I $device -c 1 $gw > /dev/null && let result"$i"=1 || let result"$i"=0
-					;;
-				dns)
-					dig -b $ip_address +tries=3 +timeout=$timeout $dns_server $host > /dev/null && let result"$i"=1 || let result"$i"=0
-					;;
-				http)
-					wget --no-check-certificate --bind-address=$ip_address --header="Wan-Failover-Flag: true" --tries=3 -O /dev/null $host 2> /dev/null && let result"$i"=1 || let result"$i"=0
-					;;
-				*)
-					echo "Unknown test $criteria"
-					let result"$i"=0
-					;;
-			esac
-
-			count=0
-			for i in $(seq 0 9) ; do
-				eval "temp=\"\$result$i\""
-				if [ $temp -eq 0 ] ; then
-					let count++
-				fi
-			done
-			if [ $count -ge $threshold ] ; then
-				result="down"
-			else
-				result="up"
+	local log_state="status"
+	if [ "$new_status" != "$status" ] || [ "$balance_string" != "$new_balance_string" ] ; then
+		local log_state="change"
+		echo "status=$new_status" > $status_file
+		echo "balance_string=\"$new_balance_string\"" >> $status_file
+		if [ "$new_status" = "down" ] ; then
+			if [ $status != "down" ] ; then
+				disable_policy $policy "$policy_wans"
+			fi
+		else
+			if [ ! $status = "up" ] || [ "$new_balance_string" != "$balance_string" ] ; then
+				balance_policy $policy "$policy_wans" $total_weight "$new_balance_string"
 			fi
 		fi
-
-		if [ ! $result = $status ] ; then
-			echo $result > $result_file
-			status=$result
-		fi
-
-		logMessage "WAN-Manager test interval running"
-	done
+	fi
+	log_status_message "$log_state" "$__function_name:" \
+		"policy=$policy, status=$status->$new_status" \
+		"policy=$policy, status=$status" \
+		"balance_string='$balance_string' -> '$new_balance_string'"
 }
 
-# wan-manager main entry point, check for wan-routing tables before continuing
+##
+## Main 
+##
+__function_name="main"
+
+# Check for wan-routing tables before continuing
 check_for_table ip wan-routing
 check_for_table ip6 wan-routing
 
-# create term handler and run the handle_term callback
-trap 'handle_term' TERM INT
+if [ "$DEBUG" = "true" ] || [ "$INTERACTIVE" == "true" ] ; then
+	log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: COMMAND_NAME=$COMMAND_NAME"
+	log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: COMMAND_PID=$COMMAND_PID"
+	log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: INTERACTIVE=$INTERACTIVE"
+	log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: DEBUG=$DEBUG"
+	log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: LOG_WATCH=$WATCH"
+fi
 
-# cleanup old wan_status files
-rm -rf /tmp/wan_status/*
+if [ "$INTERACTIVE" = "false" ] ; then
+	# Create term handler and run the handle_term callback
+	trap 'handle_term' TERM INT
+else
+	# If we're in interactive (developer) mode we don't want the system daemon process running
+	for pid in `pgrep -f $COMMAND_NAME `; do
+		if [ "$pid" = "$COMMAND_PID" ]; then
+			# Ignore ourselves
+			continue
+		fi
+		log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: killing other running process $pid"
+		kill -9 $pid
+	done
+fi
+log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: started, pid=$COMMAND_PID"
+
+# Cleanup old wan_status files
+rm -rf ${WAN_MANAGER_STATUS_PATH}/*
 
 # Wait for stats.json to change, and then run every policy once (vs having each policy wait for change every time)
 while [ 1 ] ; do
 	wait_for_change /tmp/stats.json
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: --- begin wan_manager config"
 	. /etc/config/wan_manager
+	check_allow_log_update
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: ---   end wan_manager config"
 done
 
-for i in `pgrep -P $$ `
+# Exit, wait for us to finish
+for i in `pgrep -P COMMAND_PID `
 do
 	wait $i
 done
+log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: exit, pid=$COMMAND_PID"
