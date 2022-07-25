@@ -12,7 +12,7 @@ define Package/caswell-wifi-led
   SECTION:=utils
   CATEGORY:=Utilities
   TITLE:= Caswell wifi led support
-  DEPENDS:= @TARGET_x86 +kmod-gpio-nuvoton +kmod-ledtrig-netdev
+  DEPENDS:= @TARGET_x86 +kmod-gpio-nuvoton
 endef
 
 define Package/caswell-wifi-led/description

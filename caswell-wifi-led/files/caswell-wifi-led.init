@@ -6,12 +6,16 @@ STOP=99
 
 USE_PROCD=1
 
+LED_TYPE_NAME=caswell:green:wifi
+LED_PATH=/sys/class/leds/$LED_TYPE_NAME
+
 boot() {
     grep -q -e caswell-caf-0262 -e untangle-inc-default-string /tmp/sysinfo/board_name
     if [ $? -eq 0 ] ; then
-        echo netdev > /sys/class/leds/caswell:green:wifi/trigger
-        echo wlan0 > /sys/class/leds/caswell:green:wifi/device_name
-        echo link > /sys/class/leds/caswell:green:wifi/mode
+        echo netdev > $LED_PATH/trigger
+        echo wlan0 > $LED_PATH/device_name
+        echo 1 > $LED_PATH/tx
+        echo 1 > $LED_PATH/rx
     fi
 }
 

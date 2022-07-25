@@ -18,7 +18,7 @@ get_translated_host()
     fi
     translated_url=$(wget -qO- "http://127.0.0.1/api/uri/geturiwithpath/uri=$uri")
     if [ "translated_url" != "" ] ; then
-        server=$translated_url
+        host=$translated_url
     fi
     # Strip leading https://
     host=${server##https://}
@@ -42,10 +42,12 @@ start_service() {
         SERVERS=`jsonfilter -i /etc/config/current.json -e '@["system"]["cloud"]["cloudServers"]' | tr -d ',"[]'`
 
         for server in $SERVERS ; do
-            host=
+            host=""
+            logger -t pyconnector "Checking URI translation for $server..."
             get_translated_host host $server
-            if [ "$host" == "" ] ; then
-                continue
+            if [ -z $host ] ; then
+                logger -t pyconnector "Unable to find $server in URI translations, assuming $server"
+                host=$server
             fi
 
             procd_open_instance
