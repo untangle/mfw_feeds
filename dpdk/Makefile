@@ -73,8 +73,8 @@ It supports many processor architectures and both FreeBSD and Linux.
 endef
 
 define Package/dpdk-examples
-  SECTION:=libs
-  CATEGORY:=Libraries
+  SECTION:=net
+  CATEGORY:=Network
   DEPENDS:=+libdpdk
   TITLE:=DPDK Example Programs
   URL:=https://www.dpdk.org
@@ -116,7 +116,7 @@ endef
 define Package/dpdk-examples/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_DIR) $(1)/usr/bin/dpdk-examples/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt-build/examples/*/*.* $(1)/usr/bin/dpdk-examples/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt-build/app/dpdk-*[^p] $(1)/usr/bin/dpdk-examples/
 endef
 
 $(eval $(call BuildPackage,libdpdk))
