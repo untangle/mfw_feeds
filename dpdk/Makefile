@@ -116,7 +116,7 @@ endef
 define Package/dpdk-examples/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_DIR) $(1)/usr/bin/dpdk-examples/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt-build/app/dpdk-*[^p] $(1)/usr/bin/dpdk-examples/
+	#$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt-build/app/dpdk-*[^p] $(1)/usr/bin/dpdk-examples/
 endef
 
 $(eval $(call BuildPackage,libdpdk))
