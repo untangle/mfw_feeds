@@ -50,6 +50,13 @@ define Package/libdpdk
   SECTION:=libs
   CATEGORY:=Libraries
   DEPENDS:=+libnuma +libpcap +libopenssl +zlib +jansson +python3-pyelftools +libelf +libatomic +libbpf
+  KCONFIG:=CONFIG_NUMA=y \
+		CONFIG_HUGETLB_PAGE=y CONFIG_HUGETLBFS=y \
+		CONFIG_KERNEL_HUGETLB_PAGE=y CONFIG_KERNEL_PROC_PAGE_MONITOR=y CONFIG_KERNEL_DEV_PAGEMAP_OPS=y \
+		CONFIG_KERNEL_PROC_FS=y CONFIG_PAGE_MONITOR=y CONFIG_MMU=y CONFIG_NUMA=y CONFIG_UIO=y \
+		CONFIG_VFIO_IOMMU_TYPE1=y CONFIG_VFIO_VIRQFD=y CONFIG_VFIO=y CONFIG_VFIO_NOIOMMU=y CONFIG_VFIO_PCI=y CONFIG_VFIO_PCI_MMAP=y \
+		CONFIG_PACKAGE_libnuma=y CONFIG_PACKAGE_numactl=y
+EOF
   TITLE:=Set of libraries and drivers for fast packet processing
   URL:=https://www.dpdk.org
 endef
