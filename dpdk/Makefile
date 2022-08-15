@@ -30,7 +30,7 @@ include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/devel/meson/meson.mk
 
 MESON_ARGS+=-Denable_docs=false -Dexamples=all
-CFLAGS+=-D_GNU_SOURCE
+CFLAGS+=-D_GNU_SOURCE -g
 
 # Possible place for CPU ARCH tune:
 # nocona core2 nehalem corei7 westmere sandybridge corei7-avx 
@@ -43,7 +43,7 @@ CFLAGS+=-D_GNU_SOURCE
 #
 # native - works on all x86_64 platforms
 #
-CONFIG_TARGET_SUBTARGET:="native"
+CONFIG_TARGET_SUBTARGET:="atom"
 MESON_CPU:="native"
 
 define Package/libdpdk
@@ -56,7 +56,6 @@ define Package/libdpdk
 		CONFIG_KERNEL_PROC_FS=y CONFIG_PAGE_MONITOR=y CONFIG_MMU=y CONFIG_NUMA=y CONFIG_UIO=y \
 		CONFIG_VFIO_IOMMU_TYPE1=y CONFIG_VFIO_VIRQFD=y CONFIG_VFIO=y CONFIG_VFIO_NOIOMMU=y CONFIG_VFIO_PCI=y CONFIG_VFIO_PCI_MMAP=y \
 		CONFIG_PACKAGE_libnuma=y CONFIG_PACKAGE_numactl=y
-EOF
   TITLE:=Set of libraries and drivers for fast packet processing
   URL:=https://www.dpdk.org
 endef
