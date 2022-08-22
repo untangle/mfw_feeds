@@ -21,7 +21,7 @@ get_translated_host()
         host=$translated_url
     fi
     # Strip leading https://
-    host=${server##https://}
+    host=${host##https://}
     # Strip trailing path
     host=${host%%/*}
 
