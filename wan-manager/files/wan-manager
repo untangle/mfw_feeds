@@ -21,7 +21,7 @@ LOG_WATCH=
 
 ## Utility-specific variables
 # In this interval, allow status messages to be logged.
-ALLOW_LOG_UPDATE_INTERVAL=60 
+ALLOW_LOG_UPDATE_INTERVAL=60
 # Root path for wan status tree
 WAN_MANAGER_STATUS_PATH=/tmp/wan_status
 
@@ -133,9 +133,9 @@ ALLOW_LOG_UPDATE_START=$(date +%s)
 # check_allow_log_update
 # Check for $ALLOW_LOG_UPDATE_INTERVAL if reached, set $ALLOW_LOG_UPDATE to true,
 # allowing those who wish to log at this interval to do so.
-# 
+#
 # This is used to:
-# - Log policy status period regardless of change 
+# - Log policy status period regardless of change
 # - Log policy status for polices that otherwise log a lot like balance.
 check_allow_log_update()
 {
@@ -376,7 +376,7 @@ get_static_weight()
 
 # get_stat
 # Retrieve specific stats from the /tmp/stats.json file, per interface id
-# 
+#
 # @param $1	   Return value of metric
 # @param $2    Numeric interface id
 # @param $3    Statistic name to look for (ie: ping, latency, etc.)
@@ -455,7 +455,7 @@ is_wan_up_by_family()
 	get_wan_path wan_path $policy $id $family
 
 	local __up=false
-	
+
 	local __criteria_found=0
 	local __down_found=0
 	for file in $(find $wan_path -type f); do
@@ -546,7 +546,7 @@ disable_policy()
 # @param $1    Return space separatd list of interfaceIds in policy
 # @param $2    Return space separatd list of interfaceIds in policy that are up
 # @param $3    Policy id
-get_policy_wans_and_up_wans() 
+get_policy_wans_and_up_wans()
 {
 	local __function_name="get_policy_wans_and_up_wans"
 	local __return_policy_wans=$1
@@ -576,7 +576,7 @@ get_policy_wans_and_up_wans()
 		# ex:
 		# assume d = /tmp/wan_status/policy-822f5c96-e04b-4248-aea4-7cbd5d4a8af5/wan-2
 		# then id = 2
-		id=$(echo $fileName | cut -d '-' -f 2)	
+		id=$(echo $fileName | cut -d '-' -f 2)
 		__policy_wans="$__policy_wans $id"
 		local wan_up
 		is_wan_up wan_up $policy $id
@@ -720,7 +720,7 @@ get_openwrt_interface_name(){
 		fi
 		json_select ..
 	done
-	
+
 	if [ "$__name" != "" ] && [ "$__type" != "" ] ; then
 		if [ "$__type" != "IPSEC"  ] && [ "$__type" != "OPENVPN" ] && [ "$__type" != "WIREGUARD" ] && [ "$__type" != "WWAN"  ] ; then
 			if [ "$family" = "ipv6" ] ; then
@@ -788,7 +788,7 @@ settings_get_ipsec_remote_gateway(){
 #
 # @param $1    Policy id
 # @param $2    Numeric interface id
-# @param $3    OpenWrt interface name 
+# @param $3    OpenWrt interface name
 # @param $4    Ip family of the interface
 criteria_up()
 {
@@ -822,6 +822,11 @@ criteria_up()
 	if [ "$new_status" != "$status" ] ; then
 		log_state="change"
 		echo $new_status > $status_file
+		if [ "$new_status" = "down" ]
+		then
+		    log_status_message "handling $interface status"
+		    handle_down_interface "$interface"
+		fi
 	fi
 
 	log_status_message "$log_state" "$__function_name:" \
@@ -901,7 +906,7 @@ criteria_metric()
 	local test=-1
 	local wan_path
 	get_wan_path wan_path $policy $interfaceId $family
-	status_file="$wan_path/${__function_name}_${stat_name}_${metric_name}_${operator}_${val}"	
+	status_file="$wan_path/${__function_name}_${stat_name}_${metric_name}_${operator}_${val}"
 	status="init"
 	if [ -f $status_file ] ; then
 		status=$(head -n 1 $status_file)
@@ -1264,13 +1269,13 @@ policy_best_of_ipsec_vpn()
 	settings_get_ipsec_remote_gateway remoteGateway $interfaceId
 	if [ "$remoteGateway" = "" ] ; then
 		log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: policy=$policy, interfaceId=$interfaceId, unable to get remote gateway address"
-		return 
+		return
 	fi
 	if [ "$remoteGateway" = "%any" ] ; then
 		log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, interfaceId=$interfaceId, remote gateway address is %any"
 		return
 	fi
-	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, interfaceId=$interfaceId, interfaceName=$interfaceName, family=$family, remoteGateway=$remoteGateway"	
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, interfaceId=$interfaceId, interfaceName=$interfaceName, family=$family, remoteGateway=$remoteGateway"
 
 	local policy_path
 	get_policy_path policy_path $policy
@@ -1283,7 +1288,7 @@ policy_best_of_ipsec_vpn()
 		. $status_file
 	fi
 
-	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, status=$status, current_best_wan=$current_best_wan"	
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, status=$status, current_best_wan=$current_best_wan"
 	if [ "$status" != "up" ] || [ $current_best_wan -eq -1 ]; then
 		# No policy status
 		return
@@ -1455,7 +1460,7 @@ policy_balance()
 }
 
 ##
-## Main 
+## Main
 ##
 __function_name="main"
 

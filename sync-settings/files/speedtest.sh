@@ -63,7 +63,7 @@ if [ -z $ip_address ] ; then
 fi
 
 disable_qos $interface
-OUTPUT=$(/usr/bin/speedtest-cli --simple-json --no-pre-allocate --source $ip_address 2>&1)
+OUTPUT=$(/usr/bin/speedtest-cli --secure --simple-json --no-pre-allocate --source $ip_address 2>&1)
 if [ $? -ne 0 ] ; then
 	RESULT="{\"error\":\"$OUTPUT\"}"
 else

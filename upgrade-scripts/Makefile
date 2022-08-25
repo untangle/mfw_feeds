@@ -17,7 +17,7 @@ define Package/upgrade-scripts
   SUBMENU:=Cloud
   TITLE:=Upgrade scripts for MFW
   URL:=https://github.com/untangle/mfw_feeds
-  DEPENDS:=
+  DEPENDS:= +gnu-wget
 endef
 
 define Package/upgrade-scripts/description
