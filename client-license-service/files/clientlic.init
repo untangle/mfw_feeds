@@ -9,22 +9,28 @@ USE_PROCD=1
 start_service() {
     procd_open_instance client-license-service
 
-    # procd_set_param env GODEBUG=schedtrace=30000
-    # procd_set_param env GODEBUG=schedtrace=30000,scheddetail=1
-
-    # command
-    VERSION="`grep VERSION_ID /etc/os-release | sed -rn 's/.*v(\d{1,2}\.\d{1,2}\.?\d{0,2}).*/\1/p'`"
-    BOARD="`cat /tmp/sysinfo/board_name | tr -d '[ \t\r\n]'`"
+    # Set default to appliance knowns (uid, version from file, serial, untangle_board_name)
+    UID=$(cat /etc/config/uid)
+    VERSION=$(grep VERSION_ID /etc/os-release | sed -rn 's/.*v(\d{1,2}\.\d{1,2}\.?\d{0,2}).*/\1/p')
     IS_APPLIANCE='false'
-    SERIAL="0"
+    SERIAL=$(cat /etc/config/serial | tr -d '[ \t\r\n]')
+    BOARD=$(cat /tmp/sysinfo/untangle_board_name | tr -d '[ \t\r\n]')
 
     if [[ -f "/tmp/sysinfo/untangle_board_name" ]] ; then
         IS_APPLIANCE='true'
-        BOARD="`cat /tmp/sysinfo/untangle_board_name | tr -d '[ \t\r\n]'`"
-        SERIAL="`cat /etc/config/serial | tr -d '[ \t\r\n]'`"
     fi
 
-    procd_set_param command /usr/bin/client-license-service -l /etc/config/licenses.json -p mfw -u `cat /etc/config/uid` -v ${VERSION} -m ${BOARD} -a ${IS_APPLIANCE} -sn ${SERIAL}
+    if [ -z "$SERIAL" ] ; then
+        # If no serial found, use 0
+        SERIAL="0"
+    fi
+
+    if [ -z "$BOARD" ] ; then
+        # If no board found, use board_name
+        BOARD=$(cat /tmp/sysinfo/board_name | tr -d '[ \t\r\n]')
+    fi
+
+    procd_set_param command /usr/bin/client-license-service -l /etc/config/licenses.json -p mfw -u ${UID} -v ${VERSION} -m ${BOARD} -a ${IS_APPLIANCE} -sn ${SERIAL}
     # restart indefinitely if crashed, 5 seconds between attempts
     procd_set_param respawn 3600 5 0
 
