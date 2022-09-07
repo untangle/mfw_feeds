@@ -1,0 +1,14 @@
+--- a/Lib/crypt.py
++++ b/Lib/crypt.py
+@@ -79,7 +79,10 @@
+     """
+     if salt is None or isinstance(salt, _Method):
+         salt = mksalt(salt)
+-    return _crypt.crypt(word, salt)
++    try:
++        return _crypt.crypt(word, salt)
++    except:
++        return None
+
+
+ #  available salting/crypto methods
