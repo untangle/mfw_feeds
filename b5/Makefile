@@ -37,27 +37,13 @@ define Package/b5/description
 	B5 Package tooling to enable pulling in B5 packages
 endef
 
-# define Build/Compile
-# 	@echo "Building target Go first stage"
+OUR_SRC_DIR:=$(GO_PKG_BUILD_DIR)/src/$(GO_PKG)
 
-# 	@echo "Building b5 CLI tool for host"
+define Build/Compile
+	cd $(OUR_SRC_DIR) ; \
+	go build -o ./b5 ./cmd/b5
+endef
 
-# 	goenv
-
-# 	pwd
-# 	go mod vendor
-# 	$(call GoHost/Host/Compile) 
-# endef
-
-#   pwd && go mod vendor && go build $(OUR_SRC_DIR)/cmd/b5/
-# define Host/Install
-#   $(INSTALL_DIR) $(GO_HOST_BUILD_BIN_DIR)
-#   $(INSTALL_BIN) ./cmd/b5/bin/b5 $(GO_HOST_BUILD_BIN_DIR)
-# endef
-
-# define Host/Uninstall
-#   rm -rf $(GO_HOST_BUILD_BIN_DIR)/b5
-# endef
 
 $(eval $(call GoBinHostBuild))
 $(eval $(call HostBuild))
