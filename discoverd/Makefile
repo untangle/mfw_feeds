@@ -11,6 +11,8 @@ include ../version.mk
 GO_PKG:=github.com/untangle/discoverd
 GO_PKG_INSTALL_EXTRA:=Makefile
 
+PKG_BUILD_DEPENDS:=golang/host
+
 include $(INCLUDE_DIR)/package.mk
 # FIXME: standardize on OpenWRT+golang macros, ideally we wouldn't
 # have to define anything special in neither Build/Compile nor
@@ -22,9 +24,7 @@ define Package/discoverd
   CATEGORY:=Utilities
   TITLE:=Host discovery daemon
   URL:=https://github.com/untangle/discoverd
-  PKG_BUILD_DEPENDS:=golang
   DEPENDS:=+libsodium +libzmq-curve +nmap-ssl +lldpd
-
 endef
 
 define Package/discoverd/description

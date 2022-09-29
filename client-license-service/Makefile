@@ -8,8 +8,9 @@ PKG_SOURCE_URL:=git@github.com:untangle/client-license-service.git
 
 include ../version.mk
 
-include $(INCLUDE_DIR)/package.mk
+PKG_BUILD_DEPENDS:=golang/host
 
+include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/../feeds/packages/lang/golang/golang-package.mk
 
 define Package/client-license-service
@@ -18,7 +19,6 @@ define Package/client-license-service
   SUBMENU:=Firewall
   TITLE:=Userspace license client
   URL:=https://github.com/untangle/client-license-service
-  PKG_BUILD_DEPENDS:=golang
 endef
 
 define Package/client-license-service/description
