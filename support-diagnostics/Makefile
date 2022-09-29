@@ -17,7 +17,6 @@ define Package/support-diagnostics
   SUBMENU:=Python3
   TITLE:=Library for manipulating MFW system settings
   URL:=https://github.com/untangle/support-diagnostics
-  PKG_BUILD_DEPENDS:=python3
 endef
 
 define Package/support-diagnostics/description
