@@ -8,6 +8,9 @@ PKG_SOURCE_URL:=git@github.com:untangle/client-license-service.git
 
 include ../version.mk
 
+GO_PKG:=github.com/untangle/client-license-service
+GO_PKG_INSTALL_EXTRA:=Makefile
+
 PKG_BUILD_DEPENDS:=golang/host
 
 include $(INCLUDE_DIR)/package.mk
@@ -25,8 +28,10 @@ define Package/client-license-service/description
 	Userspace license client
 endef
 
+OUR_SRC_DIR:=$(GO_PKG_BUILD_DIR)/src/$(GO_PKG)
+
 define Build/Compile
-	cd $(PKG_BUILD_DIR); \
+	cd $(OUR_SRC_DIR); \
 	export GOPATH=$(GO_PKG_BUILD_DIR) \
                         GOCACHE=$(GO_PKG_CACHE_DIR) \
                         GOTMPDIR=$(GO_PKG_TMP_DIR) \
@@ -34,12 +39,12 @@ define Build/Compile
                         CC=$(TARGET_CC) \
                         CXX=$(TARGET_CXX) \
                         $(call GoPackage/Environment) ; \
-  make build
+	make build
 endef
 
 define Package/client-license-service/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/build/client-license-service $(1)/usr/bin/
+	$(INSTALL_BIN) $(OUR_SRC_DIR)/build/client-license-service $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) files/clientlic.init $(1)/etc/init.d/clientlic
 endef
