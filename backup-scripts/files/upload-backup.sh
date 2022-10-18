@@ -5,7 +5,7 @@
 # Constants
 TIMEOUT=1200
 VERBOSE=false
-BACKUP_FILE=mfw_`date -Iseconds`.backup.gz
+BACKUP_FILE=mfw_`date -Iseconds`.backup.tar.gz
 URL='https://boxbackup.untangle.com/boxbackup/backup.php'
 TRANSLATED_URL=$(wget -qO- "http://127.0.0.1/api/uri/geturiwithpath/uri=$URL")
 if [ "$TRANSLATED_URL" != "" ] ; then
@@ -26,13 +26,12 @@ function err() {
 
 # Create backup coping settings file to a temp dir
 function createBackup() {
-  debug "Backing up settings to gunzip file"
+  debug "Backing up settings to gunzipped tar archive file"
   TEMP_DIR=`mktemp -d -t ut-backup.XXXXXXX`
+  TEMP_DIR_NAME=$(basename $TEMP_DIR)
 
   cp /etc/config/settings.json $TEMP_DIR
-  gzip $TEMP_DIR/settings.json
-  mv $TEMP_DIR/settings.json.gz ./$BACKUP_FILE   
-
+  tar -C /tmp -zcf $BACKUP_FILE $TEMP_DIR_NAME
   rm -r $TEMP_DIR
 }
 
