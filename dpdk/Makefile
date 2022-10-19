@@ -17,7 +17,7 @@ PKG_MAINTAINER:=Zbynek Kocur <zbynek.kocur@fel.cvut.cz>
 PKG_LICENSE:=BSD-3-Clause
 PKG_LICENSE_FILES:=COPYING
 
-PKG_BUILD_DEPENDS:=meson/host python3 libatomic/host
+PKG_BUILD_DEPENDS:=meson/host python3 
 
 HOST_BUILD_DEPENDS:=meson python3
 
@@ -31,6 +31,7 @@ include $(TOPDIR)/feeds/packages/devel/meson/meson.mk
 
 MESON_ARGS+=-Denable_docs=false -Dexamples=all
 CFLAGS+=-D_GNU_SOURCE -g
+#EXTRA_CFLAGS=-D_GNU_SOURCE -g -O0 
 
 # Possible place for CPU ARCH tune:
 # nocona core2 nehalem corei7 westmere sandybridge corei7-avx 
@@ -49,7 +50,7 @@ MESON_CPU:="native"
 define Package/libdpdk
   SECTION:=libs
   CATEGORY:=Libraries
-  DEPENDS:=+libnuma +libpcap +libopenssl +zlib +jansson +python3-pyelftools +libelf +libatomic +libbpf
+  DEPENDS:=+libnuma +libpcap +libopenssl +zlib +jansson +python3-pyelftools +libelf +libbpf +libatomic 
   KCONFIG:=CONFIG_NUMA=y \
 		CONFIG_HUGETLB_PAGE=y CONFIG_HUGETLBFS=y \
 		CONFIG_KERNEL_HUGETLB_PAGE=y CONFIG_KERNEL_PROC_PAGE_MONITOR=y CONFIG_KERNEL_DEV_PAGEMAP_OPS=y \
@@ -127,4 +128,4 @@ endef
 
 $(eval $(call BuildPackage,libdpdk))
 $(eval $(call BuildPackage,dpdk-tools))
-$(eval $(call BuildPackage,dpdk-examples))
+#$(eval $(call BuildPackage,dpdk-examples))
