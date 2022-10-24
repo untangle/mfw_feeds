@@ -24,7 +24,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/bess
   SECTION:=libs
   CATEGORY:=Libraries
-  DEPENDS:=+liblzma +zlib +libpcap +libssl +libnuma +git +libprotobuf-c 
+  DEPENDS:=+liblzma +zlib +libpcap +libssl +libnuma +git +libprotobuf-c +numactl
   TITLE:=Low-level netlink library for the nf_tables subsystem
   URL:=http://www.netfilter.org/projects/libnftnl
 endef
