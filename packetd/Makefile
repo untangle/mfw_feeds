@@ -26,7 +26,7 @@ define Package/packetd
   TITLE:=Userspace packet processing daemon
   URL:=https://github.com/untangle/packetd
   DEPENDS:=+libnetfilter-conntrack +libnetfilter-queue +libnetfilter-log +geoip-database \
-	  +iptables-mod-nfqueue +kmod-nft-dict +libnftnl +libsodium +libzmq-curve
+	  +iptables-mod-nfqueue +kmod-nft-dict +libnftnl +libsodium +libzmq-curve +libdpdk +dpdk-tools 
   # FIXME: needed ?
   KCONFIG:=CONFIG_NETFILTER_NETLINK_GLUE_CT=y CONFIG_NF_CT_NETLINK_HELPER=y \
 	  CONFIG_NFT_QUEUE=m CONFIG_NF_CONNTRACK_TIMESTAMP=y
