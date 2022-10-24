@@ -11,6 +11,8 @@ include ../version.mk
 GO_PKG:=github.com/untangle/reportd
 GO_PKG_INSTALL_EXTRA:=Makefile
 
+PKG_BUILD_DEPENDS:=golang/host
+
 include $(INCLUDE_DIR)/package.mk
 # FIXME: standardize on OpenWRT+golang macros, ideally we wouldn't
 # have to define anything special in neither Build/Compile nor
@@ -22,9 +24,7 @@ define Package/reportd
   CATEGORY:=Utilities
   TITLE:=Report daemon for logging and database interaction
   URL:=https://github.com/untangle/reportd
-  PKG_BUILD_DEPENDS:=golang
   DEPENDS:=+libsodium +libzmq-curve
-
 endef
 
 define Package/reportd/description
