@@ -1,0 +1,26 @@
+# Copyright (c) 2022 Arista Networks, Inc.  All rights reserved.
+# Arista Networks, Inc. Confidential and Proprietary.
+
+images:
+
+  backup-scripts:
+    units:
+    - floor: code.arista.io/mfw/build%toolchain
+      sources:
+        - code.arista.io/mfw/build
+        - github.com/untangle/openwrt
+        - github.com/untangle/mfw_feeds
+      build: | 
+        set -e
+        # copy build%toolchain's staging_dir into our source tree
+        cp -a /mfw-toolchain/staging_dir /src/github.com/untangle/openwrt/
+        # use barney-supplied feeds instead of fetching from github
+        perl -i -pe 's|^src-git mfw .+|src-link mfw /src/github.com/untangle/mfw_feeds|' /src/code.arista.io/mfw/build/feeds.conf.mfw
+        # barney sets DESTDIR to /dest, but this really confuses openwrt
+        unset DESTDIR
+        # build our package
+        cd /src/github.com/untangle/openwrt
+        /src/code.arista.io/mfw/build/build.sh -f /src -t package/feeds/mfw/backup-scripts/compile
+        # copy resulting packages to destination image
+        mkdir -p /dest/mfw-packages
+        cp bin/packages/x86_64/*/* /dest/mfw-packages/
