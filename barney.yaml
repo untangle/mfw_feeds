@@ -3,7 +3,7 @@
 
 images:
 
-  backup-scripts:
+  mfw_pkg/backup-scripts:
     units:
     - floor: code.arista.io/mfw/build%toolchain
       sources:
@@ -22,10 +22,10 @@ images:
         cd /src/github.com/untangle/openwrt
         /src/code.arista.io/mfw/build/build.sh -f /src -t package/feeds/mfw/backup-scripts/compile
         # copy resulting packages to destination image
-        mkdir -p /dest/mfw-packages
-        cp bin/packages/x86_64/*/* /dest/mfw-packages/
+        mkdir -p /dest/mfw-packages/backup-scripts
+        cp bin/packages/x86_64/*/* /dest/mfw-packages/backup-scripts
 
-  crash-collector:
+  mfw_pkg/crash-collector:
     units:
     - floor: code.arista.io/mfw/build%toolchain
       sources:
@@ -44,10 +44,10 @@ images:
         cd /src/github.com/untangle/openwrt
         /src/code.arista.io/mfw/build/build.sh -f /src -t package/feeds/mfw/crash-collector/compile
         # copy resulting packages to destination image
-        mkdir -p /dest/mfw-packages
-        cp bin/packages/x86_64/*/* /dest/mfw-packages/
+        mkdir -p /dest/mfw-packages/crash-collector
+        cp bin/packages/x86_64/*/* /dest/mfw-packages/crash-collector
 
-  license-scripts:
+  mfw_pkg/license-scripts:
     units:
     - floor: code.arista.io/mfw/build%toolchain
       sources:
@@ -66,10 +66,10 @@ images:
         cd /src/github.com/untangle/openwrt
         /src/code.arista.io/mfw/build/build.sh -f /src -t package/feeds/mfw/license-scripts/compile
         # copy resulting packages to destination image
-        mkdir -p /dest/mfw-packages
-        cp bin/packages/x86_64/*/* /dest/mfw-packages/
+        mkdir -p /dest/mfw-packages/license-scripts
+        cp bin/packages/x86_64/*/* /dest/mfw-packages/license-scripts
 
-  mfw-eu:
+  mfw_pkg/mfw-eu:
     units:
     - floor: code.arista.io/mfw/build%toolchain
       sources:
@@ -88,10 +88,10 @@ images:
         cd /src/github.com/untangle/openwrt
         /src/code.arista.io/mfw/build/build.sh -f /src -r eu -t package/feeds/mfw/mfw-eu/compile
         # copy resulting packages to destination image
-        mkdir -p /dest/mfw-packages
-        cp bin/packages/x86_64/*/* /dest/mfw-packages/
+        mkdir -p /dest/mfw-packages/mfw-eu
+        cp bin/packages/x86_64/*/* /dest/mfw-packages/mfw-eu
 
-  pyconnector:
+  mfw_pkg/pyconnector:
     units:
     - floor: code.arista.io/mfw/build%toolchain
       sources:
@@ -110,10 +110,10 @@ images:
         cd /src/github.com/untangle/openwrt
         /src/code.arista.io/mfw/build/build.sh -f /src -t package/feeds/mfw/pyconnector/compile
         # copy resulting packages to destination image
-        mkdir -p /dest/mfw-packages
-        cp bin/packages/x86_64/*/* /dest/mfw-packages/
+        mkdir -p /dest/mfw-packages/pyconnector
+        cp bin/packages/x86_64/*/* /dest/mfw-packages/pyconnector
 
-  upgrade-scripts:
+  mfw_pkg/upgrade-scripts:
     units:
     - floor: code.arista.io/mfw/build%toolchain
       sources:
@@ -132,10 +132,10 @@ images:
         cd /src/github.com/untangle/openwrt
         /src/code.arista.io/mfw/build/build.sh -f /src -t package/feeds/mfw/upgrade-scripts/compile
         # copy resulting packages to destination image
-        mkdir -p /dest/mfw-packages
-        cp bin/packages/x86_64/*/* /dest/mfw-packages/
+        mkdir -p /dest/mfw-packages/upgrade-scripts
+        cp bin/packages/x86_64/*/* /dest/mfw-packages/upgrade-scripts
 
-  wan-manager:
+  mfw_pkg/wan-manager:
     units:
     - floor: code.arista.io/mfw/build%toolchain
       sources:
@@ -160,5 +160,5 @@ images:
         cd /src/github.com/untangle/openwrt
         /src/code.arista.io/mfw/build/build.sh -f /src -t package/feeds/mfw/wan-manager/compile
         # copy resulting packages to destination image
-        mkdir -p /dest/mfw-packages
-        cp bin/packages/x86_64/*/* /dest/mfw-packages/
+        mkdir -p /dest/mfw-packages/wan-manager
+        cp bin/packages/x86_64/*/* /dest/mfw-packages/wan-manager
