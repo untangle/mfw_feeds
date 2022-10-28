@@ -117,8 +117,17 @@ function checkEnable() {
   fi
 }
 
+# cleanup - called on exit
+function cleanup() {
+  # removing the backup file.
+  debug "Remove backup file $BACKUP_FILE"
+  rm -f $BACKUP_FILE
+}
+
 ####################################
 # "Main" logic starts here
+
+trap cleanup EXIT
 
 while getopts "v" opt; do
   case $opt in
