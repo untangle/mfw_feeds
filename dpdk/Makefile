@@ -31,7 +31,6 @@ include $(TOPDIR)/feeds/packages/devel/meson/meson.mk
 
 MESON_ARGS+=-Denable_docs=false -Dexamples=all
 CFLAGS+=-D_GNU_SOURCE -g
-#EXTRA_CFLAGS=-D_GNU_SOURCE -g -O0 
 
 # Possible place for CPU ARCH tune:
 # nocona core2 nehalem corei7 westmere sandybridge corei7-avx 
@@ -50,12 +49,13 @@ MESON_CPU:="native"
 define Package/libdpdk
   SECTION:=libs
   CATEGORY:=Libraries
-  DEPENDS:=+libnuma +libpcap +libopenssl +zlib +jansson +python3-pyelftools +libelf +libbpf +libatomic 
+  DEPENDS:=+libnuma +libpcap +libopenssl +zlib +jansson +python3-pyelftools +libelf +libbpf +libatomic
   KCONFIG:=CONFIG_NUMA=y \
 		CONFIG_HUGETLB_PAGE=y CONFIG_HUGETLBFS=y \
 		CONFIG_KERNEL_HUGETLB_PAGE=y CONFIG_KERNEL_PROC_PAGE_MONITOR=y CONFIG_KERNEL_DEV_PAGEMAP_OPS=y \
 		CONFIG_KERNEL_PROC_FS=y CONFIG_PAGE_MONITOR=y CONFIG_MMU=y CONFIG_NUMA=y CONFIG_UIO=y \
 		CONFIG_VFIO_IOMMU_TYPE1=y CONFIG_VFIO_VIRQFD=y CONFIG_VFIO=y CONFIG_VFIO_NOIOMMU=y CONFIG_VFIO_PCI=y CONFIG_VFIO_PCI_MMAP=y \
+		CONFIG_VHOST=y CONFIG_VHOST_NET=y \
 		CONFIG_PACKAGE_libnuma=y CONFIG_PACKAGE_numactl=y
   TITLE:=Set of libraries and drivers for fast packet processing
   URL:=https://www.dpdk.org
@@ -110,7 +110,11 @@ endef
 
 define Package/libdpdk/install
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/lib/librte_*.so.* $(1)/usr/lib/
+	# Warning - hardcoding 22 here - this is to get rid of the copies ending in 22.1
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/lib/librte_*.so.22 $(1)/usr/lib/
+	# Added to copy the vhost.ko files since the kernel config method did not work
+	#$(INSTALL_DIR) $(1)/lib/modules/5.4.194
+	#$(INSTALL_BIN) $(PKG_BUILD_DIR)/linux-5.4.194/drivers/vhost/* $(1)/lib/modules/5.4.194
 endef
 		
 define Package/dpdk-tools/install
@@ -118,11 +122,13 @@ define Package/dpdk-tools/install
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/dpdk-devbind.py $(1)/usr/bin/dpdk-devbind
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/dpdk-pdump $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/dpdk-proc-info $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usertools/dpdk-hugepages.py $(1)/usr/bin/dpdk-hugepages
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt-build/app/dpdk-testpmd $(1)/usr/bin/dpdk-testpmd
 endef
 
 define Package/dpdk-examples/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_DIR) $(1)/usr/bin/dpdk-examples/
+	#$(INSTALL_DIR) $(1)/usr/bin/dpdk-examples/
 	#$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt-build/app/dpdk-*[^p] $(1)/usr/bin/dpdk-examples/
 endef
 
