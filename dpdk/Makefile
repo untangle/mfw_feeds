@@ -4,22 +4,20 @@
 #
 
 include $(TOPDIR)/rules.mk
-
+PKG_MIRROR_HASH:=42f74667e5d2fa36881f6e3aa05ff4772316c5e813cae52b96f1879b17bb6ae2
 PKG_NAME:=dpdk
-PKG_VERSION:=22.03
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_SOURCE_VERSION:=v19.11
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_URL:=git@github.com:DPDK/dpdk.git
 
-PKG_SOURCE_URL:=https://codeload.github.com/DPDK/dpdk/tar.gz/v$(PKG_VERSION)?
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_HASH:=b85cfcb0e85196631959db4cc45eeaad5c32112eaaa3352606b344b85a53653f
 
 PKG_MAINTAINER:=Zbynek Kocur <zbynek.kocur@fel.cvut.cz>
 PKG_LICENSE:=BSD-3-Clause
 PKG_LICENSE_FILES:=COPYING
 
-PKG_BUILD_DEPENDS:=meson/host python3 
+PKG_BUILD_DEPENDS:=meson/host python3/host python3-pyelftools/host  python3-base/host
 
-HOST_BUILD_DEPENDS:=meson python3
+HOST_BUILD_DEPENDS:=meson/host python3/host python3-pyelftools/host python3-distutils/host
 
 #export PYTHONPATH=$(STAGING_DIR_ROOT)/usr/lib64/python3.7/site-packages
 HOST_PYTHON3_PACKAGE_BUILD_DEPENDS:="python3-pyelftools"
@@ -31,26 +29,27 @@ include $(TOPDIR)/feeds/packages/devel/meson/meson.mk
 
 MESON_ARGS+=-Denable_docs=false -Dexamples=all
 CFLAGS+=-D_GNU_SOURCE -g
-#EXTRA_CFLAGS=-D_GNU_SOURCE -g -O0 
+TARGET_CFLAGS+=-msse4.2
+#EXTRA_CFLAGS=-D_GNU_SOURCE -g -O0
 
 # Possible place for CPU ARCH tune:
-# nocona core2 nehalem corei7 westmere sandybridge corei7-avx 
-# ivybridge core-avx-i haswell core-avx2 broadwell skylake 
-# skylake-avx512 cannonlake icelake-client icelake-server bonnell 
-# atom silvermont slm knl knm x86-64 eden-x2 nano nano-1000 nano-2000 
-# nano-3000 nano-x2 eden-x4 nano-x4 k8 k8-sse3 opteron opteron-sse3 athlon64 
-# athlon64-sse3 athlon-fx amdfam10 barcelona bdver1 bdver2 bdver3 bdver4 
+# nocona core2 nehalem corei7 westmere sandybridge corei7-avx
+# ivyzt0bridge core-avx-i haswell core-avx2 broadwell skylake
+# skylake-avx512 cannonlake icelake-client icelake-server bonnell
+# atom silvermont slm knl knm x86-64 eden-x2 nano nano-1000 nano-2000
+# nano-3000 nano-x2 eden-x4 nano-x4 k8 k8-sse3 opteron opteron-sse3 athlon64
+# athlon64-sse3 athlon-fx amdfam10 barcelona bdver1 bdver2 bdver3 bdver4
 # znver1 btver1 btver2 native
 #
 # native - works on all x86_64 platforms
 #
 CONFIG_TARGET_SUBTARGET:="atom"
-MESON_CPU:="native"
+MESON_CPU:="atom"
 
 define Package/libdpdk
   SECTION:=libs
   CATEGORY:=Libraries
-  DEPENDS:=+libnuma +libpcap +libopenssl +zlib +jansson +python3-pyelftools +libelf +libbpf +libatomic 
+  DEPENDS:=+libnuma +libpcap +libopenssl +zlib +jansson +python3-pyelftools +libelf +libbpf +libatomic +libbsd
   KCONFIG:=CONFIG_NUMA=y \
 		CONFIG_HUGETLB_PAGE=y CONFIG_HUGETLBFS=y \
 		CONFIG_KERNEL_HUGETLB_PAGE=y CONFIG_KERNEL_PROC_PAGE_MONITOR=y CONFIG_KERNEL_DEV_PAGEMAP_OPS=y \
@@ -101,7 +100,7 @@ define Build/InstallDev
 	$(CP) $(PKG_INSTALL_DIR)/usr/include/generic/rte_*.h $(1)/usr/include/generic/
 
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/{librte_*.a,librte_*.so*,dpdk} $(1)/usr/lib/
+$(CP) $(PKG_INSTALL_DIR)/usr/lib/{librte_*.a,librte_*.so*,*dpdk*} $(1)/usr/lib/
 
 	$(INSTALL_DIR) $(1)/usr/lib/pkgconfig
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/pkgconfig/libdpdk*.pc $(1)/usr/lib/pkgconfig/
@@ -111,8 +110,10 @@ endef
 define Package/libdpdk/install
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/lib/librte_*.so.* $(1)/usr/lib/
+	$(INSTALL_DIR) $(1)/usr/lib
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/{librte_*.a,librte_*.so*,dpdk,lib*} $(1)/usr/lib/
 endef
-		
+
 define Package/dpdk-tools/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/dpdk-devbind.py $(1)/usr/bin/dpdk-devbind
@@ -123,9 +124,10 @@ endef
 define Package/dpdk-examples/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_DIR) $(1)/usr/bin/dpdk-examples/
-	#$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt-build/app/dpdk-*[^p] $(1)/usr/bin/dpdk-examples/
+
 endef
 
+$(eval $(call HostBuild))
 $(eval $(call BuildPackage,libdpdk))
 $(eval $(call BuildPackage,dpdk-tools))
 #$(eval $(call BuildPackage,dpdk-examples))
