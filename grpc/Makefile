@@ -9,7 +9,7 @@ PKG_NAME:=grpc
 PKG_SOURCE_VERSION:= v1.49.1
 PKG_SOURCE_PROTO:=git
 PKG_MIRROR_HASH:=skip
-PKG_SOURCE_URL:=git@github.com:grpc/grpc.git
+PKG_SOURCE_URL:=https://github.com/grpc/grpc.git
 PKG_LICENSE := Apache-2.0, BSD-3-Clause (third_party code), MPL-2.0 (etc/roots.pem)
 CMAKE_INSTALL:=1
 
@@ -18,10 +18,10 @@ include $(INCLUDE_DIR)/host-build.mk
 include $(INCLUDE_DIR)/cmake.mk
 GRPC_INSTALL_STAGING = YES
 
-PKG_BUILD_DEPENDS := protobuf libopenssl
+PKG_BUILD_DEPENDS := protobuf libopenssl grpc/host
 define Package/grpc
 # Need to use host grpc_cpp_plugin during cross compilation.
-	DEPENDS:= +libcares +libabseil-cpp +libopenssl +protobuf +re2 +zlib
+	DEPENDS:= +libcares +libabseil-cpp +libopenssl +protobuf +re2 +zlib +grpc/host
 	SECTIONS:=libs
 	CATEGORY:=libraries
 	TITLE:=GRPC does the thing.

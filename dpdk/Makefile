@@ -100,7 +100,7 @@ define Build/InstallDev
 	$(CP) $(PKG_INSTALL_DIR)/usr/include/generic/rte_*.h $(1)/usr/include/generic/
 
 	$(INSTALL_DIR) $(1)/usr/lib
-$(CP) $(PKG_INSTALL_DIR)/usr/lib/{librte_*.a,librte_*.so*,*dpdk*} $(1)/usr/lib/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/{librte_*.a,librte_*.so*,*dpdk*} $(1)/usr/lib/
 
 	$(INSTALL_DIR) $(1)/usr/lib/pkgconfig
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/pkgconfig/libdpdk*.pc $(1)/usr/lib/pkgconfig/
@@ -130,4 +130,3 @@ endef
 $(eval $(call HostBuild))
 $(eval $(call BuildPackage,libdpdk))
 $(eval $(call BuildPackage,dpdk-tools))
-#$(eval $(call BuildPackage,dpdk-examples))
