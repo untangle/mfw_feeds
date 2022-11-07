@@ -1,3 +1,16 @@
+# This patch 'fixes' the GRPC build system so it can be used on
+# openwrt for cross-compiling. It is based on the buildroot patch:
+# https://github.com/buildroot/buildroot/blob/5099a1058d93821399ea758c5227e1fbbe6f76de/package/grpc/0003-host-grpc-only-cpp-plugin.patch
+# that allows you to build  just the CPP plugin. It has been modified to also:
+#
+# 1. Allow you to build the CPP _and_ Python plugin
+# 2. Fix the cmake/protobuf.cmake file to not use cmake's find_program function
+#    if we provide a manual override via a variable.
+ #
+# These two modifications are necessary to be able to compile the
+# right programs for the host and also to use the host's protoc
+# compiler instead of the version compiled for the target.
+
 diff --git a/CMakeLists.txt b/CMakeLists.txt
 index 4d9a95c918..b6564d7ab7 100644
 --- a/CMakeLists.txt

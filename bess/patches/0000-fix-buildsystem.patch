@@ -1,3 +1,9 @@
+# This patch patches the bess build system so that it can build
+# against dpdk installed as a pkg-config package, and so that we can
+# pass in CFLAGS from an external process and not overwrite the
+# built-in ones necessary for building.
+
+# It also disables building BESS with tests.
 diff --git a/core/Makefile b/core/Makefile
 index cff11173..ffbad08e 100644
 --- a/core/Makefile
