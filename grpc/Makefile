@@ -21,7 +21,7 @@ GRPC_INSTALL_STAGING = YES
 PKG_BUILD_DEPENDS := protobuf libopenssl grpc/host protobuf/host
 HOST_BUILD_DEPENDS := protobuf protobuf/host
 define Package/grpc
-	DEPENDS:= +libcares +libabseil-cpp +libopenssl +protobuf +re2 +zlib +grpc/host
+	DEPENDS:= +libcares +libabseil-cpp +libopenssl +protobuf +re2 +zlib
 	SECTIONS:=libs
 	CATEGORY:=libraries
 	TITLE:=GRPC does the thing.
@@ -37,6 +37,10 @@ CMAKE_OPTIONS += -DCMAKE_BUILD_TYPE=Release
 # packages. 'package' means 'cmake', so when there is a 'none'
 # package, this means that the library is on the system but may not
 # have a cmake file.
+
+# We manually override the protobuf protoc executable because cmake
+# finds the target version instead of the host one if left to its own
+# devices.
 CMAKE_OPTIONS += \
 	-DgRPC_PROTOBUF_PROTOC_EXECUTABLE="$(STAGING_DIR_HOSTPKG)/bin/protoc" \
 	-DCMAKE_FIND_USE_PACKAGE_ROOT_PATH=FALSE \
