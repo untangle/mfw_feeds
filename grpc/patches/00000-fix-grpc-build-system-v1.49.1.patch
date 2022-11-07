@@ -6,7 +6,7 @@
 # 1. Allow you to build the CPP _and_ Python plugin
 # 2. Fix the cmake/protobuf.cmake file to not use cmake's find_program function
 #    if we provide a manual override via a variable.
- #
+#
 # These two modifications are necessary to be able to compile the
 # right programs for the host and also to use the host's protoc
 # compiler instead of the version compiled for the target.
