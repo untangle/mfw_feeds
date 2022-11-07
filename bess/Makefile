@@ -25,7 +25,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/bess
   SECTION:=libs
   CATEGORY:=Libraries
-  DEPENDS:=+libnuma +liblzma +zlib +libpcap +libopenssl +git +libdpdk +libprotobuf-c +glog +libunwind +gflags +grpc +scapy +python3-grpcio +python3-protobuf
+  DEPENDS:=+libnuma +liblzma +zlib +libpcap +libopenssl +git +libdpdk +libprotobuf-c +glog +libunwind +gflags +grpc +scapy +python3-grpcio +python3-protobuf +kmod-bess
   TITLE:=Low-level netlink library for the nf_tables subsystem
   URL:=http://www.netfilter.org/projects/libnftnl
   KCONFIG:=CONFIG_NUMA=y \

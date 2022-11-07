@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=libabseil-cpp
 PKG_SOURCE_VERSION := 20220623.1
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL := git@github.com:abseil/abseil-cpp.git
+PKG_SOURCE_URL := https://github.com/abseil/abseil-cpp.git
 PKG_HASH:=skip
 PKG_MIRROR_HASH:=skip
 PKG_LICENSE := Apache-2.0
@@ -31,10 +31,6 @@ CMAKE_OPTIONS += \
 	-DABSL_ENABLE_INSTALL=ON \
 	-DABSL_USE_GOOGLETEST_HEAD=OFF
 
-# HOST_LIBABSEIL_CPP_CONF_OPTS = \
-# 	-DCMAKE_CXX_STANDARD=11 \
-# 	-DABSL_ENABLE_INSTALL=ON \
-# 	-DABSL_USE_GOOGLETEST_HEAD=OFF
 define Package/libabseil-cpp/install
 	$(INSTALL_DIR) $(1)/usr/include/absl
 	$(CP) -R $(PKG_INSTALL_DIR)/usr/include/absl/* $(1)/usr/include/absl/

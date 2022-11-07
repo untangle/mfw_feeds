@@ -18,7 +18,8 @@ include $(INCLUDE_DIR)/host-build.mk
 include $(INCLUDE_DIR)/cmake.mk
 GRPC_INSTALL_STAGING = YES
 
-PKG_BUILD_DEPENDS := protobuf libopenssl grpc/host
+PKG_BUILD_DEPENDS := protobuf libopenssl grpc/host protobuf/host
+HOST_BUILD_DEPENDS := protobuf protobuf/host
 define Package/grpc
 	DEPENDS:= +libcares +libabseil-cpp +libopenssl +protobuf +re2 +zlib +grpc/host
 	SECTIONS:=libs

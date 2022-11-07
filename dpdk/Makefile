@@ -8,7 +8,7 @@ PKG_MIRROR_HASH:=42f74667e5d2fa36881f6e3aa05ff4772316c5e813cae52b96f1879b17bb6ae
 PKG_NAME:=dpdk
 PKG_SOURCE_VERSION:=v19.11
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=git@github.com:DPDK/dpdk.git
+PKG_SOURCE_URL:=https://github.com/DPDK/dpdk.git
 
 
 PKG_MAINTAINER:=Zbynek Kocur <zbynek.kocur@fel.cvut.cz>
