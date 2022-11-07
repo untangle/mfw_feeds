@@ -17,7 +17,7 @@ PKG_LICENSE:=GPL-2.0+
 include ../version.mk
 
 
-# PKG_INSTALL:=1
+
 include $(TOPDIR)/feeds/packages/lang/python/python3-package.mk
 include $(INCLUDE_DIR)/package.mk
 
@@ -46,8 +46,6 @@ define KernelPackage/bess
   TITLE:=BESS kernel modules
   URL:=https://github.com/NetSys/bess.git
   FILES:=$(PKG_BUILD_DIR)/core/kmod/bess.ko
-#  AUTOLOAD:=$(call AutoLoad,75,)
-#  DEPENDS:=+kmod-nft-core
 endef
 
 include $(INCLUDE_DIR)/kernel-defaults.mk
@@ -59,13 +57,14 @@ endef
 TARGET_CFLAGS += $(FPIC) -mno-avx
 TARGET_CXXFLAGS += -std=c++17 -msse2 -msse3 -msse4.2 -msse4  -mno-avx
 
-# 	--without-json-parsing
+
 MAKE_VARS += PKG_CONFIG=$(STAGING_DIR_HOST)/bin/pkg-config \
 	PKG_CONFIG_SYSROOT_DIR=$(STAGING_DIR) \
 	BESS_LINK_DYNAMIC=y \
 	CPU=atom
-$(warning "make vars: $(MAKE_VARS)")
 MAKE_PATH:=core
+
+# configure generates bess' python protobuf files.
 define Build/Configure
 	pushd $(PKG_BUILD_DIR); \
 	python3 -c 'from build import *; generate_protobuf_files()'; \

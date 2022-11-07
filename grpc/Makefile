@@ -20,7 +20,6 @@ GRPC_INSTALL_STAGING = YES
 
 PKG_BUILD_DEPENDS := protobuf libopenssl grpc/host
 define Package/grpc
-# Need to use host grpc_cpp_plugin during cross compilation.
 	DEPENDS:= +libcares +libabseil-cpp +libopenssl +protobuf +re2 +zlib +grpc/host
 	SECTIONS:=libs
 	CATEGORY:=libraries
@@ -31,13 +30,12 @@ TARGET_CFLAGS += $(FPIC) -mno-avx
 
 CMAKE_OPTIONS += -DCMAKE_BUILD_TYPE=Release
 
-# gRPC_CARES_PROVIDER=package won't work because it requires c-ares to have
-# installed a cmake config file, but buildroot uses c-ares' autotools build,
-# which doesn't do this.  These CARES settings trick the gRPC cmake code into
-# not looking for c-ares at all and yet still linking with the library.#	-DCMAKE_PROGRAM_PATH=$(TOPDIR)/staging_dir/hostpkg/bin:$(TOPDIR)/staging_dir/bin \
-
-LD_LIBRARY_PATH := "$(STAGING_DIR_HOSTPKG)/hostpkg/lib:/$(LD_LIBRARY_PATH)"
-export LD_LIBRARY_PATH
+# This cmake config is mostly copied from buildroot. We set the
+# providers to 'package' so it doesn't clone a submodule and build
+# some version we don't have. This way it links to provided system
+# packages. 'package' means 'cmake', so when there is a 'none'
+# package, this means that the library is on the system but may not
+# have a cmake file.
 CMAKE_OPTIONS += \
 	-DgRPC_PROTOBUF_PROTOC_EXECUTABLE="$(STAGING_DIR_HOSTPKG)/bin/protoc" \
 	-DCMAKE_FIND_USE_PACKAGE_ROOT_PATH=FALSE \
@@ -57,42 +55,11 @@ CMAKE_OPTIONS += \
 	-DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF \
 	-DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF
 
-# ifeq ($(BR2_PACKAGE_LIBEXECINFO),y)
-# GRPC_DEPENDENCIES += libexecinfo
-# GRPC_EXE_LINKER_FLAGS += -lexecinfo
-# endif
-
-# grpc can use __atomic builtins, so we need to link with
-# libatomic when available
-# ifeq ($(BR2_TOOLCHAIN_HAS_LIBATOMIC),y)
-# GRPC_EXE_LINKER_FLAGS += -latomic
-#endif
-
-# GRPC_CFLAGS = $(TARGET_CFLAGS)
-# GRPC_CXXFLAGS = $(TARGET_CXXFLAGS)
-
-# Set GPR_DISABLE_WRAPPED_MEMCPY otherwise build will fail on x86_64 with uclibc
-# because grpc tries to link with memcpy@GLIBC_2.2.5
-# ifeq ($(BR2_x86_64):$(BR2_TOOLCHAIN_USES_GLIBC),y:)
-# GRPC_CFLAGS += -DGPR_DISABLE_WRAPPED_MEMCPY
-# GRPC_CXXFLAGS += -DGPR_DISABLE_WRAPPED_MEMCPY
-# endif
-
-# ifeq ($(BR2_TOOLCHAIN_HAS_GCC_BUG_85180),y)
-# GRPC_CFLAGS += -O0
-# GRPC_CXXFLAGS += -O0
-# endif
-
-# -GRPC_CONF_OPTS += \
-# 	-DCMAKE_C_FLAGS="$(GRPC_CFLAGS)" \
-# 	-DCMAKE_CXX_FLAGS="$(GRPC_CXXFLAGS)"
 
 # For host-grpc, we only need the 'grpc_cpp_plugin' binary, which is needed for
 # target grpc compilation. To avoid unnecessary build steps and host
 # dependencies, supply enough options to pass the configure checks without
 # requiring other host packages, unless those needed by grpc_cpp_plugin.
-#	-DCMAKE_PROGRAM_PATH=$(TOPDIR)/staging_dir/hostpkg/bin:$(TOPDIR)/staging_dir/bin
-
 CMAKE_HOST_OPTIONS += \
 	-DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath=$(STAGING_DIR_HOSTPKG)/lib" \
 	-DCMAKE_FIND_USE_PACKAGE_ROOT_PATH=FALSE \
