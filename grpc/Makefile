@@ -41,6 +41,7 @@ export LD_LIBRARY_PATH
 CMAKE_OPTIONS += \
 	-DgRPC_PROTOBUF_PROTOC_EXECUTABLE="$(STAGING_DIR_HOSTPKG)/bin/protoc" \
 	-DCMAKE_FIND_USE_PACKAGE_ROOT_PATH=FALSE \
+	-DgRPC_INSTALL=ON \
 	-DgRPC_ABSL_PROVIDER=package \
 	-D_gRPC_CARES_LIBRARIES=cares \
 	-DgRPC_CARES_PROVIDER=none \
@@ -95,6 +96,7 @@ CMAKE_OPTIONS += \
 CMAKE_HOST_OPTIONS += \
 	-DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath=$(STAGING_DIR_HOSTPKG)/lib" \
 	-DCMAKE_FIND_USE_PACKAGE_ROOT_PATH=FALSE \
+	-DgRPC_INSTALL=ON \
 	-DgRPC_PROTOBUF_PROVIDER=package \
 	-DgRPC_ABSL_PROVIDER=none \
 	-DgRPC_CARES_PROVIDER=none \
@@ -119,6 +121,7 @@ define Package/grpc/install
 	$(INSTALL_DIR) $(1)/usr/lib/cmake
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/cmake/* $(1)/usr/lib/cmake
 endef
+
 
 
 $(eval $(call HostBuild))
