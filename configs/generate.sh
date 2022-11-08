@@ -10,20 +10,22 @@ usage() {
   echo "  -u          : 'upstream' build, with our general config but no MFW packages"
   exit 1
 }
-TEMP=$(getopt -o d:l:uhr: --long device:,libc:,region:,with-dpdk)
+TEMP=$(getopt -o d:l:uhr: --long device:,libc:,region:,with-dpdk -- "$@")
 eval set -- "$TEMP"
 DEVICE="x86_64"
 LIBC="musl"
 REGION="us"
 NO_MFW_PACKAGES=""
-while getopts "d:l:r:uh" opt ; do
-  case "$opt" in
-    -d | --device ) DEVICE="$OPTARG" ;;
-    -l | --libc ) LIBC="$OPTARG" ;;
-    -r | --region ) REGION="$OPTARG" ;;
-    -u | --upstream ) NO_MFW_PACKAGES="1" ;;
-    --with-dpdk ) WITH_DPDK=1 ;;
-    -h ) usage ;;
+while true ; do
+  case "$1" in
+    -d | --device ) DEVICE="$OPTARG"; shift 2;;
+    -l | --libc ) LIBC="$OPTARG"; shift 2;;
+    -r | --region ) REGION="$OPTARG"; shift 2;;
+    -u | --upstream ) NO_MFW_PACKAGES="1"; shift ;;
+    --with-dpdk ) WITH_DPDK=1; shift;;
+    -h ) usage; shift ;;
+    * ) usage ;;
+    -- ) shift; break ;;
   esac
 done
 
