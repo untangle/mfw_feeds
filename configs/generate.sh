@@ -18,14 +18,15 @@ REGION="us"
 NO_MFW_PACKAGES=""
 while true ; do
   case "$1" in
-    -d | --device ) DEVICE="$OPTARG"; shift 2;;
-    -l | --libc ) LIBC="$OPTARG"; shift 2;;
-    -r | --region ) REGION="$OPTARG"; shift 2;;
+    -d | --device ) DEVICE="$2"; shift 2;;
+    -l | --libc ) LIBC="$2"; shift 2;;
+    -r | --region ) REGION="$2"; shift 2;;
     -u | --upstream ) NO_MFW_PACKAGES="1"; shift ;;
     --with-dpdk ) WITH_DPDK=1; shift;;
     -h ) usage; shift ;;
-    * ) usage ;;
     -- ) shift; break ;;
+    * ) usage ;;
+
   esac
 done
 
