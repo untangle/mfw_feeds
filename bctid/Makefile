@@ -18,7 +18,7 @@ define Package/bctid
   CATEGORY:=Network
   SUBMENU:=Firewall
   TITLE:=Brightcloud classification daemon
-  URL:=https://github.com/untangle/ngfw_hades-pkgs
+  URL:=https://github.com/untangle/bctid
   DEPENDS:=+libidn2 +libstdcpp +libopenssl +zlib
 endef
 

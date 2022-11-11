@@ -13,4 +13,4 @@
 # add whatever files you need to add or overwrite and you're good to go.
 #
 echo "Apply overrides to ./feeds"
-rsync -r ./feeds/mfw/configs/overrides/* ./feeds
+rsync -acHvP ./feeds/mfw/configs/overrides/ ./feeds/

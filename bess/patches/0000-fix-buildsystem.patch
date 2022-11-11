@@ -1,0 +1,165 @@
+# This patch patches the bess build system so that it can build
+# against dpdk installed as a pkg-config package, and so that we can
+# pass in CFLAGS from an external process and not overwrite the
+# built-in ones necessary for building.
+
+# It also disables building BESS with tests.
+diff --git a/core/Makefile b/core/Makefile
+index cff11173..ffbad08e 100644
+--- a/core/Makefile
++++ b/core/Makefile
+@@ -35,7 +35,6 @@ MAKEFLAGS += --no-builtin-rules
+ CXX ?= g++
+ PROTOC ?= protoc
+ PKG_CONFIG ?= pkg-config
+-
+ VERBOSE ?= 0
+ 
+ DEPDIR ?= .deps
+@@ -65,16 +64,17 @@ RTE_SDK ?= $(abspath ../deps/dpdk-19.11.4)
+ RTE_TARGET ?= $(shell uname -m)-native-linuxapp-gcc
+ DPDK_LIB ?= dpdk
+ 
+-ifneq ($(wildcard $(RTE_SDK)/$(RTE_TARGET)/*),)
+-  DPDK_INC_DIR := $(RTE_SDK)/$(RTE_TARGET)/include
+-  DPDK_LIB_DIR := $(RTE_SDK)/$(RTE_TARGET)/build/lib
+-else ifneq ($(wildcard $(RTE_SDK)/build/*),)
+-  # if the user didn't do "make install" for DPDK
+-  DPDK_INC_DIR := $(RTE_SDK)/build/include
+-  DPDK_LIB_DIR := $(RTE_SDK)/build/lib
+-else ifneq ($(MAKECMDGOALS),clean)
+-  $(error DPDK is not available. Make sure $(abspath $(RTE_SDK)) is available and built)
+-endif
++# Not needed -- we use pkg config not some special dpdk sauce.
++# ifneq ($(wildcard $(RTE_SDK)/$(RTE_TARGET)/*),)
++#   DPDK_INC_DIR := $(RTE_SDK)/$(RTE_TARGET)/include
++#   DPDK_LIB_DIR := $(RTE_SDK)/$(RTE_TARGET)/build/lib
++# else ifneq ($(wildcard $(RTE_SDK)/build/*),)
++#   # if the user didn't do "make install" for DPDK
++#   DPDK_INC_DIR := $(RTE_SDK)/build/include
++#   DPDK_LIB_DIR := $(RTE_SDK)/build/lib
++# else ifneq ($(MAKECMDGOALS),clean)
++#   $(error DPDK is not available. Make sure $(abspath $(RTE_SDK)) is available and built)
++# endif
+ 
+ # We always want these libraries to be dynamically linked even when the
+ # user requests a static build.
+@@ -82,7 +82,7 @@ ALWAYS_DYN_LIBS := -lpthread -ldl
+ # These libraries are not supported by pkg-config.
+ ALWAYS_LIBS := -lpcap -lgflags -lnuma
+ # If pkg-config is available, we just need a list of the dependecies.
+-PKG_CONFIG_DEPS := libglog protobuf grpc++ libunwind zlib
++PKG_CONFIG_DEPS := libglog protobuf grpc++ libunwind zlib libdpdk
+ # If pkg-config is not available, we need to list the libs we depend on.
+ NO_PKG_CONFIG_LIBS := -lglog -lgflags -lprotobuf -lgrpc++ -lunwind -lz
+ # If pkg-config is not available and we're static linking, we also need
+@@ -109,10 +109,11 @@ endif
+ # -MMD dependency recording (should we use -MD?).
+ COREDIR := $(abspath .)
+ CPU ?= native
+-CXXFLAGS += -std=c++17 -g3 -ggdb3 -march=$(CPU) \
+-            -isystem $(DPDK_INC_DIR) -isystem $(COREDIR) \
++override CXXFLAGS += -std=c++17 -g3 -ggdb3 -march=$(CPU) \
++            -isystem $(COREDIR) \
+             -isystem $(dir $<).. -isystem $(COREDIR)/modules \
+             -D_GNU_SOURCE \
++	    -I . \
+             -Werror -Wall -Wextra -Wcast-align -Wno-error=deprecated-declarations \
+             -Wno-error=array-bounds \
+             $(PKG_CFLAGS)
+@@ -133,7 +134,7 @@ ifeq "$(shell expr $(CXXCOMPILER) = g++)" "1"
+   CXXFLAGS += -fno-gnu-unique
+ endif
+ 
+-LDFLAGS += -rdynamic -L$(DPDK_LIB_DIR) -Wl,-rpath=$(DPDK_LIB_DIR) -pthread
++LDFLAGS += -rdynamic -pthread
+ ifdef BESS_LINK_DYNAMIC
+   LIBS_ALL_SHARED = -Wl,-call_shared
+   LIBS_DL_SHARED =
+@@ -157,8 +158,9 @@ else # Used static libraries
+   endif
+ endif
+ 
++
+ LIBS += -Wl,-non_shared \
+-        -Wl,--whole-archive -l$(DPDK_LIB) -Wl,--no-whole-archive \
++        -Wl,--whole-archive -Wl,--no-whole-archive \
+         $(LIBS_ALL_SHARED) \
+         $(PKG_LIBS) $(ALWAYS_LIBS) \
+         $(LIBS_DL_SHARED) \
+@@ -315,7 +317,7 @@ GTEST_DIR := /usr/src/gtest
+ 
+ .PHONY: all clean tags cscope tests benchmarks protobuf check_plugins_exist
+ 
+-all: $(EXEC) modules tests benchmarks check_plugins_exist
++all: $(EXEC) modules check_plugins_exist
+ 
+ clean:
+ 	rm -rf $(EXEC) .deps/*.d .deps/*/*.d *_test */*_test *_bench */*_bench \
+@@ -452,29 +454,30 @@ $(eval $(call BUILD, \
+         $(OBJS), \
+         $(CXX) -o $$@ $$^ $(LDFLAGS) $(LIBS)))
+ 
+-$(eval $(call BUILD, \
+-        TEST_CXX, \
+-        %_test.o, \
+-        %_test.cc $(PROTO_HEADERS), \
+-        $(CXX) -o $$@ -c $$< $$(CXXFLAGS) $$(DEPFLAGS)))
+-
+-$(eval $(call BUILD, \
+-        TEST_LD, \
+-        %_test, \
+-        %_test.o gtest-all.o gtest_main.o bess.a, \
+-        $(CXX) -o $$@ $$^ $(LDFLAGS) $(LIBS)))
+-
+-$(eval $(call BUILD, \
+-        TEST_LD, \
+-        $(TEST_ALL_EXEC), \
+-        $(TEST_OBJS) $(MODULE_OBJS) gtest-all.o bess.a, \
+-        $(CXX) -o $$@ $$^ $(LDFLAGS) $(LIBS)))
+-
+-$(eval $(call BUILD, \
+-        TEST_CXX, \
+-        gtest-all.o, \
+-        $(GTEST_DIR)/src/gtest-all.cc, \
+-        $(CXX) -o $$@ -c $$< -isystem $(GTEST_DIR)/include $$(CXXFLAGS) $$(DEPFLAGS)))
++# We do not have gtest in openwrt yet.
++# $(eval $(call BUILD, \
++#         TEST_CXX, \
++#         %_test.o, \
++#         %_test.cc $(PROTO_HEADERS), \
++#         $(CXX) -o $$@ -c $$< $$(CXXFLAGS) $$(DEPFLAGS)))
++
++# $(eval $(call BUILD, \
++#         TEST_LD, \
++#         %_test, \
++#         %_test.o gtest-all.o gtest_main.o bess.a, \
++#         $(CXX) -o $$@ $$^ $(LDFLAGS) $(LIBS)))
++
++# $(eval $(call BUILD, \
++#         TEST_LD, \
++#         $(TEST_ALL_EXEC), \
++#         $(TEST_OBJS) $(MODULE_OBJS) gtest-all.o bess.a, \
++#         $(CXX) -o $$@ $$^ $(LDFLAGS) $(LIBS)))
++
++# $(eval $(call BUILD, \
++#         TEST_CXX, \
++#         gtest-all.o, \
++#         $(GTEST_DIR)/src/gtest-all.cc, \
++#         $(CXX) -o $$@ -c $$< -isystem $(GTEST_DIR)/include $$(CXXFLAGS) $$(DEPFLAGS)))
+ 
+ $(eval $(call BUILD, \
+         BENCH_CXX, \
+diff --git a/core/port.h b/core/port.h
+index 193d1310..85a5729e 100644
+--- a/core/port.h
++++ b/core/port.h
+@@ -33,7 +33,7 @@
+ 
+ #include <glog/logging.h>
+ #include <google/protobuf/any.pb.h>
+-#include <gtest/gtest_prod.h>
++//#include <gtest/gtest_prod.h>
+ 
+ #include <cstdint>
+ #include <functional>
