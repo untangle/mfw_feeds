@@ -6,12 +6,18 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=dpdk
-PKG_VERSION:=22.03
+#PKG_VERSION:=22.03
+#PKG_VERSION:=19.11
+PKG_VERSION:=19.11.13
 PKG_RELEASE:=$(AUTORELEASE)
 
-PKG_SOURCE_URL:=https://codeload.github.com/DPDK/dpdk/tar.gz/v$(PKG_VERSION)?
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_HASH:=b85cfcb0e85196631959db4cc45eeaad5c32112eaaa3352606b344b85a53653f
+PKG_SOURCE_URL:=https://github.com/DPDK/$(PKG_NAME).git
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_VERSION:=0b2a2ca35037d6a5168f0832c11d9858b8ae946a
+PKG_MIRROR_HASH:=0f1a1ba9beee1811b3371f7542667505e4c8bd75af359658eacf557bbdff5014
+#PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+#PKG_HASH:=b85cfcb0e85196631959db4cc45eeaad5c32112eaaa3352606b344b85a53653f
+#PKG_HASH:=ce1befb20a5e5c5399b326a39cfa23314a5229c0ced2553f53b09b1ae630706b
 
 PKG_MAINTAINER:=Zbynek Kocur <zbynek.kocur@fel.cvut.cz>
 PKG_LICENSE:=BSD-3-Clause
@@ -21,7 +27,6 @@ PKG_BUILD_DEPENDS:=meson/host python3
 
 HOST_BUILD_DEPENDS:=meson python3
 
-#export PYTHONPATH=$(STAGING_DIR_ROOT)/usr/lib64/python3.7/site-packages
 HOST_PYTHON3_PACKAGE_BUILD_DEPENDS:="python3-pyelftools"
 
 PKG_INSTALL:=1
@@ -44,6 +49,7 @@ CFLAGS+=-D_GNU_SOURCE -g
 # native - works on all x86_64 platforms
 #
 CONFIG_TARGET_SUBTARGET:="atom"
+#CONFIG_TARGET_SUBTARGET:="nehalem"
 MESON_CPU:="native"
 
 define Package/libdpdk
@@ -113,7 +119,7 @@ endef
 define Package/libdpdk/install
 	$(INSTALL_DIR) $(1)/usr/lib
 	# Warning - hardcoding this pattern here - this is to get rid of the copies ending in 22.1
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/lib/librte_*.so.[2-9][0-9] $(1)/usr/lib/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/lib/librte_*.so.[1-9][0-9] $(1)/usr/lib/
 	# Added to copy the vhost.ko files since the kernel config method did not work
 	#$(INSTALL_DIR) $(1)/lib/modules/5.4.194
 	#$(INSTALL_BIN) $(PKG_BUILD_DIR)/linux-5.4.194/drivers/vhost/* $(1)/lib/modules/5.4.194
