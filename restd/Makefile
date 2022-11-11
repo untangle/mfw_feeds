@@ -19,6 +19,8 @@ include $(INCLUDE_DIR)/package.mk
 # Package/packetd/install
 include $(INCLUDE_DIR)/../feeds/packages/lang/golang/golang-package.mk
 
+include $(TOPDIR)/feeds/packages/lang/python/python3-package.mk
+
 define Package/restd
   SECTION:=utils
   CATEGORY:=Utilities
@@ -50,6 +52,10 @@ define Package/restd/install
 	$(INSTALL_BIN) $(OUR_SRC_DIR)/cmd/restd/restd $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) files/restd.init $(1)/etc/init.d/restd
+
+	# Python libraries
+	$(INSTALL_DIR) $(1)$(PYTHON3_PKG_DIR)/restd
+	$(CP) files/usr/lib/python/restd/* $(1)$(PYTHON3_PKG_DIR)/restd
 endef
 
 $(eval $(call BuildPackage,restd))
