@@ -42,7 +42,7 @@ define Build/Compile
                         CC=$(TARGET_CC) \
                         CXX=$(TARGET_CXX) \
                         $(call GoPackage/Environment) ; \
-	make build
+	make GOFLAGS=$(MFW_GOFLAGS) build
 endef
 
 define Package/reportd/install
