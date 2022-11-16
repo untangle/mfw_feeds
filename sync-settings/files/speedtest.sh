@@ -50,6 +50,24 @@ enable_qos() {
 	fi
 }
 
+SYNC_SETTINGS_ROUTEMANAGER_SPEEDTEST_FILE_NAME=/tmp/sync-settings-route-manager-speedtest
+enable_policy() {
+	intf=$1
+	ip_address=$2
+
+	# Create speed test json for sync-settings to consume
+	echo '{"device":"'$intf'","address":"'$ip_address'"}' > $SYNC_SETTINGS_ROUTEMANAGER_SPEEDTEST_FILE_NAME
+	sync-settings > /dev/null
+}
+
+disable_policy() {
+	if [ -f $SYNC_SETTINGS_ROUTEMANAGER_SPEEDTEST_FILE_NAME ]; then
+		rm -f $SYNC_SETTINGS_ROUTEMANAGER_SPEEDTEST_FILE_NAME
+	fi
+	sync-settings > /dev/null
+}
+
+# Main
 interface=$1
 if [ -z $interface ] ; then
     echo "{\"error\":\"No interface specified\"}"
@@ -63,11 +81,15 @@ if [ -z $ip_address ] ; then
 fi
 
 disable_qos $interface
+enable_policy $interface $ip_address
+
 OUTPUT=$(/usr/bin/speedtest-cli --secure --simple-json --no-pre-allocate --source $ip_address 2>&1)
 if [ $? -ne 0 ] ; then
 	RESULT="{\"error\":\"$OUTPUT\"}"
 else
-    RESULT=$OUTPUT
+   RESULT=$OUTPUT
 fi
+
+disable_policy $interface
 enable_qos $interface
 echo $RESULT
