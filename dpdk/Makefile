@@ -49,7 +49,8 @@ MESON_CPU:="atom"
 define Package/libdpdk
   SECTION:=libs
   CATEGORY:=Libraries
-  DEPENDS:=+libnuma +libpcap +libopenssl +zlib +jansson +python3-pyelftools +libelf +libbpf +libatomic +libbsd
+  DEPENDS:=+libnuma +libpcap +libopenssl +zlib +jansson +python3-pyelftools +libelf +libbpf +libatomic +libbsd \
+	@PCI_SUPPORT @TARGET_x86_64 +kmod-vfio-pci +kmod-vhost +kmod-uio_pci_generic
   KCONFIG:=CONFIG_NUMA=y \
 		CONFIG_HUGETLB_PAGE=y CONFIG_HUGETLBFS=y \
 		CONFIG_KERNEL_HUGETLB_PAGE=y CONFIG_KERNEL_PROC_PAGE_MONITOR=y CONFIG_KERNEL_DEV_PAGEMAP_OPS=y \
@@ -111,12 +112,12 @@ endef
 
 define Package/libdpdk/install
 	$(INSTALL_DIR) $(1)/usr/lib
-	# Warning - hardcoding this pattern here - this is to get rid of the copies ending in 22.1
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/lib/librte_*.so.[1-9][0-9] $(1)/usr/lib/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/lib/librte_*.so* $(1)/usr/lib/
 	# Added to copy the vhost.ko files since the kernel config method did not work
 	# Warning - hardcoding kernel version 5.4.194 here - can we get this from env ?
-	$(INSTALL_DIR) $(1)/lib/modules/5.4.194
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/linux-5.4.194/drivers/vhost/* $(1)/lib/modules/5.4.194
+	#$(INSTALL_DIR) $(1)/lib/modules/5.4.194
+	#$(INSTALL_BIN) $(PKG_BUILD_DIR)/linux-5.4.194/drivers/vhost/* $(1)/lib/modules/5.4.194
+	#$(INSTALL_BIN) $(PKG_BUILD_DIR)/linux-5.4.194/drivers/*uio*/* $(1)/lib/modules/5.4.194
 	#$(CP) $(PKG_INSTALL_DIR)/usr/lib/{librte_*.a,librte_*.so*,dpdk,lib*} $(1)/usr/lib/
 endef
 
@@ -125,7 +126,7 @@ define Package/dpdk-tools/install
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/dpdk-devbind.py $(1)/usr/bin/dpdk-devbind
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/dpdk-pdump $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/dpdk-proc-info $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/usertools/dpdk-hugepages.py $(1)/usr/bin/dpdk-hugepages
+	#$(INSTALL_BIN) $(PKG_BUILD_DIR)/usertools/dpdk-hugepages.py $(1)/usr/bin/dpdk-hugepages
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/openwrt-build/app/dpdk-testpmd $(1)/usr/bin/dpdk-testpmd
 endef
 
