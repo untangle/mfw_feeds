@@ -5,6 +5,8 @@
 # Constants
 TIMEOUT=1200
 VERBOSE=false
+SEND_CURL=true
+BACKUP_COPY_DIR=""
 BACKUP_FILE=mfw_`date -Iseconds`.backup.tar.gz
 URL='https://boxbackup.untangle.com/boxbackup/backup.php'
 TRANSLATED_URL=$(wget -qO- "http://127.0.0.1/api/uri/geturiwithpath/uri=$URL")
@@ -129,9 +131,19 @@ function cleanup() {
 
 trap cleanup EXIT
 
-while getopts "v" opt; do
+while getopts "vc:" opt; do
   case $opt in
     v) VERBOSE=true;;
+    # Takes a directory to copy the backup file to for future retrieval.
+    # Does NOT send the curl command containing the file to CMD
+    c)
+     SEND_CURL=false
+     BACKUP_COPY_DIR=$OPTARG
+     if ! [ -w $BACKUP_COPY_DIR ]; then 
+      echo "Can't write backup to provided directory ${BACKUP_COPY_DIR}"
+      exit 1
+     fi
+     ;;
   esac
 done
 
@@ -146,6 +158,22 @@ UID=`cat /etc/config/uid`
 
 # create backup file
 createBackup
+
+# In the case where a backup file needs to be created and 
+# grabbed by MFW to send to the front end, just tell MFW
+# where the file is and exit
+if ! $SEND_CURL; then
+
+  # Copy the backup file to the /tmp directory for 
+  # retrieval by MFW. The original will get deleted
+  cp $BACKUP_FILE $BACKUP_COPY_DIR
+
+  echo "Backup location: ${BACKUP_COPY_DIR}/${BACKUP_FILE}"
+  
+  # return here to avoid the file being deleted 
+  # Let MFW grab it and delete it
+  exit 0
+fi
 
 debug "Running backup"
 debug "URL: " $URL
