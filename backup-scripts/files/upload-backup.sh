@@ -150,8 +150,11 @@ done
 # determine if enabled
 checkEnable
 
-# determine if license correct
-checkLicense
+# determine if license correct. Only check the licesne if sending the backup
+# to the cloud for storage with the curl command
+if $SEND_CURL; then
+  checkLicense
+fi
 
 # get uid
 UID=`cat /etc/config/uid`
