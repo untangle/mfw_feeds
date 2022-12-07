@@ -4,9 +4,11 @@
 #
 
 include $(TOPDIR)/rules.mk
-PKG_MIRROR_HASH:=42f74667e5d2fa36881f6e3aa05ff4772316c5e813cae52b96f1879b17bb6ae2
 PKG_NAME:=dpdk
 PKG_SOURCE_VERSION:=v19.11
+PKG_MIRROR_HASH:=42f74667e5d2fa36881f6e3aa05ff4772316c5e813cae52b96f1879b17bb6ae2
+#PKG_SOURCE_VERSION:=0b2a2ca35037d6a5168f0832c11d9858b8ae946a
+#PKG_MIRROR_HASH:=1ee81d6f963c807cc7de0ab2841d7fb0375af97469b4608fe56b162c7c646a66,
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/DPDK/dpdk.git
 
@@ -15,7 +17,7 @@ PKG_MAINTAINER:=Zbynek Kocur <zbynek.kocur@fel.cvut.cz>
 PKG_LICENSE:=BSD-3-Clause
 PKG_LICENSE_FILES:=COPYING
 
-PKG_BUILD_DEPENDS:=meson/host python3/host python3-pyelftools/host  python3-base/host
+PKG_BUILD_DEPENDS:=meson/host python3/host python3-pyelftools/host
 
 HOST_BUILD_DEPENDS:=meson/host python3/host python3-pyelftools/host python3-distutils/host
 
@@ -103,7 +105,11 @@ define Build/InstallDev
 	$(CP) $(PKG_INSTALL_DIR)/usr/include/generic/rte_*.h $(1)/usr/include/generic/
 
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/{librte_*.a,librte_*.so*,*dpdk*} $(1)/usr/lib/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/{librte_*.a,librte_*.so*} $(1)/usr/lib/
+	$(INSTALL_DIR) $(1)/usr/lib/dpdk
+	$(INSTALL_DIR) $(1)/usr/lib/dpdk/pmds-20.0
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/dpdk/pmds-20.0 $(1)/usr/lib/dpdk/
+	#$(CP) $(PKG_INSTALL_DIR)/usr/lib/dpdk/pmds*/librte_*.so* $(1)/usr/lib/
 
 	$(INSTALL_DIR) $(1)/usr/lib/pkgconfig
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/pkgconfig/libdpdk*.pc $(1)/usr/lib/pkgconfig/
@@ -112,13 +118,8 @@ endef
 
 define Package/libdpdk/install
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/lib/librte_*.so* $(1)/usr/lib/
-	# Added to copy the vhost.ko files since the kernel config method did not work
-	# Warning - hardcoding kernel version 5.4.194 here - can we get this from env ?
-	#$(INSTALL_DIR) $(1)/lib/modules/5.4.194
-	#$(INSTALL_BIN) $(PKG_BUILD_DIR)/linux-5.4.194/drivers/vhost/* $(1)/lib/modules/5.4.194
-	#$(INSTALL_BIN) $(PKG_BUILD_DIR)/linux-5.4.194/drivers/*uio*/* $(1)/lib/modules/5.4.194
-	#$(CP) $(PKG_INSTALL_DIR)/usr/lib/{librte_*.a,librte_*.so*,dpdk,lib*} $(1)/usr/lib/
+	# Used $(CP) to preserve symlinks in the target image
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/librte_*.so* $(1)/usr/lib/
 endef
 
 define Package/dpdk-tools/install
