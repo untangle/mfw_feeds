@@ -18,6 +18,8 @@ DEBUG=false
 INTERACTIVE=false
 # If non empty, log debug messages that match substring.  Commonly used to watch substring.
 LOG_WATCH=
+# Interface statistics
+STATS_FILE_NAME=/tmp/stats.json
 
 ## Utility-specific variables
 # In this interval, allow status messages to be logged.
@@ -216,10 +218,8 @@ check_for_table()
 handle_term()
 {
 	local __function_name="handle_term"
-	for i in `pgrep -P $COMMAND_PID `
-	do
-		kill -9 $i
-	done
+	log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: recevied term signal"
+	kill -9 $COMMAND_PID
 }
 
 # wait_for_change
@@ -229,9 +229,14 @@ handle_term()
 wait_for_change()
 {
 	local __function_name="wait_for_change"
-	local files=$1
+	local file=$1
 
-	inotifywait -r -qq -e create,modify $files
+	if [ ! -f $file ] ; then
+		log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: $file not found, sleep instead"
+		sleep 5
+		return
+	fi
+	inotifywait -r -qq -e create,modify $file
 }
 
 # is_offline
@@ -250,7 +255,13 @@ is_offline()
 	local __offline=true
 	local interfaceId
 
-	json_load_file /tmp/stats.json
+	if [ ! -f $STATS_FILE_NAME ]; then
+		log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: no stats file, $id offline=true"
+		eval "$__return_offline=true"
+		return
+	fi
+
+	json_load_file $STATS_FILE_NAME
 	if json_is_a interfaces array ; then
 			json_select interfaces
 			json_get_keys interfaces
@@ -397,7 +408,13 @@ get_stat()
 	local metric
 	local name
 
-	json_load_file /tmp/stats.json
+	if [ ! -f $STATS_FILE_NAME ]; then
+		log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: no stats file, $id=0"
+		eval "$__return_stat=0"
+		return
+	fi
+
+	json_load_file $STATS_FILE_NAME
 	if json_is_a interfaces array ; then
 		json_select interfaces
 		json_get_keys interfaces
@@ -1478,7 +1495,7 @@ fi
 
 if [ "$INTERACTIVE" = "false" ] ; then
 	# Create term handler and run the handle_term callback
-	trap 'handle_term' TERM INT
+	trap 'handle_term' SIGTERM SIGINT
 else
 	# If we're in interactive (developer) mode we don't want the system daemon process running
 	for pid in `pgrep -f $COMMAND_NAME `; do
@@ -1497,11 +1514,11 @@ rm -rf ${WAN_MANAGER_STATUS_PATH}/*
 
 # Wait for stats.json to change, and then run every policy once (vs having each policy wait for change every time)
 while [ 1 ] ; do
-	wait_for_change /tmp/stats.json
 	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: --- begin wan_manager config"
 	. /etc/config/wan_manager
 	check_allow_log_update
 	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: ---   end wan_manager config"
+	wait_for_change $STATS_FILE_NAME
 done
 
 # Exit, wait for us to finish

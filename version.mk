@@ -12,12 +12,16 @@ PKG_SOURCE_URL := $(call check-var-overridden,PKG_SOURCE_URL,$(PKG_SOURCE_URL))
 PKG_SOURCE_VERSION := $(call check-var-overridden,PKG_SOURCE_VERSION,$(call MFW_VERSION,$(PKG_SOURCE_URL)))
 
 PKG_VERSION := $(call MFW_COMMIT,$(PKG_SOURCE_URL),$(PKG_SOURCE_VERSION))
+# use historical "go mod vendor" approach
+export MFW_GOFLAGS="-mod=vendor"
 else # use source tree already checked out on disk
 USE_SOURCE_DIR := $(LOCAL_SOURCE_PATH)/$(subst git@,,$(subst :,/,$(subst .git,,$(PKG_SOURCE_URL))))
 PKG_VERSION := local
 # undefine those 2 so there is no fetch attempt
 undefine PKG_SOURCE_PROTO
 undefine PKG_SOURCE_URL
+# use go modules already present on disk
+export MFW_GOFLAGS="-mod=readonly"
 endif
 
 PKG_SOURCE_SUBDIR := $(PKG_NAME)-$(PKG_VERSION)

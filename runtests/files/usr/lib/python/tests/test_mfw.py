@@ -25,7 +25,7 @@ class MFWBaseTests(MFWTestCase):
         assert (result == 0)
 
     def test_020_about_info(self):
-        uid = Restd.get_string("/api/status/uid")
+        uid = Restd.get("/api/status/uid", return_type="string")
         match = re.search(r'\w{8}-\w{4}-\w{4}.\w{4}.\w{12}', uid)
         assert( match )
 
