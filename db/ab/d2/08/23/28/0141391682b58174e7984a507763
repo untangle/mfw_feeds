@@ -3,7 +3,7 @@
     "commit": "dbabd20823280141391682b58174e7984a507763"
   },
   "barney.ci/alpine": {
-    "commit": "8732bb951c49016d5de181ddeebb4bd86b1acc8d"
+    "commit": "a772f65dfe30a8b2c1bbbddde6832807d2045e1f"
   },
   "barney.ci/docker": {
     "commit": "12a3314c6ea80d957e7024ede64f2ff65066e0f6"
