@@ -25,6 +25,15 @@ images:
         mkdir -p /dest/mfw-packages/backup-scripts
         cp bin/packages/x86_64/*/* /dest/mfw-packages/backup-scripts
 
+  test/backup-scripts:
+    units:
+    - image: code.arista.io/mfw/build%world
+    - image: .%mfw_pkg/backup-scripts
+    finalizers:
+    - - sh
+      - -c
+      - mkdir /var/lock && opkg install /mfw-packages/*/*
+
   mfw_pkg/crash-collector:
     units:
     - floor: code.arista.io/mfw/build%toolchain
@@ -46,6 +55,15 @@ images:
         # copy resulting packages to destination image
         mkdir -p /dest/mfw-packages/crash-collector
         cp bin/packages/x86_64/*/* /dest/mfw-packages/crash-collector
+
+  test/crash-collector:
+    units:
+    - image: code.arista.io/mfw/build%world
+    - image: .%mfw_pkg/crash-collector
+    finalizers:
+    - - sh
+      - -c
+      - mkdir /var/lock && opkg install /mfw-packages/*/*
 
   mfw_pkg/license-scripts:
     units:
@@ -69,6 +87,15 @@ images:
         mkdir -p /dest/mfw-packages/license-scripts
         cp bin/packages/x86_64/*/* /dest/mfw-packages/license-scripts
 
+  test/license-scripts:
+    units:
+    - image: code.arista.io/mfw/build%world
+    - image: .%mfw_pkg/license-scripts
+    finalizers:
+    - - sh
+      - -c
+      - mkdir /var/lock && opkg install /mfw-packages/*/*
+
   mfw_pkg/mfw-eu:
     units:
     - floor: code.arista.io/mfw/build%toolchain
@@ -90,6 +117,15 @@ images:
         # copy resulting packages to destination image
         mkdir -p /dest/mfw-packages/mfw-eu
         cp bin/packages/x86_64/*/* /dest/mfw-packages/mfw-eu
+
+  test/mfw-eu:
+    units:
+    - image: code.arista.io/mfw/build%world
+    - image: .%mfw_pkg/mfw-eu
+    finalizers:
+    - - sh
+      - -c
+      - mkdir /var/lock && opkg install /mfw-packages/*/*
 
   mfw_pkg/pyconnector:
     units:
@@ -113,6 +149,15 @@ images:
         mkdir -p /dest/mfw-packages/pyconnector
         cp bin/packages/x86_64/*/* /dest/mfw-packages/pyconnector
 
+  test/pyconnector:
+    units:
+    - image: code.arista.io/mfw/build%world
+    - image: .%mfw_pkg/pyconnector
+    finalizers:
+    - - sh
+      - -c
+      - mkdir /var/lock && opkg install /mfw-packages/*/*
+
   mfw_pkg/upgrade-scripts:
     units:
     - floor: code.arista.io/mfw/build%toolchain
@@ -134,6 +179,15 @@ images:
         # copy resulting packages to destination image
         mkdir -p /dest/mfw-packages/upgrade-scripts
         cp bin/packages/x86_64/*/* /dest/mfw-packages/upgrade-scripts
+
+  test/upgrade-scripts:
+    units:
+    - image: code.arista.io/mfw/build%world
+    - image: .%mfw_pkg/upgrade-scripts
+    finalizers:
+    - - sh
+      - -c
+      - mkdir /var/lock && opkg install /mfw-packages/*/*
 
   mfw_pkg/wan-manager:
     units:
@@ -162,3 +216,12 @@ images:
         # copy resulting packages to destination image
         mkdir -p /dest/mfw-packages/wan-manager
         cp bin/packages/x86_64/*/* /dest/mfw-packages/wan-manager
+
+  test/wan-manager:
+    units:
+    - image: code.arista.io/mfw/build%world
+    - image: .%mfw_pkg/wan-manager
+    finalizers:
+    - - sh
+      - -c
+      - mkdir /var/lock && opkg install /mfw-packages/*/*
