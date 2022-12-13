@@ -1,0 +1,10 @@
+reponame: github.com/untangle/mfw_feeds
+description: |
+  MFW feed for openwrt, providing packetd and other integration
+users:
+  maintainers:
+    - sdelafond@arista.com
+    - jsommerville@arista.com
+x-bar:
+  version: production
+epoch: 1
