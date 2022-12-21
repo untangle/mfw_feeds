@@ -1,9 +1,11 @@
-import time
+import collections
+import json
 import pytest
-from unittest import TestCase
-
 import runtests
+
+from unittest import TestCase
 from restd import Restd
+from tests import LibUtilities
 
 class MFWTestCase(TestCase):
     @staticmethod
@@ -21,7 +23,11 @@ class MFWTestCase(TestCase):
     original_settings = None
     @classmethod
     def initial_setup(cls, unused=None):
-        cls.original_settings = Restd.get("/api/settings-export")
+        # the get settings API returns settings with authentication and other
+        # items removed for privacy.
+        # settings-export returns the full settings file but as a tarball
+        export = Restd.get("/api/settings-export", return_type="content")
+        cls.original_settings = json.loads(LibUtilities.untar_file(export, "/settings.json"), object_pairs_hook=collections.OrderedDict)
 
         cls.initial_extra_setup()
 
