@@ -217,11 +217,13 @@ images:
         mkdir -p /dest/mfw-packages/wan-manager
         cp bin/packages/x86_64/*/* /dest/mfw-packages/wan-manager
 
-  test/wan-manager:
-    units:
-    - image: code.arista.io/mfw/build%world
-    - image: .%mfw_pkg/wan-manager
-    finalizers:
-    - - sh
-      - -c
-      - mkdir /var/lock && opkg install /mfw-packages/*/*
+  ## Commented-out for now because it needs kmod-nft, which is only
+  ## built by untangle/packetd
+  # test/wan-manager:
+  #   units:
+  #   - image: code.arista.io/mfw/build%world
+  #   - image: .%mfw_pkg/wan-manager
+  #   finalizers:
+  #   - - sh
+  #     - -c
+  #     - mkdir /var/lock && opkg install /mfw-packages/*/*
