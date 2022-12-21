@@ -1,7 +1,6 @@
 import collections
 import json
 import requests
-import urllib.parse, urllib.error
 
 class Restd:
     """
@@ -24,6 +23,9 @@ class Restd:
             return json.loads(data.content, object_pairs_hook=collections.OrderedDict)
         elif return_type == "string":
             return data.content.decode()
+        elif return_type == "content":
+            return data.content
+
         return data
 
     def post(path=None, post_data=None, return_type="json"):
