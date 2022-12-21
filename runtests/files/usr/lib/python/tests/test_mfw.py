@@ -2,11 +2,10 @@ import pytest
 import re
 import unittest
 
-from tests.mfwtestcase import MFWTestCase
+from restd import Restd
+from tests import MFWTestCase
 import runtests.test_registry as test_registry
 import runtests.remote_control as remote_control
-
-from restd import Restd
 
 @pytest.mark.mfw
 class MFWBaseTests(MFWTestCase):
