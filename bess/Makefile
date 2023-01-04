@@ -10,7 +10,7 @@ include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=bess
 PKG_MIRROR_HASH:=skip
-PKG_SOURCE_VERSION:=master
+PKG_SOURCE_VERSION:=withDPDK
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=git@github.com:untangle/bess.git
 PKG_LICENSE:=GPL-2.0+
@@ -45,7 +45,7 @@ include $(INCLUDE_DIR)/kernel.mk
 
 define KernelPackage/bess
   TITLE:=BESS kernel modules
-  URL:=https://github.com/NetSys/bess.git
+  URL:=git@github.com:untangle/bess.git
   FILES:=$(PKG_BUILD_DIR)/core/kmod/bess.ko
 endef
 
