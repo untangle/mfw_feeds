@@ -39,7 +39,7 @@ define Build/Compile
                         CC=$(TARGET_CC) \
                         CXX=$(TARGET_CXX) \
                         $(call GoPackage/Environment) ; \
-	make GOFLAGS=$(MFW_GOFLAGS) -buildvcs=false build
+	make GOFLAGS="$(MFW_GOFLAGS) -buildvcs=false" build
 endef
 
 define Package/client-license-service/install
