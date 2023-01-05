@@ -13,7 +13,7 @@ PKG_SOURCE_VERSION := $(call check-var-overridden,PKG_SOURCE_VERSION,$(call MFW_
 
 PKG_VERSION := $(call MFW_COMMIT,$(PKG_SOURCE_URL),$(PKG_SOURCE_VERSION))
 # use historical "go mod vendor" approach
-export MFW_GOFLAGS="-mod=vendor"
+export MFW_GOFLAGS="-mod=vendor -buildvcs=false"
 else # use source tree already checked out on disk
 USE_SOURCE_DIR := $(LOCAL_SOURCE_PATH)/$(subst git@,,$(subst :,/,$(subst .git,,$(PKG_SOURCE_URL))))
 PKG_VERSION := local
