@@ -22,7 +22,7 @@ include $(INCLUDE_DIR)/../feeds/packages/lang/golang/golang-package.mk
 define Package/alertd
   SECTION:=utils
   CATEGORY:=Utilities
-  TITLE:=Report daemon for logging and database interaction
+  TITLE:=Alert daemon for processing alerts
   URL:=https://github.com/untangle/reportd
   DEPENDS:=+libsodium +libzmq-curve
 endef
