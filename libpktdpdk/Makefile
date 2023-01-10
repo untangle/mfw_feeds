@@ -11,6 +11,10 @@ PKG_INSTALL:=1
 
 include $(INCLUDE_DIR)/package.mk
 
+CFLAGS+=-D_GNU_SOURCE -g
+TARGET_CFLAGS+=-msse4.2
+CONFIG_TARGET_SUBTARGET:="atom"
+
 define Package/libpktdpdk
 	SECTION:=libs
 	CATEGORY:=libraries
@@ -27,7 +31,8 @@ define Package/libpktdpdk/install
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libpktdpdk.so* $(1)/usr/lib/	
 	$(INSTALL_DIR) $(1)/usr/bin
-	#$(INSTALL_BIN) files/dpdkclient.sh $(1)/usr/bin
+	$(CP) $(PKG_BUILD_DIR)/test/dpdktest $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/dpdkclient.sh $(1)/usr/bin
 endef
 
 $(eval $(call BuildPackage,libpktdpdk))
