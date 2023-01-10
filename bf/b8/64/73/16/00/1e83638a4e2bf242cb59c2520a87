@@ -15,7 +15,7 @@
     "commit": "2ad739199ff4a64aee89dc182438705fb7b7dabb"
   },
   "github.com/golang/go": {
-    "commit": "dc04f3ba1f25313bc9c97e728620206c235db9ee"
+    "commit": "1e9ff255a130200fcc4ec5e911d28181fce947d5"
   },
   "github.com/untangle/openwrt": {
     "commit": "8bbfcef87bf9608e8d663cff13c935f93ac38045"
