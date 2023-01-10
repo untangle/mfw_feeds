@@ -6,7 +6,7 @@
     "commit": "a772f65dfe30a8b2c1bbbddde6832807d2045e1f"
   },
   "barney.ci/debian": {
-    "commit": "d9f33f3e3f084f8c713d004e5675b8da9d552212"
+    "commit": "792f7fb4a7e0eb1a4ab585e927ee28c0cad04e55"
   },
   "barney.ci/golang": {
     "commit": "fb96df7372c41bbc29bc59d1299bf91833bd4123"
