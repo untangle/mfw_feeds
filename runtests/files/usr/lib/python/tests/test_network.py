@@ -1,7 +1,7 @@
 import pytest
 import unittest
 
-from tests.mfwtestcase import MFWTestCase
+from tests import MFWTestCase
 import runtests.test_registry as test_registry
 import runtests.remote_control as remote_control
 
