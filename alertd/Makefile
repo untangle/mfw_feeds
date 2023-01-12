@@ -4,7 +4,7 @@ PKG_NAME:=alertd
 PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=git@github.com:untangle/reportd.git
+PKG_SOURCE_URL:=git@github.com:untangle/alertd.git
 
 include ../version.mk
 
@@ -23,7 +23,7 @@ define Package/alertd
   SECTION:=utils
   CATEGORY:=Utilities
   TITLE:=Alert daemon for processing alerts
-  URL:=https://github.com/untangle/reportd
+  URL:=https://github.com/untangle/alertd
   DEPENDS:=+libsodium +libzmq-curve
 endef
 
