@@ -8,3 +8,5 @@ CONFIG_PACKAGE_kmod-uio_pci_generic=y
 CONFIG_PACKAGE_kmod-vfio-pci=y
 CONFIG_PACKAGE_kmod-amd_iommu_v2=y
 CONFIG_PACKAGE_kmod-irqbypass=y
+CONFIG_PACKAGE_kmod-vhost=y
+CONFIG_PACKAGE_libpktdpdk=y

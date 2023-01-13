@@ -11,6 +11,10 @@ PKG_INSTALL:=1
 
 include $(INCLUDE_DIR)/package.mk
 
+CFLAGS+=-D_GNU_SOURCE -g
+TARGET_CFLAGS+=-msse4.2
+CONFIG_TARGET_SUBTARGET:="atom"
+
 define Package/libpktdpdk
 	SECTION:=libs
 	CATEGORY:=libraries
