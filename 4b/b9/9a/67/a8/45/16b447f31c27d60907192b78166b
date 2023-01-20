@@ -3,7 +3,7 @@
     "commit": "4bb99a67a84516b447f31c27d60907192b78166b"
   },
   "barney.ci/alpine": {
-    "commit": "a772f65dfe30a8b2c1bbbddde6832807d2045e1f"
+    "commit": "9289d43cef55c131072d200665d085e35554f4e7"
   },
   "barney.ci/debian": {
     "commit": "792f7fb4a7e0eb1a4ab585e927ee28c0cad04e55"
