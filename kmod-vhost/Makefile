@@ -27,11 +27,13 @@ define KernelPackage/vhost
       CONFIG_PROC_PAGE_MONITOR=y \
 			CONFIG_VHOST=y \
 			CONFIG_VHOST_NET=y
-  DEPENDS:=@PCI_SUPPORT @TARGET_x86_64 +kmod-vfio-pci +kmod-tun +libdpdk
+  DEPENDS:=@PCI_SUPPORT @TARGET_x86_64 +kmod-tun
   FILES:= \
       $(LINUX_DIR)/drivers/vhost/vhost.ko \
       $(LINUX_DIR)/drivers/vhost/vhost_net.ko
   AUTOLOAD:=$(call AutoProbe,vhost vhost_net)
+	#echo FILES=$FILES
+	#echo AUTOLOAD=$AUTOLOAD
 endef
 
 define KernelPackage/vhost/description
