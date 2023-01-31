@@ -10,7 +10,7 @@ include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=bess
 PKG_MIRROR_HASH:=skip
-PKG_SOURCE_VERSION:=withDPDK
+PKG_SOURCE_VERSION:=master
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=git@github.com:untangle/bess.git
 PKG_LICENSE:=GPL-2.0+
