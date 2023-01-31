@@ -32,8 +32,6 @@ define KernelPackage/vhost
       $(LINUX_DIR)/drivers/vhost/vhost.ko \
       $(LINUX_DIR)/drivers/vhost/vhost_net.ko
   AUTOLOAD:=$(call AutoProbe,vhost vhost_net)
-	#echo FILES=$FILES
-	#echo AUTOLOAD=$AUTOLOAD
 endef
 
 define KernelPackage/vhost/description
