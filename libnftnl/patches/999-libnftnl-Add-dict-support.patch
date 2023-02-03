@@ -1,28 +1,29 @@
-From 7f1578063dccdde47af261c8938af09b8845c29a Mon Sep 17 00:00:00 2001
-From: Brett Mastbergen <bmastbergen@untangle.com>
-Date: Thu, 17 May 2018 15:41:18 -0400
-Subject: [PATCH] libnftnl: Add dict support (w/ ct id)
+From e4362ee21171a045d3071a769d5433965974b2e8 Mon Sep 17 00:00:00 2001
+From: John Sommerville <jsommerville@arista.com>
+Date: Fri, 3 Feb 2023 15:32:34 -0700
+Subject: [PATCH] adding dict support
 
 ---
  include/libnftnl/expr.h             |  17 ++
- include/linux/netfilter/nf_tables.h |  25 +++
+ include/linux/netfilter/nf_tables.h |  25 ++
  src/Makefile.am                     |   2 +
- src/expr/cmp.c                      |  11 ++
- src/expr/ctid.c                     | 143 ++++++++++++++
- src/expr/dict.c                     | 361 ++++++++++++++++++++++++++++++++++++
+ src/expr/cmp.c                      |  11 +
+ src/expr/ctid.c                     | 143 +++++++++++
+ src/expr/dict.c                     | 361 ++++++++++++++++++++++++++++
  src/expr_ops.c                      |   6 +
  7 files changed, 565 insertions(+)
  create mode 100644 src/expr/ctid.c
  create mode 100644 src/expr/dict.c
 
 diff --git a/include/libnftnl/expr.h b/include/libnftnl/expr.h
-index 3e0f5b0..a72f487 100644
+index 00c63ab..523f1a2 100644
 --- a/include/libnftnl/expr.h
 +++ b/include/libnftnl/expr.h
-@@ -212,6 +212,23 @@ enum {
+@@ -225,6 +225,23 @@ enum {
+ 	NFTNL_EXPR_REJECT_CODE,
  };
  
- enum {
++enum {
 +	NFTNL_EXPR_DICT_SREG	= NFTNL_EXPR_BASE,
 +	NFTNL_EXPR_DICT_DREG,
 +	NFTNL_EXPR_DICT_TYPE,
@@ -39,15 +40,14 @@ index 3e0f5b0..a72f487 100644
 +	NFTNL_EXPR_CTID_DREG	= NFTNL_EXPR_BASE,
 +};
 +
-+enum {
+ enum {
  	NFTNL_EXPR_QUEUE_NUM	= NFTNL_EXPR_BASE,
  	NFTNL_EXPR_QUEUE_TOTAL,
- 	NFTNL_EXPR_QUEUE_FLAGS,
 diff --git a/include/linux/netfilter/nf_tables.h b/include/linux/netfilter/nf_tables.h
-index 03fd1b7..2eb1e12 100644
+index 0ae9120..aab0015 100644
 --- a/include/linux/netfilter/nf_tables.h
 +++ b/include/linux/netfilter/nf_tables.h
-@@ -1700,6 +1700,31 @@ enum nft_ng_types {
+@@ -1829,6 +1829,31 @@ enum nft_ng_types {
  };
  #define NFT_NG_MAX	(__NFT_NG_MAX - 1)
  
@@ -80,11 +80,11 @@ index 03fd1b7..2eb1e12 100644
  	NFTA_TUNNEL_KEY_IP_UNSPEC,
  	NFTA_TUNNEL_KEY_IP_SRC,
 diff --git a/src/Makefile.am b/src/Makefile.am
-index f16422c..b19d582 100644
+index c3b0ab9..dbdeac3 100644
 --- a/src/Makefile.am
 +++ b/src/Makefile.am
-@@ -36,6 +36,8 @@ libnftnl_la_SOURCES = utils.c		\
- 		      expr/fwd.c	\
+@@ -37,6 +37,8 @@ libnftnl_la_SOURCES = utils.c		\
+ 		      expr/last.c	\
  		      expr/limit.c	\
  		      expr/log.c	\
 +		      expr/dict.c	\
@@ -93,12 +93,12 @@ index f16422c..b19d582 100644
  		      expr/dynset.c	\
  		      expr/immediate.c	\
 diff --git a/src/expr/cmp.c b/src/expr/cmp.c
-index 86d7842..49f5cbe 100644
+index f9d15bb..10eda2c 100644
 --- a/src/expr/cmp.c
 +++ b/src/expr/cmp.c
-@@ -218,3 +218,14 @@ struct expr_ops expr_ops_cmp = {
+@@ -204,3 +204,14 @@ struct expr_ops expr_ops_cmp = {
  	.build		= nftnl_expr_cmp_build,
- 	.snprintf	= nftnl_expr_cmp_snprintf,
+ 	.output		= nftnl_expr_cmp_snprintf,
  };
 +
 +struct expr_ops expr_ops_scmp = {
@@ -109,11 +109,11 @@ index 86d7842..49f5cbe 100644
 +	.get		= nftnl_expr_cmp_get,
 +	.parse		= nftnl_expr_cmp_parse,
 +	.build		= nftnl_expr_cmp_build,
-+	.snprintf	= nftnl_expr_cmp_snprintf,
++	.output	= nftnl_expr_cmp_snprintf,
 +};
 diff --git a/src/expr/ctid.c b/src/expr/ctid.c
 new file mode 100644
-index 0000000..41d0148
+index 0000000..0b878bc
 --- /dev/null
 +++ b/src/expr/ctid.c
 @@ -0,0 +1,143 @@
@@ -258,11 +258,11 @@ index 0000000..41d0148
 +	.get		= nftnl_expr_ctid_get,
 +	.parse		= nftnl_expr_ctid_parse,
 +	.build		= nftnl_expr_ctid_build,
-+	.snprintf	= nftnl_expr_ctid_snprintf,
++	.output 	= nftnl_expr_ctid_snprintf,
 +};
 diff --git a/src/expr/dict.c b/src/expr/dict.c
 new file mode 100644
-index 0000000..bc9d95d
+index 0000000..f173542
 --- /dev/null
 +++ b/src/expr/dict.c
 @@ -0,0 +1,361 @@
@@ -625,13 +625,13 @@ index 0000000..bc9d95d
 +	.get		= nftnl_expr_dict_get,
 +	.parse		= nftnl_expr_dict_parse,
 +	.build		= nftnl_expr_dict_build,
-+	.snprintf	= nftnl_expr_dict_snprintf,
++	.output  	= nftnl_expr_dict_snprintf,
 +};
 diff --git a/src/expr_ops.c b/src/expr_ops.c
-index 3538dd6..f532fa3 100644
+index 7248e4f..6a12108 100644
 --- a/src/expr_ops.c
 +++ b/src/expr_ops.c
-@@ -37,6 +37,9 @@ extern struct expr_ops expr_ops_hash;
+@@ -38,6 +38,9 @@ extern struct expr_ops expr_ops_hash;
  extern struct expr_ops expr_ops_fib;
  extern struct expr_ops expr_ops_flow;
  extern struct expr_ops expr_ops_socket;
@@ -641,7 +641,7 @@ index 3538dd6..f532fa3 100644
  extern struct expr_ops expr_ops_synproxy;
  extern struct expr_ops expr_ops_tunnel;
  extern struct expr_ops expr_ops_osf;
-@@ -81,6 +84,9 @@ static struct expr_ops *expr_ops[] = {
+@@ -83,6 +86,9 @@ static struct expr_ops *expr_ops[] = {
  	&expr_ops_objref,
  	&expr_ops_flow,
  	&expr_ops_socket,
@@ -652,5 +652,5 @@ index 3538dd6..f532fa3 100644
  	&expr_ops_tunnel,
  	&expr_ops_osf,
 -- 
-2.11.0
+2.39.1
 
