@@ -10,7 +10,7 @@ PKG_NAME:=nftables
 PKG_VERSION:=1.0.6
 PKG_RELEASE:=1
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://netfilter.org/projects/$(PKG_NAME)/files
 PKG_HASH:=2407430ddd82987670e48dc2fda9e280baa8307abec04ab18d609df3db005e4c
 PKG_MAINTAINER:=Steven Barth <steven@midlink.org>
