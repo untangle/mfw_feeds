@@ -19,7 +19,7 @@ logException() {
     logger -p 2 -s -t upgrade.sh "$1"
 }
 
-for f in /etc/os-release /tmp/sysinfo/board_name /etc/config/uid ; do
+for f in /etc/os-release /tmp/sysinfo/product_board_name /etc/config/uid ; do
     if [ ! -f $f ] ; then
         logException "Missing $f file"
         exit 1
@@ -31,11 +31,7 @@ source /usr/share/libubox/jshn.sh
 
 FULL_VERSION="$(grep VERSION_ID /etc/os-release | cut -d '"' -f 2)"
 VERSION="`grep VERSION_ID /etc/os-release | sed -rn 's/.*v(\d{1,2}\.\d{1,2}\.?\d{0,2}).*/\1/p'`"
-BOARD="`cat /tmp/sysinfo/board_name | tr -d '[ \t\r\n]'`"
-
-if [[ -f "/tmp/sysinfo/untangle_board_name" ]] ; then
-    BOARD="`cat /tmp/sysinfo/untangle_board_name | tr -d '[ \t\r\n]'`"
-fi
+BOARD="`cat /tmp/sysinfo/product_board_name | tr -d '[ \t\r\n]'`"
 
 UID="`cat /etc/config/uid | tr -d '[ \t\r\n]'`"
 DEVICE="`grep DEVICE_MANUFACTURER_URL /etc/os-release | sed -rn 's/.*(mfw|sdwan)-(.*?)-Packages.*/\2/p'`"

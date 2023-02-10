@@ -47,7 +47,7 @@ define Py3Package/sync-settings/install
 	$(INSTALL_BIN) files/setup.init $(1)/etc/init.d/setup
 	$(INSTALL_BIN) files/startup.init $(1)/etc/init.d/startup
 	$(INSTALL_BIN) files/uid.init $(1)/etc/init.d/uid
-	$(INSTALL_BIN) files/untangle-board-name.init $(1)/etc/init.d/untangle-board-name
+	$(INSTALL_BIN) files/product-board-name.init $(1)/etc/init.d/product-board-name
 
 	# config/startup.d
 	$(INSTALL_DIR) $(1)/etc/config/startup.d
