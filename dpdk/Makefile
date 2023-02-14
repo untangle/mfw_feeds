@@ -4,12 +4,13 @@
 #
 
 include $(TOPDIR)/rules.mk
-PKG_MIRROR_HASH:=42f74667e5d2fa36881f6e3aa05ff4772316c5e813cae52b96f1879b17bb6ae2
-PKG_NAME:=dpdk
-PKG_SOURCE_VERSION:=v19.11
-PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/DPDK/dpdk.git
 
+PKG_NAME:=dpdk
+PKG_MAINTAINER:=Christian Rasmussen <crasmussen@arista.com>
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_URL:=git@github.com:aristanetworks/dpdk.git
+
+include ../version.mk
 
 PKG_MAINTAINER:=Zbynek Kocur <zbynek.kocur@fel.cvut.cz>
 PKG_LICENSE:=BSD-3-Clause
