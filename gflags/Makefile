@@ -6,9 +6,9 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gflags
-PKG_SOURCE_VERSION:= v2.2.2
+PKG_SOURCE_VERSION:=v2.2.2
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:= git@github.com:gflags/gflags.git
+PKG_SOURCE_URL:=https://github.com/gflags/gflags.git
 PKG_MIRROR_HASH:=skip
 
 CMAKE_INSTALL:=1

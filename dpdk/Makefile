@@ -4,18 +4,19 @@
 #
 
 include $(TOPDIR)/rules.mk
-PKG_MIRROR_HASH:=42f74667e5d2fa36881f6e3aa05ff4772316c5e813cae52b96f1879b17bb6ae2
-PKG_NAME:=dpdk
-PKG_SOURCE_VERSION:=v19.11
-PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/DPDK/dpdk.git
 
+PKG_NAME:=dpdk
+PKG_MAINTAINER:=Christian Rasmussen <crasmussen@arista.com>
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_URL:=git@github.com:aristanetworks/dpdk.git
+
+include ../version.mk
 
 PKG_MAINTAINER:=Zbynek Kocur <zbynek.kocur@fel.cvut.cz>
 PKG_LICENSE:=BSD-3-Clause
 PKG_LICENSE_FILES:=COPYING
 
-PKG_BUILD_DEPENDS:=meson/host python3/host python3-pyelftools/host  python3-base/host
+PKG_BUILD_DEPENDS:=meson/host python3/host python3-pyelftools/host  
 
 HOST_BUILD_DEPENDS:=meson/host python3/host python3-pyelftools/host python3-distutils/host
 
@@ -53,9 +54,10 @@ define Package/libdpdk
   KCONFIG:=CONFIG_NUMA=y \
 		CONFIG_HUGETLB_PAGE=y CONFIG_HUGETLBFS=y \
 		CONFIG_KERNEL_HUGETLB_PAGE=y CONFIG_KERNEL_PROC_PAGE_MONITOR=y CONFIG_KERNEL_DEV_PAGEMAP_OPS=y \
-		CONFIG_KERNEL_PROC_FS=y CONFIG_PAGE_MONITOR=y CONFIG_MMU=y CONFIG_NUMA=y CONFIG_UIO=y \
+		CONFIG_KERNEL_PROC_FS=y CONFIG_PAGE_MONITOR=y CONFIG_MMU=y CONFIG_NUMA=y CONFIG_UIO=y CONFIG_VFIO=y\
 		CONFIG_VFIO_IOMMU_TYPE1=y CONFIG_VFIO_VIRQFD=y CONFIG_VFIO=y CONFIG_VFIO_NOIOMMU=y CONFIG_VFIO_PCI=y CONFIG_VFIO_PCI_MMAP=y \
-		CONFIG_PACKAGE_libnuma=y CONFIG_PACKAGE_numactl=y
+		CONFIG_VFIO_PCI_IGD=y CONFIG_VFIO_PCI_INTX=y CONFIG_VHOST=y CONFIG_VHOST_CROSS_ENDIAN_LEGACY=y CONFIG_VHOST_NET=y \
+		CONFIG_PACKAGE_libnuma=y CONFIG_PACKAGE_numactl=y CONFIG_VIRTUALIZATION=y CONFIG_IOMMU_API=y
   TITLE:=Set of libraries and drivers for fast packet processing
   URL:=https://www.dpdk.org
 endef
@@ -119,6 +121,7 @@ define Package/dpdk-tools/install
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/dpdk-devbind.py $(1)/usr/bin/dpdk-devbind
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/dpdk-pdump $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/dpdk-proc-info $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/dpdk-testpmd $(1)/usr/bin/
 endef
 
 define Package/dpdk-examples/install

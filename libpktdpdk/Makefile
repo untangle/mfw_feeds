@@ -5,11 +5,16 @@ PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=Al Parker <al.parker@arista.com>
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=git@github.com:untangle/libpktdpdk.git
-PKG_SOURCE_VERSION:=master
+
+include ../version.mk
 
 PKG_INSTALL:=1
 
 include $(INCLUDE_DIR)/package.mk
+
+CFLAGS+=-D_GNU_SOURCE -g
+TARGET_CFLAGS+=-msse4.2
+CONFIG_TARGET_SUBTARGET:="atom"
 
 define Package/libpktdpdk
 	SECTION:=libs
