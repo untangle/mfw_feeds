@@ -22,7 +22,7 @@ for target_address in "${TARGET_ADDRESSES[@]}"; do
     fi
 
     rsync -r -a -v --chown=root:root wan-manager/files/* root@$target_address:/usr/bin
-    rsync -r -a -v --ignore-existing --chown=root:root credentials/files/credentials.json root@$target_address:/etc/config/credentials.json
+    rsync -r -a -v --chown=root:root credentials/files/credentials.json root@$target_address:/etc/config/credentials.json
     # rsync -r -a -v --chown=root:root pyconnector/files/* root@$target_address:/usr/bin
     # rsync -r -a -v --chown=root:root strongswan-full/files/override.ipsec.init root@$target_address:/etc/init.d/ipsec
     # rsync -r -a -v --chown=root:root pyconnector/files/pyconnector root@$target_address:/usr/bin/pyconnector
