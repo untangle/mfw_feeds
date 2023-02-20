@@ -50,8 +50,6 @@ define Package/alertd/install
 	$(INSTALL_BIN) $(OUR_SRC_DIR)/cmd/alertd/alertd $(1)/usr/bin/alertd
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) files/alertd.init $(1)/etc/init.d/alertd
-	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(OUR_SRC_DIR)/cmd/send-alert/send-alert $(1)/usr/bin/send-alert
 endef
 
 $(eval $(call BuildPackage,alertd))
