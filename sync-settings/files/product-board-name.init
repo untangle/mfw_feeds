@@ -23,7 +23,7 @@ boot() {
             fi
             echo $product_board_name > /tmp/sysinfo/product_board_name
             ;;
-        caswell-caf-0262|untangle-inc-default-string)
+        caswell-caf-0262|untangle-inc-default-string|arista-networks-inc-default-string)
             if [[ $SERIAL =~ $qSerialPattern ]];
             then
                 # Handle Q series board name.
