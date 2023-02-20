@@ -27,20 +27,8 @@ define Package/alertd
   DEPENDS:=+libsodium +libzmq-curve
 endef
 
-define Package/send-alert
-  SECTION:=utils
-  CATEGORY:=Utilities
-  TITLE:=Utility for sending alerts
-  URL:=https://github.com/untangle/alertd
-  DEPENDS:=+libsodium +libzmq-curve
-endef
-
 define Package/alertd/description
 	Alerts processing daemon
-endef
-
-define Package/send-alert/description
-	Command for sending alerts from CLI
 endef
 
 OUR_SRC_DIR:=$(GO_PKG_BUILD_DIR)/src/$(GO_PKG)
@@ -62,11 +50,9 @@ define Package/alertd/install
 	$(INSTALL_BIN) $(OUR_SRC_DIR)/cmd/alertd/alertd $(1)/usr/bin/alertd
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) files/alertd.init $(1)/etc/init.d/alertd
-endef
 
-define Package/send-alert/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(OUR_SRC_DIR)/cmd/send-alert/send-alert $(1)/usr/bin/send-alert
+    $(INSTALL_BIN) $(OUR_SRC_DIR)/cmd/send-alert/send-alert $(1)/usr/bin/send-alert
 endef
 
 $(eval $(call BuildPackage,alertd))
