@@ -24,7 +24,7 @@ define Package/discoverd
   CATEGORY:=Utilities
   TITLE:=Host discovery daemon
   URL:=https://github.com/untangle/discoverd
-  DEPENDS:=+libsodium +libzmq-curve +nmap-ssl +lldpd
+  DEPENDS:=+libsodium +libzmq-curve +nmap-ssl +lldpd +lsof
 endef
 
 define Package/discoverd/description
@@ -42,7 +42,7 @@ define Build/Compile
                         CC=$(TARGET_CC) \
                         CXX=$(TARGET_CXX) \
                         $(call GoPackage/Environment) ; \
-	make build
+	make GOFLAGS=$(MFW_GOFLAGS) build
 endef
 
 define Package/discoverd/install
@@ -50,6 +50,8 @@ define Package/discoverd/install
 	$(INSTALL_BIN) $(OUR_SRC_DIR)/cmd/discoverd/discoverd $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) files/discoverd.init $(1)/etc/init.d/discoverd
+  $(INSTALL_BIN) files/discoverd_monitor.init $(1)/etc/init.d/discoverd_monitor
+  $(INSTALL_DIR) files/discoverd_monitor.sh $(1)/usr/bin/
 endef
 
 $(eval $(call BuildPackage,discoverd))
