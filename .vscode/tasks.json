@@ -28,7 +28,7 @@
         "id": "target_address",
         "type": "promptString",
         "description": "IP Address to upload package to",
-        "default": ""
+        "default": "192.168.1.1"
     },{
         "id": "test_client_address",
         "type":"promptString",
