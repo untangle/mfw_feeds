@@ -7,7 +7,7 @@ STOP=01
 USE_PROCD=1
 
 start_service() {
-    procd_open_instance discoverd
+    procd_open_instance discoverd_monitor
 
     # procd_set_param env GODEBUG=schedtrace=30000
     # procd_set_param env GODEBUG=schedtrace=30000,scheddetail=1
