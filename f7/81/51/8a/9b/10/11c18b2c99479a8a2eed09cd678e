@@ -1,0 +1,23 @@
+{
+  "": {
+    "commit": "f781518a9b1011c18b2c99479a8a2eed09cd678e"
+  },
+  "barney.ci/alpine": {
+    "commit": "9289d43cef55c131072d200665d085e35554f4e7"
+  },
+  "barney.ci/debian": {
+    "commit": "792f7fb4a7e0eb1a4ab585e927ee28c0cad04e55"
+  },
+  "barney.ci/golang": {
+    "commit": "fb96df7372c41bbc29bc59d1299bf91833bd4123"
+  },
+  "code.arista.io/mfw/build": {
+    "commit": "6576550419876bdda9e1a69b3bb7fff3637590c4"
+  },
+  "github.com/golang/go": {
+    "commit": "202a1a57064127c3f19d96df57b9f9586145e21c"
+  },
+  "github.com/untangle/openwrt": {
+    "commit": "a4481d2248d0d60edb27573cbc83dbfa8b265845"
+  }
+}
