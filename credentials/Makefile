@@ -27,7 +27,7 @@ endef
 
 define Package/credentials/install
 	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_BIN) files/credentials.json $(1)/etc/config
+	$(INSTALL_BIN) files/credentials.json $(1)/etc/config/
 endef
 
 $(eval $(call BuildPackage,credentials))
