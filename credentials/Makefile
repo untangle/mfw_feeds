@@ -16,6 +16,7 @@ define Package/credentials
   CATEGORY:=Network
   TITLE:=Credentials
   URL:=https://github.com/untangle/mfw_feeds
+  DEPENDS:=+openssh-client +openssh-server
 endef
 
 define Package/credentials/description
