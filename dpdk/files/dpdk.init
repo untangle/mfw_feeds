@@ -1,0 +1,12 @@
+#!/bin/sh /etc/rc.common
+
+# If DPDK is enabled we need to load vhost and initialize hugepages.
+if [ -e /etc/config/dpdk ]
+then
+    # Enable DPDK OS support.
+    insmod /overlay/vhost.ko
+    insmod /overlay/vhost_net.ko
+    # Enable hugepages.
+    sysctl -w vm.nr_hugepages=512
+    mount -t hugetlbfs -o pagesize=2097152 nodev /dev/hugepages
+fi
