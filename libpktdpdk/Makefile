@@ -8,6 +8,8 @@ PKG_SOURCE_URL:=git@github.com:untangle/libpktdpdk.git
 
 include ../version.mk
 
+PKG_BUILD_DEPENDS:=golang/host
+
 PKG_INSTALL:=1
 
 include $(INCLUDE_DIR)/package.mk
