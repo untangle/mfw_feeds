@@ -74,6 +74,10 @@ define Package/dpdk-init
   URL:=https://www.arista.com
 endef
 
+define Package/dpdk-init/description
+  This package contains the dpdk init script.
+endef
+
 define Package/dpdk-tools
   SECTION:=net
   CATEGORY:=Network
