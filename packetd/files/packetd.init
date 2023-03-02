@@ -17,7 +17,14 @@ start_service() {
     # --no-timestamps disable timestamps in log
     # --logfile to specify a logfile manually
     # as output goes to logd which will add timestamps
-    procd_set_param command /usr/bin/packetd --no-timestamp
+
+    if [ -e /etc/config/dpdk ]
+    then
+        procd_set_param command /usr/bin/packetd --dpdk --no-timestamp
+        source /etc/config/dpdk.env
+    else
+        procd_set_param command /usr/bin/packetd --no-timestamp
+    fi
     # procd_set_param command /usr/bin/packetd --logfile /tmp/log/packetd.log
 
     # restart indefinitely if crashed, 5 seconds between attempts
