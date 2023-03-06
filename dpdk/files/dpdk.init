@@ -1,5 +1,11 @@
 #!/bin/sh /etc/rc.common
 
+# Must run before packetd.
+START=20
+STOP=20
+
+USE_PROCD=1
+
 # If DPDK is enabled we need to load vhost and initialize hugepages.
 if [ -e /etc/config/dpdk ]
 then
