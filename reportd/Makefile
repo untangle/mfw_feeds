@@ -24,7 +24,7 @@ define Package/reportd
   CATEGORY:=Utilities
   TITLE:=Report daemon for logging and database interaction
   URL:=https://github.com/untangle/reportd
-  DEPENDS:=+libsodium +libzmq-curve
+  DEPENDS:=+libsodium +libzmq-curve +credentials
 endef
 
 define Package/reportd/description
