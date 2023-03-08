@@ -5,6 +5,7 @@ CONFIG_PACKAGE_classd=y
 CONFIG_PACKAGE_client-license-service=y
 CONFIG_PACKAGE_container=y
 CONFIG_PACKAGE_crash-collector=y
+CONFIG_PACKAGE_credentials=y
 CONFIG_PACKAGE_discoverd=y
 CONFIG_PACKAGE_geoip-database=y
 CONFIG_PACKAGE_nftables=y
