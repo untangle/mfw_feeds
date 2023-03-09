@@ -24,7 +24,7 @@ define Package/alertd
   CATEGORY:=Utilities
   TITLE:=Alert daemon for processing alerts
   URL:=https://github.com/untangle/alertd
-  DEPENDS:=+libsodium +libzmq-curve
+  DEPENDS:=+libsodium +libzmq-curve +credentials
 endef
 
 define Package/alertd/description
