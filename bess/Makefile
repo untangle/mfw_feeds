@@ -19,6 +19,7 @@ include ../version.mk
 include $(TOPDIR)/feeds/packages/lang/python/python3-package.mk
 include $(INCLUDE_DIR)/package.mk
 
+PKG_BUILD_DEPENDS:=libdpdk
 
 define Package/bess
   SECTION:=libs
