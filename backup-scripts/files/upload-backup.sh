@@ -5,7 +5,9 @@
 # Constants
 TIMEOUT=1200
 VERBOSE=false
-BACKUP_FILE=mfw_`date -Iseconds`.backup.gz
+SEND_CURL=true
+BACKUP_COPY_DIR=""
+BACKUP_FILE=mfw_`date -Iseconds`.backup.tar.gz
 URL='https://boxbackup.untangle.com/boxbackup/backup.php'
 TRANSLATED_URL=$(wget -qO- "http://127.0.0.1/api/uri/geturiwithpath/uri=$URL")
 if [ "$TRANSLATED_URL" != "" ] ; then
@@ -26,13 +28,12 @@ function err() {
 
 # Create backup coping settings file to a temp dir
 function createBackup() {
-  debug "Backing up settings to gunzip file"
+  debug "Backing up settings to gunzipped tar archive file"
   TEMP_DIR=`mktemp -d -t ut-backup.XXXXXXX`
+  TEMP_DIR_NAME=$(basename $TEMP_DIR)
 
   cp /etc/config/settings.json $TEMP_DIR
-  gzip $TEMP_DIR/settings.json
-  mv $TEMP_DIR/settings.json.gz ./$BACKUP_FILE   
-
+  tar -C /tmp -zcf $BACKUP_FILE $TEMP_DIR_NAME
   rm -r $TEMP_DIR
 }
 
@@ -118,26 +119,64 @@ function checkEnable() {
   fi
 }
 
+# cleanup - called on exit
+function cleanup() {
+  # removing the backup file.
+  debug "Remove backup file $BACKUP_FILE"
+  rm -f $BACKUP_FILE
+}
+
 ####################################
 # "Main" logic starts here
 
-while getopts "v" opt; do
+trap cleanup EXIT
+
+while getopts "vc:" opt; do
   case $opt in
     v) VERBOSE=true;;
+    # Takes a directory to copy the backup file to for future retrieval.
+    # Does NOT send the curl command containing the file to CMD
+    c)
+     SEND_CURL=false
+     BACKUP_COPY_DIR=$OPTARG
+     if ! [ -w $BACKUP_COPY_DIR ]; then 
+      echo "Can't write backup to provided directory ${BACKUP_COPY_DIR}"
+      exit 1
+     fi
+     ;;
   esac
 done
 
 # determine if enabled
 checkEnable
 
-# determine if license correct
-checkLicense
+# determine if license correct. Only check the licesne if sending the backup
+# to the cloud for storage with the curl command
+if $SEND_CURL; then
+  checkLicense
+fi
 
 # get uid
 UID=`cat /etc/config/uid`
 
 # create backup file
 createBackup
+
+# In the case where a backup file needs to be created and 
+# grabbed by MFW to send to the front end, just tell MFW
+# where the file is and exit
+if ! $SEND_CURL; then
+
+  # Copy the backup file to the /tmp directory for 
+  # retrieval by MFW. The original will get deleted
+  cp $BACKUP_FILE $BACKUP_COPY_DIR
+
+  echo "Backup location: ${BACKUP_COPY_DIR}/${BACKUP_FILE}"
+  
+  # return here to avoid the file being deleted 
+  # Let MFW grab it and delete it
+  exit 0
+fi
 
 debug "Running backup"
 debug "URL: " $URL

@@ -11,6 +11,8 @@ include ../version.mk
 GO_PKG:=github.com/untangle/packetd
 GO_PKG_INSTALL_EXTRA:=packetd_rules Makefile
 
+PKG_BUILD_DEPENDS:=golang/host
+
 include $(INCLUDE_DIR)/package.mk
 # FIXME: standardize on OpenWRT+golang macros, ideally we wouldn't
 # have to define anything special in neither Build/Compile nor
@@ -23,7 +25,6 @@ define Package/packetd
   SUBMENU:=Firewall
   TITLE:=Userspace packet processing daemon
   URL:=https://github.com/untangle/packetd
-  PKG_BUILD_DEPENDS:=golang
   DEPENDS:=+libnetfilter-conntrack +libnetfilter-queue +libnetfilter-log +geoip-database \
 	  +iptables-mod-nfqueue +kmod-nft-dict +libnftnl +libsodium +libzmq-curve
   # FIXME: needed ?
@@ -46,7 +47,7 @@ define Build/Compile
                         CC=$(TARGET_CC) \
                         CXX=$(TARGET_CXX) \
                         $(call GoPackage/Environment) ; \
-	make build
+	make GOFLAGS=$(MFW_GOFLAGS) build
 endef
 
 define Package/packetd/install

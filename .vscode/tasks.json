@@ -1,0 +1,43 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [{
+        "label": "Copy to target",
+        "type": "shell",
+        "command": "./.vscode/vsbuild.sh ${input:target_address}",
+        "group": {
+            "kind": "build"
+        }
+    },{
+        "label": "Search for tests",
+        "type": "shell",
+        "command": "./.vscode/tests.sh -t ${input:target_address} -g -r \"${input:tests}\"",
+        "group": {
+            "kind": "build"
+        }
+    },{
+        "label": "Run tests",
+        "type": "shell",
+        "command": "./.vscode/vsbuild.sh ${input:target_address} && ./.vscode/tests.sh -t \"${input:target_address}\" -h \"${input:test_client_address}\" -r \"${input:tests}\"  ",
+        "group": {
+            "kind": "build"
+        }
+    }],
+    "inputs": [{
+        "id": "target_address",
+        "type": "promptString",
+        "description": "IP Address to upload package to",
+        "default": "192.168.1.1"
+    },{
+        "id": "test_client_address",
+        "type":"promptString",
+        "description": "IP of test client",
+        "default": ""
+    },{
+        "id": "tests",
+        "type":"promptString",
+        "description": "Tests to run (runtests arguments like -t <suite> amd/or -T <tests> comma separated",
+        "default": "-t all"
+    }]
+}

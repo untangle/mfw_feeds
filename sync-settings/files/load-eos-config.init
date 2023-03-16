@@ -1,0 +1,17 @@
+#!/bin/sh /etc/rc.common
+
+# 17 is right after setup (16)
+#Load MFW EOS config to sysdb only if MFW runs on EOS
+START=17
+STOP=17
+
+start() {
+    if [ -f /etc/Eos-release ] ; then
+        load-eos-config
+    fi
+}
+
+stop() {
+    # Not implemented
+    true
+}

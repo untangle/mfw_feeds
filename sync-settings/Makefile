@@ -17,7 +17,7 @@ define Package/sync-settings
   SUBMENU:=Python3
   TITLE:=Library for manipulating MFW system settings
   URL:=https://github.com/untangle/sync-settings
-  PKG_BUILD_DEPENDS:=python3 python3-urllib3 python3-pyroute2
+  PKG_BUILD_DEPENDS:=python3-urllib3 python3-pyroute2
   DEPENDS:= +diffutils +tc +kmod-sched +kmod-sched-cake +kmod-ifb +kmod-sched-connmark \
 	  +uuidgen +python3-jsonschema +kmod-nft-fib +openvpn-proto +wan-manager +speedtest-cli \
 	  +python3 +python3-urllib3 +python3-pyroute2 +strongswan-default +strongswan-mod-gcm \
@@ -32,6 +32,7 @@ define Py3Package/sync-settings/install
 	# bin
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/sync-settings $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/load-eos-config $(1)/usr/bin
 	$(INSTALL_BIN) files/speedtest.sh $(1)/usr/bin
 	$(INSTALL_BIN) files/wwan_status.sh $(1)/usr/bin
 	$(INSTALL_BIN) files/nft_debug $(1)/usr/bin
@@ -46,7 +47,8 @@ define Py3Package/sync-settings/install
 	$(INSTALL_BIN) files/setup.init $(1)/etc/init.d/setup
 	$(INSTALL_BIN) files/startup.init $(1)/etc/init.d/startup
 	$(INSTALL_BIN) files/uid.init $(1)/etc/init.d/uid
-	$(INSTALL_BIN) files/untangle-board-name.init $(1)/etc/init.d/untangle-board-name
+	$(INSTALL_BIN) files/product-board-name.init $(1)/etc/init.d/product-board-name
+	$(INSTALL_BIN) files/load-eos-config.init $(1)/etc/init.d/load-eos-config
 
 	# config/startup.d
 	$(INSTALL_DIR) $(1)/etc/config/startup.d

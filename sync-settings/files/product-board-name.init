@@ -1,0 +1,59 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2015-2016 OpenWrt.org
+# Copyright (C) 2016 LEDE-Project.org
+
+START=12
+boot() {
+    . /lib/functions.sh
+
+    if [ -f /tmp/sysinfo/product_board_name ] ; then
+        exit
+    fi
+
+    SERIAL=$(cat /etc/config/serial | tr -d '[ \t\r\n]')
+    # Q series serial pattern CTWYYWWSSSS
+    # YYWWSSSS is a series of digits representing the year, number of weeks, and a sequence number
+    qSerialPattern="^CTW([1-9][0-9])(0[1-9]|[1-4][0-9]|5[0-3])([0-9]{4})$"
+
+    case $(board_name) in
+        globalscale,espressobin-v7-emmc)
+            product_board_name="e3"
+            if [ -L /sys/class/ieee80211/phy0 ] ; then
+                product_board_name=$product_board_name"w"
+            fi
+            echo $product_board_name > /tmp/sysinfo/product_board_name
+            ;;
+        caswell-caf-0262|untangle-inc-default-string|arista-networks-inc-default-string)
+            if [[ $SERIAL =~ $qSerialPattern ]];
+            then
+                # Handle Q series board name.
+                product_board_name="Q6E"
+            else
+                # Handle NON Q series board name.
+                product_board_name="e6"
+            fi
+
+            if [ -L /sys/class/ieee80211/phy0 ] ; then
+                product_board_name=$product_board_name"w"
+            fi
+
+            if [ -L /sys/class/net/wwan0 ] ; then
+                product_board_name=$product_board_name"l"
+            fi
+
+            echo $product_board_name > /tmp/sysinfo/product_board_name
+            ;;
+        vmware-inc-vmware-virtual-platform)
+            echo "VMware" > /tmp/sysinfo/product_board_name
+            ;;
+        innotek-gmbh-virtualbox)
+            echo "VirtualBox" > /tmp/sysinfo/product_board_name
+            ;;
+        microsoft-corporation-virtual-machine)
+            echo "HyperV" > /tmp/sysinfo/product_board_name
+            ;;
+        *)
+            echo "Custom" > /tmp/sysinfo/product_board_name
+            ;;
+    esac
+}

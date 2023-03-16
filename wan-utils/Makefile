@@ -12,6 +12,7 @@ include $(INCLUDE_DIR)/package.mk
 GO_PKG:=github.com/untangle/wan-utils
 GO_PKG_INSTALL_EXTRA:=Makefile
 
+PKG_BUILD_DEPENDS:=golang/host
 
 # FIXME: standardize on OpenWRT+golang macros, ideally we wouldn't
 # have to define anything special in neither Build/Compile nor
@@ -24,7 +25,6 @@ define Package/wan-utils
   SUBMENU:=Firewall
   TITLE:=wan utilities
   URL:=https://github.com/untangle/wan-utils
-  PKG_BUILD_DEPENDS:=golang
 endef
 
 define Package/wan-utils/description
@@ -42,7 +42,7 @@ define Build/Compile
                         CC=$(TARGET_CC)		\
                         CXX=$(TARGET_CXX)	\
                         $(call GoPackage/Environment) ; \
-	make build
+	make GOFLAGS=$(MFW_GOFLAGS) build
 endef
 
 define Package/wan-utils/install

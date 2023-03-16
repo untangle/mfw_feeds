@@ -1,0 +1,16 @@
+#!/bin/sh /etc/rc.common
+
+# Must run before packetd.
+START=20
+STOP=20
+
+USE_PROCD=1
+
+# If DPDK is enabled we need to load vhost and initialize hugepages.
+if [ -e /etc/config/dpdk ]
+then
+    # Enable hugepages.
+    sysctl -w vm.nr_hugepages=512
+    mkdir -p /dev/hugepages
+    mount -t hugetlbfs -o pagesize=2097152 nodev /dev/hugepages
+fi
