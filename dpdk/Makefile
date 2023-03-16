@@ -67,17 +67,6 @@ define Package/libdpdk/description
 It supports many processor architectures and both FreeBSD and Linux.
 endef
 
-define Package/dpdk-init
-  SECTION:=utils
-  CATEGORY:=Utilities
-  TITLE:=DPDK init script
-  URL:=https://www.arista.com
-endef
-
-define Package/dpdk-init/description
-  This package contains the dpdk init script.
-endef
-
 define Package/dpdk-tools
   SECTION:=net
   CATEGORY:=Network
@@ -141,12 +130,6 @@ define Package/dpdk-examples/install
 
 endef
 
-define Package/dpdk-init/install
-	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) files/dpdk.init $(1)/etc/init.d/dpdk
-endef
-
 $(eval $(call HostBuild))
 $(eval $(call BuildPackage,libdpdk))
-$(eval $(call BuildPackage,dpdk-init))
 $(eval $(call BuildPackage,dpdk-tools))

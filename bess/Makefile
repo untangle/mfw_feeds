@@ -83,5 +83,22 @@ define Package/bess/install
 	$(CP) -LR $(PKG_BUILD_DIR)/pybess/ $(1)/$(PYTHON3_PKG_DIR)/
 endef
 
+define Package/bess-init
+  SECTION:=utils
+  CATEGORY:=Utilities
+  TITLE:=BESS init script
+  URL:=https://www.arista.com
+endef
+
+define Package/bess-init/description
+  This package contains the bess init script.
+endef
+
+define Package/bess-init/install
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) files/bess.init $(1)/etc/init.d/bess
+endef
+
 $(eval $(call BuildPackage,bess))
+$(eval $(call BuildPackage,bess-init))
 $(eval $(call KernelPackage,bess))
