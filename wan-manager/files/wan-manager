@@ -1257,7 +1257,7 @@ policy_best_of()
 					if [ $stat -gt $best_stat ] ; then
 						best_wan=$wan
 						best_stat=$stat
-=					fi
+					fi
 					;;
 			esac
 		fi
