@@ -21,7 +21,7 @@ CONFIG_TARGET_SUBTARGET:="atom"
 define Package/libpktdpdk
 	SECTION:=libs
 	CATEGORY:=libraries
-	DEPENDS:=+libdpdk +dpdk-tools +dpdk-init
+	DEPENDS:=+libdpdk +dpdk-tools
 	TITLE:=Userspace DPDK packet processing library 
 	URL:=https://github.com/untangle/libpktdpdk
 endef
