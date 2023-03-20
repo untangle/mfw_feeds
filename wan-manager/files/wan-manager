@@ -851,6 +851,28 @@ criteria_up()
 		"policy=$policy, interface=${interfaceId}/$interface/$family, status=$new_status"
 }
 
+# always_up
+# Always write 'up', so that policies always apply to this interface.
+#
+# @param $1    Policy id
+# @param $2    Numeric interface id
+# @param $3    IP family of the interface
+criteria_always_up()
+{
+    local __function_name="criteria_up"
+    local policy=$1
+    local interfaceId=$2
+    local family=$3
+    local wan_path
+    get_wan_path wan_path $policy $interfaceId $family
+    local status_file="${wan_path}/${__function_name}"
+
+    echo "up" > $status_file
+    log_status_message  "change" "$__function_name:" \
+			"policy=$policy, interface=${interfaceId}/$family, status=up" \
+			"policy=$policy, interface=${interfaceId}/$family, status=up"
+}
+
 # attribute
 # Insert policy rules associated to a wan with specific attributes.
 # IMPORTANT: At this time, these attribute values are pre-calculated!  We just write the result
