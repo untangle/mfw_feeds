@@ -20,8 +20,9 @@ start_service() {
 
     if [ -e /etc/config/dpdk ]
     then
-        procd_set_param command /usr/bin/packetd --dpdk --no-timestamp
-        source /etc/config/dpdk.env
+    # TODO if dpdk/bess is enabled we load packetd from bess as a dynamic library.
+    # But for not just start it normally.
+       procd_set_param command /usr/bin/packetd --no-timestamp
     else
         procd_set_param command /usr/bin/packetd --no-timestamp
     fi

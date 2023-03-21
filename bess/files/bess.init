@@ -1,0 +1,30 @@
+#!/bin/sh /etc/rc.common
+
+# Must run before packetd.
+START=20
+STOP=20
+
+USE_PROCD=1
+
+start_service() {
+    # If DPDK is enabled we need  and initialize hugepages and start bessd
+    if [ -e /etc/config/dpdk ]
+    then
+        # Enable hugepages.
+        sysctl -w vm.nr_hugepages=512
+        mkdir -p /dev/hugepages
+        mount -t hugetlbfs -o pagesize=2097152 nodev /dev/hugepages
+
+        # Start bessd
+        procd_open_instance bessd
+        procd_set_param command /usr/bin/bessd -d -v 9
+        procd_set_param respawn 3600 5 0
+
+        # stdout to system log
+        procd_set_param stdout 1
+        # stderr to system log
+        procd_set_param stderr 1
+
+        procd_close_instance
+    fi
+}
