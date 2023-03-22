@@ -18,6 +18,7 @@ include ../version.mk
 
 include $(TOPDIR)/feeds/packages/lang/python/python3-package.mk
 include $(INCLUDE_DIR)/package.mk
+include $(INCLUDE_DIR)/kernel-defaults.mk
 
 PKG_BUILD_DEPENDS:=libdpdk
 
@@ -39,15 +40,12 @@ define Package/bess/description
 	Bess is really the thing.
 endef
 
-include $(INCLUDE_DIR)/kernel.mk
-
 define KernelPackage/bess
   TITLE:=BESS kernel modules
   URL:=git@github.com:untangle/bess.git
   FILES:=$(PKG_BUILD_DIR)/core/kmod/bess.ko
+  DEPENDS:=+kmod-sched
 endef
-
-include $(INCLUDE_DIR)/kernel-defaults.mk
 
 define KernelPackage/bess/description
 	Bess kernel stuff.
