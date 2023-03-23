@@ -11,7 +11,7 @@ include $(INCLUDE_DIR)/kernel.mk
 PKG_NAME:=bess
 PKG_SOURCE_PROTO:=git
 PKG_MAINTAINER:=Christian Rasmussen <crasmussen@arista.com>
-PKG_SOURCE_URL:=git@github.com:untangle/bess.git
+PKG_SOURCE_URL:=git@github.com:aristanetworks/bess.git
 PKG_LICENSE:=GPL-2.0+
 
 include ../version.mk
@@ -42,7 +42,7 @@ endef
 
 define KernelPackage/bess
   TITLE:=BESS kernel modules
-  URL:=git@github.com:untangle/bess.git
+  URL:=git@github.com:aristanetworks/bess.git
   FILES:=$(PKG_BUILD_DIR)/core/kmod/bess.ko
   DEPENDS:=+kmod-sched
 endef
