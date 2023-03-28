@@ -25,7 +25,8 @@ cp geoip-database/GeoLite2-Country.mmdb %{buildroot}/usr/share/geoip/
 install -m 755 speedtest-cli/speedtest.py %{buildroot}/usr/bin/speedtest-cli
 
 %files
-/usr/share/geoip/GeoLite2-Country.mmdb
+#/usr/share/geoip/GeoLite2-Country.mmdb
 
 %dir
+/usr/share/geoip
 /usr/bin
