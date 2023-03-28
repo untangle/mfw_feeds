@@ -26,7 +26,6 @@ install -m 755 speedtest-cli/speedtest.py %{buildroot}/usr/bin/speedtest-cli
 
 %files
 /usr/bin/wan-manager
-/usr/bin/stats_schema
 /usr/bin/upload-backup.sh
 /usr/bin/upgrade.sh
 /usr/share/geoip/GeoLite2-Country.mmdb
