@@ -11,9 +11,6 @@ images:
     - image: code.arista.io/infra/barney/barnzilla%rpms/wget/fakeroot/sudo/EosImage/EosImageBuildUtils/EosUtils/EosSwimUtils
     - image: code.arista.io/infra/barney/barnzilla%rpms/rpm-build
     - image: code.arista.io/infra/barney/barnzilla%rpmdb
-    finalizers:
-      - [ ln, -svf, /usr/bin/python3, /usr/bin/python ]
-      - [ ln, -svf, /usr/bin/pip3, /usr/bin/pip ]
 
   mfw_pkg/backup-scripts:
     units:
@@ -447,7 +444,6 @@ images:
         echo "Installed Files" > /dest/testResults
 
         ls /dest/testRoot/usr/bin/wan-manager && echo "/usr/bin/wan-manager" >> /dest/testResults
-        ls /dest/testRoot/usr/bin/wan-manager.init && echo "/usr/bin/wan-manager.init" >> /dest/testResults
         ls /dest/testRoot/usr/bin/upgrade.sh && echo "/usr/bin/upgrade.sh" >> /dest/testResults
         ls /dest/testRoot/usr/bin/speedtest-cli && echo "/usr/bin/speedtest-cli" >> /dest/testResults
         ls /dest/testRoot/usr/bin/upload-backup.sh && echo "/usr/bin/upload-backup.sh" >> /dest/testResults
