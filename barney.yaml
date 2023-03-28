@@ -391,6 +391,7 @@ images:
     - floor: .%build-floor
       sources:
         - github.com/untangle/mfw_feeds
+        - github.com/sivel/speedtest-cli
       build: |
         # Remove once barnzilla%base is fixed to no longer break rpmdb
         /usr/libexec/barnzilla/init-rpmdb-from-rpmcache
@@ -409,12 +410,12 @@ images:
         cd $MFWFEEDS_TARDIR 
         wget -O - https://downloads.untangle.com/download.php?resource=geoipCountry | \
         tar -xz --strip-components=1 -C geoip-database/
-        wget -O - https://github.com/sivel/speedtest-cli/archive/v2.1.3/speedtest-cli-2.1.3.tar.gz | \
-        tar -xz --strip-components=1 -C speedtest-cli/ 
 
         # Patch speedtest-cli 
-        cd speedtest-cli && patch -p1 < $MFWFEEDS_DIR/speedtest-cli/patches/0001-Switch-to-python3.patch \
+        cd /src/github.com/sivel/speedtest-cli
+        patch -p1 < $MFWFEEDS_DIR/speedtest-cli/patches/0001-Switch-to-python3.patch \
          && patch -p1 < $MFWFEEDS_DIR/speedtest-cli/patches/0002-Add-simple-json-output-option.patch
+        cp speedtest.py $MFWFEEDS_TARDIR/speedtest-cli
         cd $MFWFEEDS_TARDIR && tar -czvf /tmp/rpmbuild/SOURCES/mfw_feeds.tar.gz --transform 's|^|mfw_feeds/|' *
         cp /tmp/rpmbuild/SOURCES/mfw_feeds.tar.gz /dest/mfw_rpms
 
@@ -441,7 +442,7 @@ images:
         /usr/libexec/barnzilla/init-rpmdb-from-rpmcache
 
         sudo yum --releasever 7 -y --installroot=/dest/testRoot install /mfw_rpms/*.rpm
-        echo "Installed Files" > /dest/testResults
+        echo "mfw-feeds-rpm Installed Files" > /dest/testResults
 
         ls /dest/testRoot/usr/bin/wan-manager && echo "/usr/bin/wan-manager" >> /dest/testResults
         ls /dest/testRoot/usr/bin/upgrade.sh && echo "/usr/bin/upgrade.sh" >> /dest/testResults
