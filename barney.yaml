@@ -405,8 +405,7 @@ images:
         mkdir -p $MFWFEEDS_TARDIR/{geoip-database,speedtest-cli}
         mkdir -p $RPMDIR
 
-        cd $MFWFEEDS_DIR
-        cp -r wan-manager upgrade-scripts backup-scripts $MFWFEEDS_TARDIR
+        cp -r $MFWFEEDS_DIR/{wan-manager,upgrade-scripts,backup-scripts} $MFWFEEDS_TARDIR
         cd $MFWFEEDS_TARDIR 
         wget -O - https://downloads.untangle.com/download.php?resource=geoipCountry | \
         tar -xz --strip-components=1 -C geoip-database/
@@ -416,8 +415,9 @@ images:
         patch -p1 < $MFWFEEDS_DIR/speedtest-cli/patches/0001-Switch-to-python3.patch \
          && patch -p1 < $MFWFEEDS_DIR/speedtest-cli/patches/0002-Add-simple-json-output-option.patch
         cp speedtest.py $MFWFEEDS_TARDIR/speedtest-cli
+
+        # Bundle stuffs in MFWFEEDS_TARDIR to a single source tar.gz for rpm spec file
         cd $MFWFEEDS_TARDIR && tar -czvf /tmp/rpmbuild/SOURCES/mfw_feeds.tar.gz --transform 's|^|mfw_feeds/|' *
-        cp /tmp/rpmbuild/SOURCES/mfw_feeds.tar.gz /dest/mfw_rpms
 
         # build the rpm and copy it to the right directory
         rpmbuild -v --define '_topdir /tmp/rpmbuild' -bb $MFWFEEDS_DIR/mfw-feeds.spec
