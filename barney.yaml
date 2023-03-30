@@ -2,6 +2,15 @@
 # Arista Networks, Inc. Confidential and Proprietary.
 
 images:
+  build-floor:
+    units:
+    - image: code.arista.io/infra/barney/barnzilla%base
+    - image: code.arista.io/infra/barney/barnzilla%network
+    - image: code.arista.io/infra/barney/barnzilla%rpms/yum
+    - image: code.arista.io/infra/barney/barnzilla%rpms/yum-utils
+    - image: code.arista.io/infra/barney/barnzilla%rpms/wget/fakeroot/sudo/EosImage/EosImageBuildUtils/EosUtils/EosSwimUtils
+    - image: code.arista.io/infra/barney/barnzilla%rpms/rpm-build
+    - image: code.arista.io/infra/barney/barnzilla%rpmdb
 
   mfw_pkg/backup-scripts:
     units:
@@ -10,6 +19,7 @@ images:
         - code.arista.io/mfw/build
         - github.com/untangle/openwrt
         - github.com/untangle/mfw_feeds
+
       build: | 
         set -e
         # copy build%toolchain's staging_dir into our source tree
@@ -374,6 +384,71 @@ images:
     - - sh
       - -c
       - mkdir /var/lock && opkg install /mfw-packages/*/*
+
+  # Create the mfw-feeds RPM consisting of some basic scripts
+  mfw_pkg/mfw-feeds-rpm:
+    units:
+    - floor: .%build-floor
+      sources:
+        - github.com/untangle/mfw_feeds
+        - github.com/sivel/speedtest-cli
+      build: |
+        # Remove once barnzilla%base is fixed to no longer break rpmdb
+        /usr/libexec/barnzilla/init-rpmdb-from-rpmcache
+
+        MFWFEEDS_DIR="/src/github.com/untangle/mfw_feeds"
+        MFWFEEDS_TARDIR="/dest/mfw-tardir/"
+        RPMDIR="/dest/mfw_rpms"
+
+        # Build rpm build root
+        mkdir -p /tmp/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS,BUILDROOT}
+        mkdir -p $MFWFEEDS_TARDIR/{geoip-database,speedtest-cli}
+        mkdir -p $RPMDIR
+
+        cp -r $MFWFEEDS_DIR/{wan-manager,upgrade-scripts,backup-scripts} $MFWFEEDS_TARDIR
+        cd $MFWFEEDS_TARDIR 
+        wget -O - https://downloads.untangle.com/download.php?resource=geoipCountry | \
+        tar -xz --strip-components=1 -C geoip-database/
+
+        # Patch speedtest-cli 
+        cd /src/github.com/sivel/speedtest-cli
+        patch -p1 < $MFWFEEDS_DIR/speedtest-cli/patches/0001-Switch-to-python3.patch \
+         && patch -p1 < $MFWFEEDS_DIR/speedtest-cli/patches/0002-Add-simple-json-output-option.patch
+        cp speedtest.py $MFWFEEDS_TARDIR/speedtest-cli
+
+        # Bundle stuffs in MFWFEEDS_TARDIR to a single source tar.gz for rpm spec file
+        cd $MFWFEEDS_TARDIR && tar -czvf /tmp/rpmbuild/SOURCES/mfw_feeds.tar.gz --transform 's|^|mfw_feeds/|' *
+
+        # build the rpm and copy it to the right directory
+        rpmbuild -v --define '_topdir /tmp/rpmbuild' -bb $MFWFEEDS_DIR/mfw-feeds.spec
+        cp -r /tmp/rpmbuild/RPMS/noarch/* $RPMDIR
+        rm -rf $MFWFEEDS_TARDIR
+        # The current working directory is saved in future images
+        cd /
+
+  # Generate an image of floor + RPMs before testing
+  testImage/mfw_pkg/mfw-feeds-rpm:
+    units:
+    - image: .%mfw_pkg/mfw-feeds-rpm
+    - image: .%build-floor
+    - image: code.arista.io/infra/barney/barnzilla%rpmdb
+
+  # Install the generated RPM and check if it was successfully installed
+  test/mfw_pkg/mfw-feeds-rpm:
+    units:
+    - floor: .%testImage/mfw_pkg/mfw-feeds-rpm
+      build: |
+        # Remove once barnzilla%base is fixed to no longer break rpmdb
+        /usr/libexec/barnzilla/init-rpmdb-from-rpmcache
+
+        sudo yum --releasever 7 -y --installroot=/dest/testRoot install /mfw_rpms/*.rpm
+        echo "mfw-feeds-rpm Installed Files" > /dest/testResults
+
+        ls /dest/testRoot/usr/bin/wan-manager && echo "/usr/bin/wan-manager" >> /dest/testResults
+        ls /dest/testRoot/usr/bin/upgrade.sh && echo "/usr/bin/upgrade.sh" >> /dest/testResults
+        ls /dest/testRoot/usr/bin/speedtest-cli && echo "/usr/bin/speedtest-cli" >> /dest/testResults
+        ls /dest/testRoot/usr/bin/upload-backup.sh && echo "/usr/bin/upload-backup.sh" >> /dest/testResults
+        ls /dest/testRoot/usr/share/geoip/GeoLite2-Country.mmdb && echo "/usr/share/geoip/GeoLite2-Country.mmdb" >> /dest/testResults
 
   mfw_pkg/wan-manager:
     units:
