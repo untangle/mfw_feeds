@@ -22,7 +22,7 @@ define Package/client-license-service
   SUBMENU:=Firewall
   TITLE:=Userspace license client
   URL:=https://github.com/untangle/client-license-service
-  DEPENDS:=+libsodium +libzmq-curve
+  DEPENDS:=+libsodium +libzmq-curve +libstdcpp
 endef
 
 define Package/client-license-service/description
