@@ -50,43 +50,6 @@ images:
         mkdir /var/lock
         opkg install /mfw-packages/*/*
 
-  mfw_pkg/glibc/backup-scripts:
-    units:
-    - floor: code.arista.io/mfw/build%toolchain-glibc
-      sources:
-        - code.arista.io/mfw/build
-        - github.com/untangle/openwrt
-        - github.com/untangle/mfw_feeds
-      build: | 
-        set -e
-        # copy build%toolchain's staging_dir into our source tree
-        cp -a /mfw-toolchain/staging_dir /src/github.com/untangle/openwrt/
-        # use barney-supplied feeds instead of fetching from github
-        perl -i -pe 's|^src-git mfw .+|src-link mfw /src/github.com/untangle/mfw_feeds|' /src/code.arista.io/mfw/build/feeds.conf.mfw
-        # barney sets DESTDIR to /dest, but this really confuses openwrt
-        unset DESTDIR
-        # build our package
-        cd /src/github.com/untangle/openwrt
-        /src/code.arista.io/mfw/build/build.sh -l glibc -f /src -t package/feeds/mfw/backup-scripts/compile
-        # copy resulting packages to destination image
-        mkdir -p /dest/mfw-packages/backup-scripts
-        cp bin/packages/x86_64/*/* /dest/mfw-packages/backup-scripts
-
-  internal/test/mfw_pkg/glibc/backup-scripts:
-    units:
-    - image: code.arista.io/mfw/build%world-glibc
-    - image: .%mfw_pkg/glibc/backup-scripts
-    entry:
-      mutables:
-        - /usr
-
-  test/mfw_pkg/glibc/backup-scripts:
-    units:
-    - floor: .%internal/test/mfw_pkg/glibc/backup-scripts
-      build: |
-        mkdir /var/lock
-        opkg install /mfw-packages/*/*
-
   mfw_pkg/crash-collector:
     units:
     - floor: code.arista.io/mfw/build%toolchain
@@ -120,43 +83,6 @@ images:
   test/mfw_pkg/crash-collector:
     units:
     - floor: .%internal/test/mfw_pkg/crash-collector
-      build: |
-        mkdir /var/lock
-        opkg install /mfw-packages/*/*
-
-  mfw_pkg/glibc/crash-collector:
-    units:
-    - floor: code.arista.io/mfw/build%toolchain-glibc
-      sources:
-        - code.arista.io/mfw/build
-        - github.com/untangle/openwrt
-        - github.com/untangle/mfw_feeds
-      build: | 
-        set -e
-        # copy build%toolchain's staging_dir into our source tree
-        cp -a /mfw-toolchain/staging_dir /src/github.com/untangle/openwrt/
-        # use barney-supplied feeds instead of fetching from github
-        perl -i -pe 's|^src-git mfw .+|src-link mfw /src/github.com/untangle/mfw_feeds|' /src/code.arista.io/mfw/build/feeds.conf.mfw
-        # barney sets DESTDIR to /dest, but this really confuses openwrt
-        unset DESTDIR
-        # build our package
-        cd /src/github.com/untangle/openwrt
-        /src/code.arista.io/mfw/build/build.sh -l glibc -f /src -t package/feeds/mfw/crash-collector/compile
-        # copy resulting packages to destination image
-        mkdir -p /dest/mfw-packages/crash-collector
-        cp bin/packages/x86_64/*/* /dest/mfw-packages/crash-collector
-
-  internal/test/mfw_pkg/glibc/crash-collector:
-    units:
-    - image: code.arista.io/mfw/build%world-glibc
-    - image: .%mfw_pkg/glibc/crash-collector
-    entry:
-      mutables:
-        - /usr
-
-  test/mfw_pkg/glibc/crash-collector:
-    units:
-    - floor: .%internal/test/mfw_pkg/glibc/crash-collector
       build: |
         mkdir /var/lock
         opkg install /mfw-packages/*/*
@@ -198,43 +124,6 @@ images:
         mkdir /var/lock
         opkg install /mfw-packages/*/*
 
-  mfw_pkg/glibc/credentials:
-    units:
-    - floor: code.arista.io/mfw/build%toolchain-glibc
-      sources:
-        - code.arista.io/mfw/build
-        - github.com/untangle/openwrt
-        - github.com/untangle/mfw_feeds
-      build: | 
-        set -e
-        # copy build%toolchain's staging_dir into our source tree
-        cp -a /mfw-toolchain/staging_dir /src/github.com/untangle/openwrt/
-        # use barney-supplied feeds instead of fetching from github
-        perl -i -pe 's|^src-git mfw .+|src-link mfw /src/github.com/untangle/mfw_feeds|' /src/code.arista.io/mfw/build/feeds.conf.mfw
-        # barney sets DESTDIR to /dest, but this really confuses openwrt
-        unset DESTDIR
-        # build our package
-        cd /src/github.com/untangle/openwrt
-        /src/code.arista.io/mfw/build/build.sh -l glibc -f /src -t package/feeds/mfw/credentials/compile
-        # copy resulting packages to destination image
-        mkdir -p /dest/mfw-packages/credentials
-        cp bin/packages/x86_64/*/* /dest/mfw-packages/credentials
-
-  internal/test/mfw_pkg/glibc/credentials:
-    units:
-    - image: code.arista.io/mfw/build%world-glibc
-    - image: .%mfw_pkg/glibc/credentials
-    entry:
-      mutables:
-        - /usr
-
-  test/mfw_pkg/glibc/credentials:
-    units:
-    - floor: .%internal/test/mfw_pkg/glibc/credentials
-      build: |
-        mkdir /var/lock
-        opkg install /mfw-packages/*/*
-
   mfw_pkg/mfw-eu:
     units:
     - floor: code.arista.io/mfw/build%toolchain
@@ -268,43 +157,6 @@ images:
   test/mfw_pkg/mfw-eu:
     units:
     - floor: .%internal/test/mfw_pkg/mfw-eu
-      build: |
-        mkdir /var/lock
-        opkg install /mfw-packages/*/*
-
-  mfw_pkg/glibc/mfw-eu:
-    units:
-    - floor: code.arista.io/mfw/build%toolchain-glibc
-      sources:
-        - code.arista.io/mfw/build
-        - github.com/untangle/openwrt
-        - github.com/untangle/mfw_feeds
-      build: | 
-        set -e
-        # copy build%toolchain's staging_dir into our source tree
-        cp -a /mfw-toolchain/staging_dir /src/github.com/untangle/openwrt/
-        # use barney-supplied feeds instead of fetching from github
-        perl -i -pe 's|^src-git mfw .+|src-link mfw /src/github.com/untangle/mfw_feeds|' /src/code.arista.io/mfw/build/feeds.conf.mfw
-        # barney sets DESTDIR to /dest, but this really confuses openwrt
-        unset DESTDIR
-        # build our package
-        cd /src/github.com/untangle/openwrt
-        /src/code.arista.io/mfw/build/build.sh -l glibc -f /src -r eu -t package/feeds/mfw/mfw-eu/compile
-        # copy resulting packages to destination image
-        mkdir -p /dest/mfw-packages/mfw-eu
-        cp bin/packages/x86_64/*/* /dest/mfw-packages/mfw-eu
-
-  internal/test/mfw_pkg/glibc/mfw-eu:
-    units:
-    - image: code.arista.io/mfw/build%world-glibc
-    - image: .%mfw_pkg/glibc/mfw-eu
-    entry:
-      mutables:
-        - /usr
-
-  test/mfw_pkg/glibc/mfw-eu:
-    units:
-    - floor: .%internal/test/mfw_pkg/glibc/mfw-eu
       build: |
         mkdir /var/lock
         opkg install /mfw-packages/*/*
@@ -346,43 +198,6 @@ images:
         mkdir /var/lock
         opkg install /mfw-packages/*/*
 
-  mfw_pkg/glibc/pyconnector:
-    units:
-    - floor: code.arista.io/mfw/build%toolchain-glibc
-      sources:
-        - code.arista.io/mfw/build
-        - github.com/untangle/openwrt
-        - github.com/untangle/mfw_feeds
-      build: | 
-        set -e
-        # copy build%toolchain's staging_dir into our source tree
-        cp -a /mfw-toolchain/staging_dir /src/github.com/untangle/openwrt/
-        # use barney-supplied feeds instead of fetching from github
-        perl -i -pe 's|^src-git mfw .+|src-link mfw /src/github.com/untangle/mfw_feeds|' /src/code.arista.io/mfw/build/feeds.conf.mfw
-        # barney sets DESTDIR to /dest, but this really confuses openwrt
-        unset DESTDIR
-        # build our package
-        cd /src/github.com/untangle/openwrt
-        /src/code.arista.io/mfw/build/build.sh -l glibc -f /src -t package/feeds/mfw/pyconnector/compile
-        # copy resulting packages to destination image
-        mkdir -p /dest/mfw-packages/pyconnector
-        cp bin/packages/x86_64/*/* /dest/mfw-packages/pyconnector
-
-  internal/test/mfw_pkg/glibc/pyconnector:
-    units:
-    - image: code.arista.io/mfw/build%world-glibc
-    - image: .%mfw_pkg/glibc/pyconnector
-    entry:
-      mutables:
-        - /usr
-
-  test/mfw_pkg/glibc/pyconnector:
-    units:
-    - floor: .%internal/test/mfw_pkg/glibc/pyconnector
-      build: |
-        mkdir /var/lock
-        opkg install /mfw-packages/*/*
-
   mfw_pkg/upgrade-scripts:
     units:
     - floor: code.arista.io/mfw/build%toolchain
@@ -416,43 +231,6 @@ images:
   test/mfw_pkg/upgrade-scripts:
     units:
     - floor: .%internal/test/mfw_pkg/upgrade-scripts
-      build: |
-        mkdir /var/lock
-        opkg install /mfw-packages/*/*
-
-  mfw_pkg/glibc/upgrade-scripts:
-    units:
-    - floor: code.arista.io/mfw/build%toolchain-glibc
-      sources:
-        - code.arista.io/mfw/build
-        - github.com/untangle/openwrt
-        - github.com/untangle/mfw_feeds
-      build: | 
-        set -e
-        # copy build%toolchain's staging_dir into our source tree
-        cp -a /mfw-toolchain/staging_dir /src/github.com/untangle/openwrt/
-        # use barney-supplied feeds instead of fetching from github
-        perl -i -pe 's|^src-git mfw .+|src-link mfw /src/github.com/untangle/mfw_feeds|' /src/code.arista.io/mfw/build/feeds.conf.mfw
-        # barney sets DESTDIR to /dest, but this really confuses openwrt
-        unset DESTDIR
-        # build our package
-        cd /src/github.com/untangle/openwrt
-        /src/code.arista.io/mfw/build/build.sh -l glibc -f /src -t package/feeds/mfw/upgrade-scripts/compile
-        # copy resulting packages to destination image
-        mkdir -p /dest/mfw-packages/upgrade-scripts
-        cp bin/packages/x86_64/*/* /dest/mfw-packages/upgrade-scripts
-
-  internal/test/mfw_pkg/glibc/upgrade-scripts:
-    units:
-    - image: code.arista.io/mfw/build%world-glibc
-    - image: .%mfw_pkg/glibc/upgrade-scripts
-    entry:
-      mutables:
-        - /usr
-
-  test/mfw_pkg/glibc/upgrade-scripts:
-    units:
-    - floor: .%internal/test/mfw_pkg/glibc/upgrade-scripts
       build: |
         mkdir /var/lock
         opkg install /mfw-packages/*/*
@@ -563,51 +341,6 @@ images:
   # test/mfw_pkg/wan-manager:
   #   units:
   #   - floor: .%internal/test/mfw_pkg/wan-manager
-  #     build: |
-  #       mkdir /var/lock
-  #       opkg install /mfw-packages/*/*
-
-  mfw_pkg/glibc/wan-manager:
-    units:
-    - floor: code.arista.io/mfw/build%toolchain-glibc
-      sources:
-        - code.arista.io/mfw/build
-        - github.com/untangle/openwrt
-        - github.com/untangle/mfw_feeds
-      build: |
-        set -e
-        # copy build%toolchain's staging_dir into our source tree
-        cp -a /mfw-toolchain/staging_dir /src/github.com/untangle/openwrt/
-        # use barney-supplied feeds instead of fetching from github
-        perl -i -pe 's|^src-git mfw .+|src-link mfw /src/github.com/untangle/mfw_feeds|' /src/code.arista.io/mfw/build/feeds.conf.mfw
-        # barney sets DESTDIR to /dest, but this really confuses openwrt
-        unset DESTDIR
-        # avoid rebuilding wan-utils, as it's already built from its own
-        # repository; removing the dependency is a bit nasty, but we
-        # consider it acceptable still because for MFW we install all
-        # the packages together at image creation time, and we don't
-        # have to support further upgrades
-        perl -i -pe 's/ .?wan-utils//' /src/github.com/untangle/mfw_feeds/wan-manager/Makefile
-        # build our package
-        cd /src/github.com/untangle/openwrt
-        /src/code.arista.io/mfw/build/build.sh -l glibc -f /src -t package/feeds/mfw/wan-manager/compile
-        # copy resulting packages to destination image
-        mkdir -p /dest/mfw-packages/wan-manager
-        cp bin/packages/x86_64/*/* /dest/mfw-packages/wan-manager
-
-  ## Commented-out for now because it needs kmod-nft, which is only
-  ## built by untangle/packetd
-  # internal/test/mfw_pkg/glibc/wan-manager:
-  #   units:
-  #   - image: code.arista.io/mfw/build%world-glibc
-  #   - image: .%mfw_pkg/glibc/wan-manager
-  #   entry:
-  #     mutables:
-  #       - /usr
-  #
-  # test/mfw_pkg/glibc/wan-manager:
-  #   units:
-  #   - floor: .%internal/test/mfw_pkg/glibc/wan-manager
   #     build: |
   #       mkdir /var/lock
   #       opkg install /mfw-packages/*/*
