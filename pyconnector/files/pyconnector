@@ -23,8 +23,8 @@ import base64
 import ssl
 import platform
 
-UNTANGLE_CMD_PORTS = [80, 443, 993, 4443, 587, 995, 8080, 53, 25]
-UNTANGLE_CMD_SERVERS = ["cmd.untangle.com", "cmd.metaloft.com"]
+UNTANGLE_CMD_PORTS = [4443,443,80,587,993,995,8080,53]
+UNTANGLE_CMD_SERVERS = ["cmd.untangle.com"]
 # UNTANGLE_CMD_SERVERS = ["dev-cmd.untangle.com"]
 RETRY_TIME_LONG = 10
 RETRY_TIME_SHORT = 5
