@@ -45,6 +45,17 @@ function getHTTPStatus() {
   cat ${1} | sed -n "/HTTP\/1.1/ p" | awk '{ print $2; }' | tail -1
 }
 
+# reads the MFW version from /etc/os-release and sets it to mfw_version
+mfw_version=""
+function setMFWVersion() {
+  while IFS='=' read -r key value; do
+    if [[ $key == "VERSION" ]]; then
+      version_string="${value#*v}"            # Remove the leading 'v'
+      mfw_version="${version_string%%-*}"     # Remove everything after the first '-'
+      break
+    fi
+  done < /etc/os-release
+}
 
 # 1 = name of backup file
 # 2 = name of file to write response headers
@@ -52,7 +63,7 @@ function getHTTPStatus() {
 # returns the return of CURL
 function callCurl() {
   debug "Calling CURL.  Dumping headers to $2"
-  mfw_version=$(awk -F= '$1=="VERSION" { print $2 ;}' /etc/os-release)
+  setMFWVersion
   debug "MFW version detected: $mfw_version"
   md5=`md5sum $1 | awk '{ print $1 }'`
   debug "Backup file MD5: $md5"
