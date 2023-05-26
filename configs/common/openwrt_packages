@@ -46,3 +46,5 @@ CONFIG_PACKAGE_vti=y
 CONFIG_PACKAGE_wget=y
 CONFIG_PACKAGE_wireguard-tools=y
 CONFIG_PACKAGE_wpad-mini=y
+CONFIG_PACKAGE_gdb=y
+CONFIG_PACKAGE_strace=y
