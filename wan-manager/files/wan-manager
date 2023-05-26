@@ -993,6 +993,7 @@ criteria_connectivity()
 
 	local device
 	local ip_address
+	local protocol
 	local dns_server
 	local gw
 	local status
@@ -1039,11 +1040,14 @@ criteria_connectivity()
 			network_get_ipaddr ip_address $interface
 			network_get_dnsserver dns_server $interface
 			network_get_gateway gw $interface
+            network_get_protocol protocol $interface
 
 			case $criteria in
 				ping)
 					if [ "$family" = "ipv4" ] ; then
-						ping -I $device -w $timeout -W $timeout -c 1 $host > /dev/null && let result"$i"=1 || let result"$i"=0
+                        if [ "$protocol" != "vti" ] ; then
+						    ping -I $device -w $timeout -W $timeout -c 1 $host > /dev/null && let result"$i"=1 || let result"$i"=0
+                        fi
 					fi
 					;;
 				arp)
