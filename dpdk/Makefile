@@ -31,7 +31,7 @@ include $(TOPDIR)/feeds/packages/devel/meson/meson.mk
 MESON_ARGS+=-Denable_docs=false -Dexamples=all
 CFLAGS+=-D_GNU_SOURCE -g
 TARGET_CFLAGS+=-msse4.2
-#EXTRA_CFLAGS=-D_GNU_SOURCE -g -O0
+EXTRA_CFLAGS=-D_GNU_SOURCE -g -O0
 
 # Possible place for CPU ARCH tune:
 # nocona core2 nehalem corei7 westmere sandybridge corei7-avx
