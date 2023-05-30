@@ -24,7 +24,7 @@ include $(INCLUDE_DIR)/package.mk
 DISABLE_NLS:=
 
 CONFIGURE_ARGS += \
-        --disable-debug \
+        CFLAGS="-g -O0" \
         --disable-man-doc \
         --with-mini-gmp \
         --without-cli \
