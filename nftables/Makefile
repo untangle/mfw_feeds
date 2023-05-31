@@ -23,6 +23,8 @@ include $(INCLUDE_DIR)/package.mk
 
 DISABLE_NLS:=
 
+CFLAGS+=-g -O0
+
 CONFIGURE_ARGS += \
         --disable-man-doc \
         --with-mini-gmp \
