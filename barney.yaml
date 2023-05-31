@@ -183,6 +183,28 @@ images:
         mkdir -p /dest/mfw-packages/pyconnector
         cp bin/packages/x86_64/*/* /dest/mfw-packages/pyconnector
 
+  mfw_pkg/nftables:
+    units:
+    - floor: code.arista.io/mfw/build%toolchain
+      sources:
+        - code.arista.io/mfw/build
+        - github.com/untangle/openwrt
+        - github.com/untangle/mfw_feeds
+      build: | 
+        set -e
+        # copy build%toolchain's staging_dir into our source tree
+        cp -a /mfw-toolchain/staging_dir /src/github.com/untangle/openwrt/
+        # use barney-supplied feeds instead of fetching from github
+        perl -i -pe 's|^src-git mfw .+|src-link mfw /src/github.com/untangle/mfw_feeds|' /src/code.arista.io/mfw/build/feeds.conf.mfw
+        # barney sets DESTDIR to /dest, but this really confuses openwrt
+        unset DESTDIR
+        # build our package
+        cd /src/github.com/untangle/openwrt
+        /src/code.arista.io/mfw/build/build.sh -f /src -t package/feeds/mfw/nftables/compile
+        # copy resulting packages to destination image
+        mkdir -p /dest/mfw-packages/nftables
+        cp bin/packages/x86_64/*/* /dest/mfw-packages/nftables
+
   internal/test/mfw_pkg/pyconnector:
     units:
     - image: code.arista.io/mfw/build%world
