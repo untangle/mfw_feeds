@@ -23,14 +23,14 @@ include $(INCLUDE_DIR)/package.mk
 
 DISABLE_NLS:=
 
-CFLAGS+=-D_GNU_SOURCE -g -O0
-EXTRA_CFLAGS=-D_GNU_SOURCE -g -O0
-
 CONFIGURE_ARGS += \
         --disable-man-doc \
         --with-mini-gmp \
         --without-cli \
         --disable-python \
+
+CFLAGS+=-D_GNU_SOURCE -g -O0
+EXTRA_CFLAGS=-D_GNU_SOURCE -g -O0
 
 define Package/nftables
   SECTION:=net
