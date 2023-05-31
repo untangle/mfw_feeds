@@ -51,11 +51,17 @@ function getHTTPStatus() {
 #
 # returns the return of CURL
 function callCurl() {
+  # read MFW version from /etc/os-release
+  full_mfw_version=$(grep 'VERSION=' /etc/os-release | cut -d '=' -f 2 | tr -d '"')
+  version_string="${full_mfw_version#*v}"     # Remove the leading 'v'
+  mfw_version="${version_string%%-*}"         # Remove everything after the first '-'
+  debug "MFW version detected: $mfw_version"
+
   debug "Calling CURL.  Dumping headers to $2"
   md5=`md5sum $1 | awk '{ print $1 }'`
   debug "Backup file MD5: $md5"
-  debug "curl $URL -k -F uid=$UID -F uploadedfile=@$1 -F md5=$md5 --dump-header $2 --max-time $TIMEOUT"
-  curl "$URL" -k -F uid="$UID" -F uploadedfile=@$1 -F md5="$md5" --dump-header $2 --max-time $TIMEOUT > /dev/null 2>&1
+  debug "curl $URL -k -F uid=$UID -F uploadedfile=@$1 -F md5=$md5 -F version=$mfw_version --dump-header $2 --max-time $TIMEOUT"
+  curl "$URL" -k -F uid="$UID" -F uploadedfile=@$1 -F md5="$md5" -F version="$mfw_version" --dump-header $2 --max-time $TIMEOUT > /dev/null 2>&1
   return $?
 }
 
