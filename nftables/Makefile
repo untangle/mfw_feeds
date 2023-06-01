@@ -27,7 +27,7 @@ CONFIGURE_ARGS += \
         --disable-man-doc \
         --with-mini-gmp \
         --without-cli \
-        --disable-python \
+        --disable-python
 
 CFLAGS+=-g -O0
 
