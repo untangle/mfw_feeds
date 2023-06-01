@@ -35,7 +35,7 @@ define Package/nftables
   CATEGORY:=Network
   SUBMENU:=Firewall
   TITLE:=nftables packet filtering userspace utility
-  DEPENDS:=+kmod-nft-core +libnftnl
+  DEPENDS:=+kmod-nft-core +libnftnl +libreadline8
   URL:=http://netfilter.org/projects/nftables/
 endef
 
