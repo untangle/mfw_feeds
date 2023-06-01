@@ -26,10 +26,9 @@ DISABLE_NLS:=
 CONFIGURE_ARGS += \
         --disable-man-doc \
         --with-mini-gmp \
-        --without-cli \
         --disable-python \
 
-CFLAGS+=-g
+CFLAGS+=-g -O0
 
 define Package/nftables
   SECTION:=net
