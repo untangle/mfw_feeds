@@ -26,6 +26,7 @@ DISABLE_NLS:=
 CONFIGURE_ARGS += \
         --disable-man-doc \
         --with-mini-gmp \
+        --without-cli \
         --disable-python \
 
 CFLAGS+=-g -O0
@@ -35,7 +36,7 @@ define Package/nftables
   CATEGORY:=Network
   SUBMENU:=Firewall
   TITLE:=nftables packet filtering userspace utility
-  DEPENDS:=+kmod-nft-core +libnftnl +libreadline8
+  DEPENDS:=+kmod-nft-core +libnftnl
   URL:=http://netfilter.org/projects/nftables/
 endef
 
