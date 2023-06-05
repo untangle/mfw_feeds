@@ -12,7 +12,7 @@
     "commit": "e469e37b1fa1b0e91616de1b3fcce34a13d90a0d"
   },
   "barney.ci/debian": {
-    "commit": "2f498d8029be967bb6aa77565254c0bb725ed15f"
+    "commit": "792f7fb4a7e0eb1a4ab585e927ee28c0cad04e55"
   },
   "barney.ci/docker": {
     "commit": "12a3314c6ea80d957e7024ede64f2ff65066e0f6"
@@ -24,7 +24,7 @@
     "commit": "4a19aead534df8e1aa323f64cbba8141a3be4dda"
   },
   "code.arista.io/infra/barney/barnzilla-repos": {
-    "commit": "9691758f14e259e3238519d22344f47347611360"
+    "commit": "3e0309fa39fda304d37a765f459265ba221b67fd"
   },
   "code.arista.io/mfw/build": {
     "commit": "f4a134330ce47d8d1bbdb8408323e461aab3fcfd"
