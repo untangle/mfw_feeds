@@ -3,7 +3,7 @@
     "commit": "f60cf0e84093692032322425d68508851965ad5d"
   },
   "barney.ci/alpine": {
-    "commit": "bceb3463aa0be16c6eab2d8230342c081cbc130c"
+    "commit": "205102b2c8be885b11e7b73505faba7a810e26af"
   },
   "barney.ci/barneyfile": {
     "commit": "53feafb63400a2d8f704ba2013b3b6e92bbe87bc"
@@ -12,7 +12,7 @@
     "commit": "e469e37b1fa1b0e91616de1b3fcce34a13d90a0d"
   },
   "barney.ci/debian": {
-    "commit": "2f498d8029be967bb6aa77565254c0bb725ed15f"
+    "commit": "792f7fb4a7e0eb1a4ab585e927ee28c0cad04e55"
   },
   "barney.ci/docker": {
     "commit": "12a3314c6ea80d957e7024ede64f2ff65066e0f6"
