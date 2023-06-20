@@ -7,13 +7,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nftables
-PKG_VERSION:=0.9.2
-PKG_RELEASE:=1
+PKG_VERSION:=1.0.2
+PKG_RELEASE:=2.1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:=https://netfilter.org/projects/$(PKG_NAME)/files
-PKG_HASH:=5cb66180143e6bfc774f4eb316206d40ac1cb6df269a90882404cbf7165513f5
-PKG_MAINTAINER:=Steven Barth <steven@midlink.org>
+PKG_HASH:=0b28a36ffcf4567b841de7bd3f37918b1fed27859eb48bdec51e1f7a83954c02
+PKG_MAINTAINER:=
 PKG_LICENSE:=GPL-2.0
 
 PKG_FIXUP:=autoreconf
@@ -28,22 +28,58 @@ CONFIGURE_ARGS += \
         --disable-man-doc \
         --with-mini-gmp \
         --without-cli \
-        --disable-python \
+        --disable-python
 
-define Package/nftables
+define Package/nftables/Default
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Firewall
-  TITLE:=nftables packet filtering userspace utility
+  TITLE:=nftables userspace utility
   DEPENDS:=+kmod-nft-core +libnftnl
   URL:=http://netfilter.org/projects/nftables/
+  PROVIDES:=nftables
 endef
 
-define Package/nftables/install
+define Package/nftables-nojson
+  $(Package/nftables/Default)
+  TITLE+= no JSON support
+  VARIANT:=nojson
+  DEFAULT_VARIANT:=1
+  CONFLICTS:=nftables-json
+endef
+
+define Package/nftables-json
+  $(Package/nftables/Default)
+  TITLE+= with JSON support
+  VARIANT:=json
+  DEPENDS+=+jansson
+endef
+
+ifeq ($(BUILD_VARIANT),json)
+  CONFIGURE_ARGS += --with-json
+endif
+
+TARGET_CFLAGS += -flto
+TARGET_LDFLAGS += -flto
+
+define Build/InstallDev
+	$(INSTALL_DIR) $(1)/usr/lib $(1)/usr/include
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/*.so* $(1)/usr/lib/
+	$(CP) $(PKG_INSTALL_DIR)/usr/include/nftables $(1)/usr/include/
+	$(INSTALL_DIR) $(1)/usr/lib/pkgconfig
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/pkgconfig/libnftables.pc \
+		$(1)/usr/lib/pkgconfig/
+endef
+
+define Package/nftables/install/Default
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(CP) $(PKG_INSTALL_DIR)/usr/sbin/nft $(1)/usr/sbin/
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/*.so* $(1)/usr/lib/
 endef
 
-$(eval $(call BuildPackage,nftables))
+Package/nftables-nojson/install = $(Package/nftables/install/Default)
+Package/nftables-json/install = $(Package/nftables/install/Default)
+
+$(eval $(call BuildPackage,nftables-nojson))
+$(eval $(call BuildPackage,nftables-json))
