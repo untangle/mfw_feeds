@@ -1,0 +1,214 @@
+From 7140c5319e5c42f8f03848823b5c5cd8787d8df5 Mon Sep 17 00:00:00 2001
+From: Indira Ramasamy <iramasamy@arista.com>
+Date: Tue, 28 Mar 2023 17:51:33 -0600
+Subject: [PATCH] MFW-2754: Cbl dut became unreachable after starting mfw bst
+ container
+
+---
+ dict.c     | 14 +++++++-------
+ nft_dict.c | 41 +++++++++++++++++++++++------------------
+ 2 files changed, 30 insertions(+), 25 deletions(-)
+
+diff --git a/dict.c b/dict.c
+index a32b4ca..7f30678 100644
+--- a/dict.c
++++ b/dict.c
+@@ -92,13 +92,13 @@ static struct nf_conn_dict_entry_elem * alloc_dict_entry_elem(int size)
+ {
+ 	struct nf_conn_dict_entry_elem * new;
+ 
+-	new = kzalloc(sizeof(*new), GFP_KERNEL);
++	new = kzalloc(sizeof(*new), GFP_ATOMIC);
+ 	if(!new) {
+ 		pr_err("%s: Could not allocate new dictionary entry struct\n", __func__);
+ 		goto err;
+ 	}
+ 
+-	new->buf = kzalloc(size, GFP_KERNEL);
++	new->buf = kzalloc(size, GFP_ATOMIC);
+ 	if(!new->buf) {
+ 		pr_err("%s: Could not allocate new string\n", __func__);
+ 		goto err_free_new;
+@@ -153,7 +153,7 @@ struct nf_conn_dict * new_dict_entry(struct net *net, u8 *key, u32 key_len, char
+ 		.table = table,
+ 	};
+ 
+-	dict = kzalloc(sizeof(*dict), GFP_KERNEL);
++	dict = kzalloc(sizeof(*dict), GFP_ATOMIC);
+ 	if(!dict) {
+ 		pr_err("%s: Could not allocate dict structure\n", __func__);
+ 		return NULL;
+@@ -587,7 +587,7 @@ static int write_dict(struct file *file, char *buf, size_t size)
+ 	memset(key, 0, sizeof(key));
+ 
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(4,18,0)
+-	orig = local_buf = kzalloc(size + 1, GFP_KERNEL);
++	orig = local_buf = kzalloc(size + 1, GFP_ATOMIC);
+ 	if(!local_buf) {
+ 		pr_err("%s: Could not allocate local buffer!\n", __func__);
+ 		goto err;
+@@ -767,7 +767,7 @@ static int write_dict(struct file *file, char *buf, size_t size)
+ 	} else {
+ 		char * debug_buffer;
+ 
+-		debug_buffer = kzalloc(size + 1, GFP_KERNEL);
++		debug_buffer = kzalloc(size + 1, GFP_ATOMIC);
+ 		if (debug_buffer && (copy_from_user(debug_buffer, buf, size) == 0)) {
+ 			pr_err("%s: Insuffient input: %s\n", __func__, debug_buffer);
+ 		} else {
+@@ -873,7 +873,7 @@ static int read_id_write(struct file *file, char *buf, size_t size)
+ 	memset(key, 0, sizeof(key));
+ 
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(4,18,0)
+-	orig = local_buf = kzalloc(size + 1, GFP_KERNEL);
++	orig = local_buf = kzalloc(size + 1, GFP_ATOMIC);
+ 	if(!local_buf) {
+ 		pr_err("%s: Could not allocate local buffer!\n", __func__);
+ 		goto err;
+@@ -1008,7 +1008,7 @@ static int delete_write(struct file *file, char *buf, size_t size)
+ 	memset(key, 0, sizeof(key));
+ 
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(4,18,0)
+-	orig = local_buf = kzalloc(size + 1, GFP_KERNEL);
++	orig = local_buf = kzalloc(size + 1, GFP_ATOMIC);
+ 	if(!local_buf) {
+ 		pr_err("%s: Could not allocate local buffer!\n", __func__);
+ 		goto err;
+diff --git a/nft_dict.c b/nft_dict.c
+index 4c31085..a2433a2 100644
+--- a/nft_dict.c
++++ b/nft_dict.c
+@@ -32,8 +32,8 @@ enum nft_dict_attributes {
+ #define DICT_VALUE_SIZE 128
+ 
+ struct nft_dict {
+-	enum nft_registers      sreg:8;
+-	enum nft_registers      dreg:8;
++	u8  sreg;
++	u8  dreg;
+ 	char field[DICT_FIELD_SIZE];
+ 	u8 field_len;
+ 	u32 field_hash;
+@@ -45,7 +45,7 @@ struct nft_dict {
+ 	char *ptable;
+ 	u32 len;
+ 	u32 size;
+-	enum nft_registers      set:8;
++	u8  set;
+ 	u32 flush;
+ };
+ 
+@@ -156,16 +156,17 @@ err:
+ static int nft_dict_init(const struct nft_ctx *ctx, const struct nft_expr *expr, const struct nlattr * const tb[])
+ {
+ 	struct nft_dict *priv = nft_expr_priv(expr);
++	int err;
+ 
+ 	if (!tb[NFTA_DICT_SREG] ||
+ 	    !tb[NFTA_DICT_LEN])
+ 		return -EINVAL;
+ 
+ 	memset(priv, 0, sizeof(*priv));
+-	priv->sreg = nft_parse_register(tb[NFTA_DICT_SREG]);
++	nft_parse_register_load(tb[NFTA_DICT_SREG],&priv->sreg, priv->len);
+ 
+ 	if(tb[NFTA_DICT_DREG]) {
+-		priv->dreg = nft_parse_register(tb[NFTA_DICT_DREG]);
++		nft_parse_register_load(tb[NFTA_DICT_DREG],&priv->dreg,priv->len);
+ 	}
+ 
+ 	if(tb[NFTA_DICT_FIELD]) {
+@@ -196,14 +197,14 @@ static int nft_dict_init(const struct nft_ctx *ctx, const struct nft_expr *expr,
+ 	priv->len = ntohl(nla_get_be32(tb[NFTA_DICT_LEN]));
+ 
+ 	if(tb[NFTA_DICT_SET]) {
+-		priv->set = nft_parse_register(tb[NFTA_DICT_SET]);
++		nft_parse_register_load(tb[NFTA_DICT_SET],&priv->set,priv->len);
+ 	}
+ 
+ 	if(tb[NFTA_DICT_FLUSH]) {
+ 		priv->flush = ntohl(nla_get_be32(tb[NFTA_DICT_FLUSH]));
+ 	}
+ 
+-	return nft_validate_register_load(priv->sreg, priv->len);
++	return nft_parse_register_load(tb[NFTA_DICT_SREG],&priv->sreg, priv->len);
+ }
+ 
+ static int nft_dict_dump(struct sk_buff *skb, const struct nft_expr *expr)
+@@ -281,7 +282,7 @@ enum nft_ctid_attributes {
+ };
+ 
+ struct nft_ctid {
+-	enum nft_registers      dreg:8;
++	u8	dreg;
+ };
+ 
+ static const struct nla_policy nft_ctid_policy[NFTA_CTID_MAX + 1] = {
+@@ -320,9 +321,8 @@ static int nft_ctid_init(const struct nft_ctx *ctx, const struct nft_expr *expr,
+ 		return -EINVAL;
+ 
+ 	memset(priv, 0, sizeof(*priv));
+-	priv->dreg = nft_parse_register(tb[NFTA_CTID_DREG]);
+-
+-	return nft_validate_register_store(ctx, priv->dreg, NULL,
++	
++	return nft_parse_register_store(ctx,tb[NFTA_CTID_DREG], &priv->dreg, NULL,
+ 					  NFT_DATA_VALUE, sizeof(u32));
+ }
+ 
+@@ -357,7 +357,7 @@ static struct nft_expr_type nft_ctid_type __read_mostly = {
+ 
+ struct nft_cmp_expr {
+ 	struct nft_data		data;
+-	enum nft_registers	sreg:8;
++	u8			sreg;
+ 	u8			len;
+ 	enum nft_cmp_ops	op:8;
+ };
+@@ -430,15 +430,17 @@ static int nft_cmp_init(const struct nft_ctx *ctx, const struct nft_expr *expr,
+ 			const struct nlattr * const tb[])
+ {
+ 	struct nft_cmp_expr *priv = nft_expr_priv(expr);
+-	struct nft_data_desc desc;
++	struct nft_data_desc desc = {  
++		.type   = NFT_DATA_VALUE,
++		.size   = sizeof(priv->data),
++	};
+ 	int err;
+ 
+-	err = nft_data_init(NULL, &priv->data, sizeof(priv->data), &desc,
++	err = nft_data_init(NULL, &priv->data, &desc,
+ 			    tb[NFTA_CMP_DATA]);
+ 	BUG_ON(err < 0);
+ 
+-	priv->sreg = nft_parse_register(tb[NFTA_CMP_SREG]);
+-	err = nft_validate_register_load(priv->sreg, desc.len);
++	err = nft_parse_register_load(tb[NFTA_CMP_SREG],&priv->sreg, desc.len);
+ 	if (err < 0)
+ 		return err;
+ 
+@@ -477,8 +479,11 @@ static const struct nft_expr_ops nft_cmp_ops = {
+ static const struct nft_expr_ops *
+ nft_cmp_select_ops(const struct nft_ctx *ctx, const struct nlattr * const tb[])
+ {
+-	struct nft_data_desc desc;
+ 	struct nft_data data;
++	struct nft_data_desc desc = {  
++		.type   = NFT_DATA_VALUE,
++		.size   = sizeof(data),
++	};
+ 	enum nft_cmp_ops op;
+ 	int err;
+ 
+@@ -501,7 +506,7 @@ nft_cmp_select_ops(const struct nft_ctx *ctx, const struct nlattr * const tb[])
+ 		return ERR_PTR(-EINVAL);
+ 	}
+ 
+-	err = nft_data_init(NULL, &data, sizeof(data), &desc,
++	err = nft_data_init(NULL, &data, &desc,
+ 			    tb[NFTA_CMP_DATA]);
+ 	if (err < 0)
+ 		return ERR_PTR(err);
+-- 
+2.25.1
+
