@@ -2,7 +2,7 @@ import requests
 import ipaddress
 
 class FetchIp:
-    def is_valid_ip(ip):
+    def is_valid_ip(self, ip):
         try:
             ipaddress.ip_address(ip)
             return True
@@ -26,7 +26,7 @@ class FetchIp:
             print(f"Error fetching IP addresses: {e}")
         return []
 
-    def save_ips_to_file(ip_list, file_path):
+    def save_ips_to_file(self, ip_list, file_path):
         try:
             file = open(file_path, 'w')
             # for ip in ip_list:
