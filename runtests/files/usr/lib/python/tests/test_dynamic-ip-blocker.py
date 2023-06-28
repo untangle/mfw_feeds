@@ -1,12 +1,12 @@
 import unittest
 from unittest.mock import MagicMock, patch
 import requests
-import sys 
-import os
-sys.path.append("../../../../../../dynamic-ip-blocker/files/")
-sys.path.append("dynamic-ip-blocker/files")
+# import sys 
+# import os
+# sys.path.append("../../../../../../dynamic-ip-blocker/files/")
+# sys.path.append("dynamic-ip-blocker/files")
 
-from fetch_ip import FetchIp
+from dynamic_ip_blocker.files.fetch_ip import FetchIp
 
 class TestIPFetching(unittest.TestCase):
 
@@ -17,8 +17,8 @@ class TestIPFetching(unittest.TestCase):
 
     def test_save_ips_to_file(self):
         ip_list = ["127.0.0.1", "192.168.0.1"]
-        self.FetchIp.save_ips_to_file(ip_list, "ip_addresses.txt")
-        with open("ip_addresses.txt", "r") as file:
+        self.FetchIp.save_ips_to_file(ip_list, "dynamic_ip_addresses_list.txt")
+        with open("dynamic_ip_addresses_list.txt", "r") as file:
             content = file.read()
             self.assertEqual(content, "127.0.0.1\n192.168.0.1")
 

@@ -1,5 +1,4 @@
 docs/_build/
-dynamic-ip-blocker/files/dynamic_ip_addresses_list.txt
-runtests/files/usr/lib/python/tests/ip_addresses.txt
+*dynamic_ip_addresses_list.txt
 *__pycache__/
 *.pyc
