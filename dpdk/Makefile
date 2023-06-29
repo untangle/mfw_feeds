@@ -26,7 +26,7 @@ HOST_PYTHON3_PACKAGE_BUILD_DEPENDS:="python3-pyelftools"
 PKG_INSTALL:=1
 
 include $(INCLUDE_DIR)/package.mk
-include $(TOPDIR)/feeds/packages/devel/meson/meson.mk
+include $(TOPDIR)/include/meson.mk
 
 MESON_ARGS+=-Denable_docs=false -Dexamples=all
 CFLAGS+=-D_GNU_SOURCE -g
