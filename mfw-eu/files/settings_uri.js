@@ -18,6 +18,9 @@
         },{
             "uri": "https://cmd.untangle.com/",
             "host": "cmd-eu.untangle.com"
+        },{
+            "uri": "https://sshrelay.untangle.com",
+            "host": "sshrelay-eu.untangle.com"
         }]
     }
 }
