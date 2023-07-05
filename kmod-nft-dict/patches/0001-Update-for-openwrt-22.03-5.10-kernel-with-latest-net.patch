@@ -1,12 +1,13 @@
-From d54ecf4051f7731fdd20947ad9405b1f0d34052b Mon Sep 17 00:00:00 2001
-From: John Sommerville <jsommerville@arista.com>
-Date: Fri, 2 Jun 2023 08:19:00 -0700
-Subject: [PATCH] Fix dict condition failures
+From 093a4b44e3829434721f57430d7d0505949f22e8 Mon Sep 17 00:00:00 2001
+From: Sebastien Delafond <sdelafond@gmail.com>
+Date: Wed, 5 Jul 2023 06:37:41 +0200
+Subject: [PATCH] Update for openwrt 22.03 5.10 kernel with latest netfilter
+ backport from 5.13
 
 ---
  dict.c     | 14 +++++++-------
- nft_dict.c | 35 ++++++++++++++++++++---------------
- 2 files changed, 27 insertions(+), 22 deletions(-)
+ nft_dict.c | 43 ++++++++++++++++++++++++-------------------
+ 2 files changed, 31 insertions(+), 26 deletions(-)
 
 diff --git a/dict.c b/dict.c
 index a32b4ca..7f30678 100644
@@ -74,7 +75,7 @@ index a32b4ca..7f30678 100644
  		pr_err("%s: Could not allocate local buffer!\n", __func__);
  		goto err;
 diff --git a/nft_dict.c b/nft_dict.c
-index 4c31085..057d956 100644
+index 4c31085..d256edc 100644
 --- a/nft_dict.c
 +++ b/nft_dict.c
 @@ -32,8 +32,8 @@ enum nft_dict_attributes {
@@ -97,7 +98,7 @@ index 4c31085..057d956 100644
  	u32 flush;
  };
  
-@@ -156,6 +156,7 @@ err:
+@@ -156,16 +156,18 @@ static void nft_dict_get_eval(const struct nft_expr *expr, struct nft_regs *regs
  static int nft_dict_init(const struct nft_ctx *ctx, const struct nft_expr *expr, const struct nlattr * const tb[])
  {
  	struct nft_dict *priv = nft_expr_priv(expr);
@@ -105,7 +106,31 @@ index 4c31085..057d956 100644
  
  	if (!tb[NFTA_DICT_SREG] ||
  	    !tb[NFTA_DICT_LEN])
-@@ -203,7 +204,7 @@ static int nft_dict_init(const struct nft_ctx *ctx, const struct nft_expr *expr,
+ 		return -EINVAL;
+ 
+ 	memset(priv, 0, sizeof(*priv));
+-	priv->sreg = nft_parse_register(tb[NFTA_DICT_SREG]);
++
++	priv->len = ntohl(nla_get_be32(tb[NFTA_DICT_LEN]));
+ 
+ 	if(tb[NFTA_DICT_DREG]) {
+-		priv->dreg = nft_parse_register(tb[NFTA_DICT_DREG]);
++		nft_parse_register_load(tb[NFTA_DICT_DREG], &priv->dreg, priv->len);
+ 	}
+ 
+ 	if(tb[NFTA_DICT_FIELD]) {
+@@ -193,17 +195,16 @@ static int nft_dict_init(const struct nft_ctx *ctx, const struct nft_expr *expr,
+ 	if(tb[NFTA_DICT_SIZE]) {
+ 		priv->size = ntohl(nla_get_be32(tb[NFTA_DICT_SIZE]));
+ 	}
+-	priv->len = ntohl(nla_get_be32(tb[NFTA_DICT_LEN]));
+ 
+ 	if(tb[NFTA_DICT_SET]) {
+-		priv->set = nft_parse_register(tb[NFTA_DICT_SET]);
++		nft_parse_register_load(tb[NFTA_DICT_SET], &priv->set, priv->len);
+ 	}
+ 
+ 	if(tb[NFTA_DICT_FLUSH]) {
  		priv->flush = ntohl(nla_get_be32(tb[NFTA_DICT_FLUSH]));
  	}
  
