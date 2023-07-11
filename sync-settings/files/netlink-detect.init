@@ -6,7 +6,7 @@ STOP=18
 
 start() {
     if [ -f /etc/Eos-release ] ; then
-        netlink-detect
+        netlink-detect &
     fi
 }
 
