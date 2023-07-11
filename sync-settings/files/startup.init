@@ -5,12 +5,12 @@ START=15
 STOP=15
 platform=`cat /proc/cmdline  | xargs -n1 |grep platform |cut -d '=' -f2`
 
-start() {
-	if [ $platform = "councilbluffs" ] || [ $platform = "veos" ]; then
-		# Don't require sshd process from BST container in cbl's and vEOS.
-		/etc/init.d/sshd stop
-	fi
-}
+echo "DISABLING SSHD"
+
+if [ $platform = "councilbluffs" ] || [ $platform = "veos" ]; then
+	# Don't require sshd process from BST container in cbl's and vEOS.
+	/etc/init.d/sshd stop
+fi
 
 boot() {
     if [ -d /etc/config/startup.d/ ] ; then
