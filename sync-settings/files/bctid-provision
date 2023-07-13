@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+
+import json
+import os
+import sys
+import subprocess
+
+class BctidProvision:
+	def __init__(self):
+		self.settings_file_path = '/etc/config/settings.json'
+		self.dns_static_entries = {'r_untangle.com'             : '34.198.106.160',
+					   'r_queue.untangle.com'       : '54.196.207.161',
+					   'r_license.untangle.com'     : '23.20.79.130',
+					   'r_cmd.untangle.com'         : '3.228.213.118',
+					   'r_boxbackup.untangle.com'   : '3.15.109.142',
+					   'r_database.untangle.com'    : '54.196.207.161',
+					   'r_api.bcti.brightcloud.com' : '35.83.77.30'}
+		self.settings_data = {}
+		self.mgmt_gateway = ""
+		self.mgmt_intf_id = 0
+		return
+
+	def get_settings_data(self):
+		with open(self.settings_file_path, "r") as settings_file:
+			self.settings_data = json.load(settings_file)
+		return
+
+	def get_mgmt_info(self):
+		self.mgmt_gateway = ""
+		for intf in self.settings_data['network']['interfaces']:
+			if(intf['name'] == 'MGMT1'):
+				self.mgmt_intf_id = intf['interfaceId']
+		return
+
+	def add_static_routes(self):
+		for name,addr in self.dns_static_entries.items():
+			route_setting = {}
+			route_setting['network'] = addr + '/32'
+			route_setting['nextHop'] = self.mgmt_gateway
+			route_setting['description'] = name
+			route_setting['interfaceId'] = self.mgmt_intf_id
+			self.settings_data['routes'].append(route_setting)
+		return
+
+	def add_dns_entries(self):
+		for name,addr in self.dns_static_entries.items():
+			dns_setting = {}
+			dns_setting['name'] = name
+			dns_setting['description'] = name
+			dns_setting['address'] = addr
+			self.settings_data['dns']['staticEntries'].append(dns_setting)
+		return
+
+	def write_settings_file(self):
+		try:
+			settings_file = open(self.settings_file_path, "w")
+			json.dump(self.settings_data, settings_file, indent=4, separators=(',', ': '))
+			settings_file.flush()
+			settings_file.close()
+		except IOError as exc:
+			print("Unable to save settings file.", exc)
+
+		return
+
+	def call_sync_settings(self):
+		try:
+			subprocess.run(['sync-settings'], capture_output=True, text=True)
+		except Exception as e:
+			print("An error occurred during sync-settings :", e)
+		return
+
+	def run(self):
+		self.get_settings_data()
+		self.get_mgmt_info()
+		self.add_static_routes()
+		self.add_dns_entries()
+		self.write_settings_file()
+		self.call_sync_settings()
+		return
+
+if __name__ == '__main__':
+
+	bctidprovision = BctidProvision()
+	bctidprovision.run()
