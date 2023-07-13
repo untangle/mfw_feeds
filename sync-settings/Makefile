@@ -33,7 +33,7 @@ define Py3Package/sync-settings/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/sync-settings $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/load-eos-config $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/bctid-provision $(1)/usr/bin
+	$(INSTALL_BIN) files/bctid-provision $(1)/usr/bin
 	$(INSTALL_BIN) files/speedtest.sh $(1)/usr/bin
 	$(INSTALL_BIN) files/wwan_status.sh $(1)/usr/bin
 	$(INSTALL_BIN) files/nft_debug $(1)/usr/bin
