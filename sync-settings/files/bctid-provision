@@ -8,15 +8,16 @@ import subprocess
 class BctidProvision:
 	def __init__(self):
 		self.settings_file_path = '/etc/config/settings.json'
-		self.dns_static_entries = {'r_untangle.com'             : '34.198.106.160',
-					   'r_queue.untangle.com'       : '54.196.207.161',
-					   'r_license.untangle.com'     : '23.20.79.130',
-					   'r_cmd.untangle.com'         : '3.228.213.118',
-					   'r_boxbackup.untangle.com'   : '3.15.109.142',
-					   'r_database.untangle.com'    : '54.196.207.161',
-					   'r_api.bcti.brightcloud.com' : '35.83.77.30'}
+		self.dns_static_entries = {'untangle.com'             : '34.198.106.160',
+					   'queue.untangle.com'       : '54.196.207.161',
+					   'license.untangle.com'     : '23.20.79.130',
+					   'cmd.untangle.com'         : '3.228.213.118',
+					   'boxbackup.untangle.com'   : '3.15.109.142',
+				           'database.untangle.com'    : '54.196.207.161',
+					   'api.bcti.brightcloud.com' : '35.83.77.30'}
 		self.settings_data = {}
-		self.mgmt_gateway = ""
+		self.mgmt_name = ''
+		self.mgmt_gateway = ''
 		self.mgmt_intf_id = 0
 		return
 
@@ -26,10 +27,11 @@ class BctidProvision:
 		return
 
 	def get_mgmt_info(self):
-		self.mgmt_gateway = ""
 		for intf in self.settings_data['network']['interfaces']:
 			if(intf['name'] == 'MGMT1'):
 				self.mgmt_intf_id = intf['interfaceId']
+				self.mgmt_name = intf['device']
+		self.mgmt_gateway = subprocess.getoutput(f"ip route show dev {self.mgmt_name} | grep via | awk '{{print $3}}' | head -n 1")
 		return
 
 	def add_static_routes(self):
@@ -39,6 +41,7 @@ class BctidProvision:
 			route_setting['nextHop'] = self.mgmt_gateway
 			route_setting['description'] = name
 			route_setting['interfaceId'] = self.mgmt_intf_id
+			route_setting["enabled"] = "true"
 			self.settings_data['routes'].append(route_setting)
 		return
 
@@ -64,7 +67,7 @@ class BctidProvision:
 
 	def call_sync_settings(self):
 		try:
-			subprocess.run(['sync-settings'], capture_output=True, text=True)
+			subprocess.getoutput("sync-settings")
 		except Exception as e:
 			print("An error occurred during sync-settings :", e)
 		return
