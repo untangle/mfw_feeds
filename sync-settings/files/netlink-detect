@@ -7,6 +7,12 @@ import datetime
 import sync.eos.MfwEapiClientLib as EapiClientLib
 import json
 
+INTF_OPER_UP = 1
+INTF_OPER_DOWN = 2
+INTF_LINK_UP = 2
+INTF_LINK_DOWN = 1
+BASH_TIMEOUT = 15
+
 class NetlinkHandler:
     def __init__(self):
         self.sysdb_path = "/ar/Sysdb/interface/status/eth/phy/all/intfStatus"
@@ -41,9 +47,13 @@ class NetlinkHandler:
 
     def get_interface_names(self):
         sfaFruFile = "/var/run/sfaFruPluginDevices.json"
-        output = self.eapiClient.runCmds(version=1,cmds=[ f"bash  timeout 15 cat {sfaFruFile} " ],format="text", requestTimeout=1 )
-        devices = json.loads(output['result'][0]['output'])
-        self.interface_list = devices['device']
+        output = self.eapiClient.runCmds(version=1,cmds=[ f"bash  timeout {BASH_TIMEOUT} cat {sfaFruFile} " ],format="text", requestTimeout=1 )
+        if(output != None):
+            devices = json.loads(output['result'][0]['output'])
+            self.interface_list = devices['device']
+        else:
+            self.logger.info(f"No devices found from {sfaFruFile} exiting....")
+            exit()
 
     def get_link_status(self, interface):
         ifname = None
@@ -74,15 +84,15 @@ class NetlinkHandler:
 
         if status == "DOWN":
             self.logger.info(f"Interface {ifname} is down.")
-            operstatus = 2
-            linkstatus = 1
+            operstatus = INTF_OPER_DOWN
+            linkstatus = INTF_LINK_DOWN
         else:
             self.logger.info(f"Interface {ifname} is up.")
-            operstatus = 1
-            linkstatus = 2
+            operstatus = INTF_OPER_UP
+            linkstatus = INTF_LINK_UP
 
         command = f'(echo -e "cd {sysdb_intf_path}"; echo -e "_.operStatus={operstatus}"; echo -e "_.linkStatus={linkstatus}") | python3 -m Acons Sysdb'
-        timeout_cmd = "timeout 15 bash -c"
+        timeout_cmd = f"timeout {BASH_TIMEOUT} bash -c"
 
         result = self.eapiClient.runCmds(version=1,cmds=[ f"bash  {timeout_cmd} '{command}' " ],format="text", requestTimeout=1 )
         if("Error" in result):
