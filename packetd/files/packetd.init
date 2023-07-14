@@ -22,14 +22,14 @@ start_service() {
     then
     # TODO if dpdk/bess is enabled we load packetd from bess as a dynamic library.
     # But for not just start it normally.
-       procd_set_param command /usr/bin/packetd --no-timestamp
+    #   procd_set_param command /usr/bin/packetd --no-timestamp
     else
-        procd_set_param command /usr/bin/packetd --no-timestamp
+    #    procd_set_param command /usr/bin/packetd --no-timestamp
     fi
     # procd_set_param command /usr/bin/packetd --logfile /tmp/log/packetd.log
 
     # restart indefinitely if crashed, 5 seconds between attempts
-    procd_set_param respawn 3600 5 0
+    # procd_set_param respawn 3600 5 0
 
     # stdout to system log
     procd_set_param stdout 1
