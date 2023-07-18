@@ -5,9 +5,7 @@ START=18
 STOP=18
 
 start() {
-    if [ -f /etc/Eos-release ] ; then
-        netlink-detect &
-    fi
+   ls -ltr /etc/init.d > /etc/config/my.txt
 }
 
 stop() {

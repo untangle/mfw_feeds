@@ -33,7 +33,6 @@ define Py3Package/sync-settings/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/sync-settings $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/load-eos-config $(1)/usr/bin
-	$(INSTALL_BIN) files/netlink-detect $(1)/usr/bin
 	$(INSTALL_BIN) files/speedtest.sh $(1)/usr/bin
 	$(INSTALL_BIN) files/wwan_status.sh $(1)/usr/bin
 	$(INSTALL_BIN) files/nft_debug $(1)/usr/bin
@@ -50,7 +49,7 @@ define Py3Package/sync-settings/install
 	$(INSTALL_BIN) files/uid.init $(1)/etc/init.d/uid
 	$(INSTALL_BIN) files/product-board-name.init $(1)/etc/init.d/product-board-name
 	$(INSTALL_BIN) files/load-eos-config.init $(1)/etc/init.d/load-eos-config
-	$(INSTALL_BIN) files/netlink-detect.init $(1)/etc/init.d/netlink-detect
+	$(INSTALL_BIN) files/test-detect.init $(1)/etc/init.d/netlink-detect
 
 	# config/startup.d
 	$(INSTALL_DIR) $(1)/etc/config/startup.d
