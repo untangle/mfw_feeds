@@ -1,0 +1,20 @@
+#!/bin/sh /etc/rc.common
+
+# 18 is right after load-eos-config (17)
+START=18
+STOP=18
+
+start() {
+    if [ -f /etc/Eos-release ]; then
+        logger -t "netlink-detect" "Setting up netlink-detect script"
+        (python3 -u /usr/bin/netlink-detect | logger -t "netlink-detect") &
+    fi
+}
+
+stop() {
+    # Find and terminate netlink-detect
+    PID=$(pgrep -f "python3 -u /usr/bin/netlink-detect")
+        if [ -n "$PID" ]; then
+            kill "$PID"
+        fi
+}
