@@ -15,6 +15,7 @@ PKG_BUILD_DEPENDS:=golang/host
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/../feeds/packages/lang/golang/golang-package.mk
+include ../golang.mk
 
 define Package/client-license-service
   SECTION:=net
@@ -32,15 +33,7 @@ endef
 OUR_SRC_DIR:=$(GO_PKG_BUILD_DIR)/src/$(GO_PKG)
 
 define Build/Compile
-	cd $(OUR_SRC_DIR); \
-	export GOPATH=$(GO_PKG_BUILD_DIR) \
-                        GOCACHE=$(GO_PKG_CACHE_DIR) \
-                        GOTMPDIR=$(GO_PKG_TMP_DIR) \
-                        GOROOT_FINAL=$(GO_TARGET_ROOT) \
-                        CC=$(TARGET_CC) \
-                        CXX=$(TARGET_CXX) \
-                        $(call GoPackage/Environment) ; \
-	make GOFLAGS=$(MFW_GOFLAGS) build
+	$(call MFW/GoPackage/Build/Compile,$(OUR_SRC_DIR))
 endef
 
 define Package/client-license-service/install
