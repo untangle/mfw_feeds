@@ -18,7 +18,7 @@ include $(INCLUDE_DIR)/package.mk
 # have to define anything special in neither Build/Compile nor
 # Package/packetd/install
 include $(INCLUDE_DIR)/../feeds/packages/lang/golang/golang-package.mk
-
+include ../golang.mk
 define Package/packetd
   SECTION:=net
   CATEGORY:=Network
@@ -39,15 +39,7 @@ endef
 OUR_SRC_DIR:=$(GO_PKG_BUILD_DIR)/src/$(GO_PKG)
 
 define Build/Compile
-	cd $(OUR_SRC_DIR) ; \
-	export GOPATH=$(GO_PKG_BUILD_DIR) \
-                        GOCACHE=$(GO_PKG_CACHE_DIR) \
-                        GOTMPDIR=$(GO_PKG_TMP_DIR) \
-                        GOROOT_FINAL=$(GO_TARGET_ROOT) \
-                        CC=$(TARGET_CC) \
-                        CXX=$(TARGET_CXX) \
-                        $(call GoPackage/Environment) ; \
-	make GOFLAGS=$(MFW_GOFLAGS) build
+	$(call MFW/GoPackage/Build/Compile,$(OUR_SRC_DIR))
 endef
 
 define Package/packetd/install
