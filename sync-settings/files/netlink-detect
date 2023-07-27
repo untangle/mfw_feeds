@@ -6,152 +6,203 @@ import os
 import datetime
 import sync.eos.MfwEapiClientLib as EapiClientLib
 import json
-import subprocess
 
 INTF_OPER_UP = 1
 INTF_OPER_DOWN = 2
 INTF_LINK_UP = 2
 INTF_LINK_DOWN = 1
 BASH_TIMEOUT = 15
+SYSDB_PATH = "/ar/Sysdb/interface/status/eth/phy/all/intfStatus"
+SYSDB_SUBINTF_PATH  = "/ar/Sysdb/interface/status/subintf/intfStatus"
 
+# This class has attributes of an Interface(EOS,MFW details)
+# Attributes are :
+# ifname (Type String): Name of the interface in the kernel. Eg : et1_1
+# is_subintf (Type Boolean): True if the interface is a subinterface else False
+# sysdb_ifname (Type String): Name of the interface in Sysdb. Eg : Ethernet1\/1
+# sysdb_path (Type String): Path in the sysdb to update the operstatus, link status for an interface
+# pi_name (Type String) : Parent interface name on which the subinterface created
+#                         For physcial interface the pi_name would be same as ifname
+class Interface:
+    def __init__(self,ifname,is_subintf=False):
+        self.ifname = ifname
+        self.is_subIntf = is_subintf
+        self.sysdb_ifname = self.get_sysdb_ifname()
+        self.pi_name = self.get_pi_name()
+        self.sysdb_path = self.get_sysdb_path()
+
+    # obtain the pi_name form the ifname 
+    def get_pi_name(self):
+        if(self.is_subIntf):
+            return self.ifname.split(".")[0]
+        else:
+            return self.ifname
+
+    # construct the sysdb path for each interface
+    def get_sysdb_path(self):
+        if(self.is_subIntf):
+            return f"{SYSDB_SUBINTF_PATH}/{self.sysdb_ifname}"
+        else:
+            return f"{SYSDB_PATH}/{self.sysdb_ifname}"
+
+    # construct the sysdb interface name
+    def get_sysdb_ifname(self):
+        intf_name = self.ifname.replace("et","Ethernet")
+        # if "_" in interface name, need to add '\' in the sysdb path
+        if("_" in intf_name):
+            pre,post = intf_name.split("_")
+            intf_name = f"""{pre}\/{post}"""
+        return intf_name
+
+    # for a sub interface get the details of
+    # pi_state : Parent Interface admin state
+    # subintf_state : Sub interface admin state
+    # subint_ip_add : IP address of the sub interface
+    def get_intf_settings_info(self):
+        pi_state = False
+        subintf_state = False
+        subint_ip_add = None
+        settings_json =  read_settings_file()
+        if(settings_json):
+            for item in settings_json["network"]["interfaces"]:
+                # check if the physical interface is enabled
+                if item["device"] == self.pi_name:
+                    pi_state = item["enabled"]
+
+                # check if the created vlan interface is enabled in settings.json
+                if item["device"] == self.ifname:
+                    subintf_state = item["enabled"]
+                    subint_ip_add = item.get("v4StaticAddress",None)
+
+        return (pi_state,subintf_state,subint_ip_add)
+
+# read the setting.json file return it as a json object
+def read_settings_file():
+    setting_file = "/etc/config/settings.json"
+    settings_json = {}
+    try:
+        with open(setting_file, 'r') as file:
+            settings_json = json.load(file)
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON while reading settings.json: {e}")
+    except FileNotFoundError:
+        print(f"File not found. Make sure {setting_file} exists.")
+    except Exception as e:
+        print(f"An unexpected error occurred while reading settings.json : {e}")
+
+    return settings_json
+
+# This class is responsible for handling all the Netlink Events
+# Detects a netlink message on an interested interface and sets
+# Interface states (OperStatus,LinkStatus) in Sysdb
+# For a subinterface it additionally it sets Hardware Status Directory
+# and enables/disables the interface on the kernel
 class NetlinkHandler:
     def __init__(self):
-        self.sysdb_path = "/ar/Sysdb/interface/status/eth/phy/all/intfStatus"
-        self.subintf_sysdb_path = "/ar/Sysdb/interface/status/subintf/intfStatus"
+
         self.timeout_cmd = f"timeout {BASH_TIMEOUT} bash -c"
         self.ipr = IPRoute()
         self.ipr.bind()
 
-        self.interface_list = []
+        self.interface_dict = {}
 
         self.eapiClient = EapiClientLib.EapiClient('ar', disableAaa=True, privLevel=15)
 
-        self.get_interface_names() # update the list of interfaces from sfaFruFile
+        self.get_interface_names() # update the list of interfaces from settings.json
         self.init()  # Call the initialization method
 
+    # Fetch all the interfaces from settings.json after boot up
     def get_interface_names(self):
-        sfaFruFile = "/var/run/sfaFruPluginDevices.json"
-        output = self.eapiClient.runCmds(version=1,cmds=[ f"bash  timeout {BASH_TIMEOUT} cat {sfaFruFile} " ],format="text", requestTimeout=1 )
-        try:
-            if(output != None):
-                    devices = json.loads(output['result'][0]['output'])
-                    self.interface_list = devices['device']
-            else:
-                raise ValueError(f"No devices found from {sfaFruFile}.")
+        settings_json = read_settings_file()
+        for device in settings_json["network"]["interfaces"]:
+            subintf = False
+            ifname = device["device"]
+            if("ma" not in ifname):
+                if(device["type"] == "VLAN"):
+                    subintf = True
+                self.interface_dict[ifname] = Interface(ifname,subintf)
 
-        except (ValueError, json.JSONDecodeError, TypeError) as e:
-            print("An error occurred while parsing the JSON:", e)
-            exit()
-
-    def get_link_status(self, interface):
+    # Parse netlink msg to obtain interface name, Operstate
+    def get_link_status(self, msg):
         ifname = None
         operstate = None
-
-        for attribute, value in interface['attrs']:
+        is_subintf = False
+        for attribute, value in msg['attrs']:
             if attribute == 'IFLA_IFNAME':
                 ifname = value
             elif attribute == 'IFLA_OPERSTATE':
                 operstate = value
+            # IFLA_LINKINFO is detected when a new sub interface is created
+            # check for a vlan attr and create a new interface object for the subinterface
+            elif attribute == 'IFLA_LINKINFO':
+                # value['attrs'] are of type pyroute2.netlink.nla_slot
+                # convert all the elements of value['attrs'] into tuple to compare
+                value['attrs'] = list(map(tuple, value['attrs']))
+                is_subintf = ('IFLA_INFO_KIND', 'vlan') in value['attrs']
 
-        return ifname, operstate
+        return ifname,operstate,is_subintf
 
+    # Handles updating the hardwareStatus directory for a subinterface
+    # Is also responsible for enabling/disabling the kernel interface based on settings.json
+    def handle_sub_intf_netlink_message(self,interface):
 
-    # if the interface is valid grep the admin state of the subinterface
-    # and update the sysdb_intf_path for physical or vlan interface
-    def handle_sub_intf_netlink_message(self, ifname, intf_name):
+        pi_admin_state, subintf_admin_state, subint_ip_add = interface.get_intf_settings_info()
 
-        sysdb_intf_path = f"{self.subintf_sysdb_path}/{intf_name}"
-        subintf_admin_state = False
-        subint_ip_add = 0
-
-        pi = ifname.split(".")[0]
-        setting_file = "/etc/config/settings.json"
-        try:
-            cmd = f"cat {setting_file}"
-            output = subprocess.check_output(cmd, shell=True, text=True)
-
-        except subprocess.CalledProcessError as e:
-            print("Command execution failed with error:", e)
-
-        try:
-            if(output != None):
-                    data = json.loads(output)
-                    for item in data["network"]["interfaces"]:
-                        # check if the physical interface is enabled
-                        if item["device"] == pi:
-                            pi_admin_state = item["enabled"]
-                        # check if the created vlan interface is enabled in settings.json
-                        if item["device"] == ifname:
-                            subintf_admin_state = item["enabled"]
-                            subint_ip_add = item["v4StaticAddress"]
-            else:
-                raise ValueError(f"No data found in {setting_file}.")
-
-        except (ValueError, json.JSONDecodeError, TypeError) as e:
-            print(f"An error occurred while parsing the JSON for {ifname}:", e)
-
+        # Need to set the hardware status of Sysdb and Kernel state accrodingly for subinterfaces
         if(subintf_admin_state and pi_admin_state):
-            command = f'(echo -e "cd /ar/Sysdb/interface/hardware/status/subintf"; echo -e "_.hardwareStatus.newMember{intf_name}") | python3 -m Acons Sysdb'
+            command = f'(echo -e "cd /ar/Sysdb/interface/hardware/status/subintf"; echo -e "_.hardwareStatus.newMember({interface.sysdb_ifname})") | python3 -m Acons Sysdb'
             result = self.eapiClient.runCmds(version=1,cmds=[ f"bash  {self.timeout_cmd} '{command}' " ],format="text", requestTimeout=1 )
             if("Error" in result):
                 print(f"Failed to run {command}")
-            cmd = f"ifconfig  {ifname} {subint_ip_add} up"
+            # Enable the subinterface on the kernel
+            cmd = f"ifconfig  {interface.ifname} {subint_ip_add} up"
         else:
-            cmd = f"ifconfig {ifname} down"
+            # Disable the interface on the kernel
+            cmd = f"ifconfig {interface.ifname} down"
 
+        # execute the commands
         try:
             subprocess.check_output(cmd, shell=True, text=True)
         except subprocess.CalledProcessError as e:
             print("Command execution failed with error:", e)
 
-        return sysdb_intf_path
+    # Handle all the netlink messages
+    # Additionally calls handle_sub_intf_netlink_message for sub interfaces
+    # Is responsible for updating the Operstatus and Linkstatus in Sysdb for physical and sub interfaces
+    def handle_netlink_message(self,interface,status):
 
-    def handle_netlink_message(self, ifname, status):
-        print(f"ifname is {ifname}")
-        # Sysdb uses "Ethernet" as naming convention
-        intf_name = ifname.replace("et","Ethernet")
-
-        # if "_" in interface name, need to add '\' in the sysdb path
-        if("_" in intf_name):
-            pre,post = intf_name.split("_")
-            intf_name = f"""{pre}\/{post}"""
-
-        # if its sub interface call handle_sub_intf_netlink_message
-        if ("." in ifname):
-            sysdb_intf_path = self.handle_sub_intf_netlink_message(ifname, intf_name)
-
-        else:
-            sysdb_intf_path = f"{self.sysdb_path}/{intf_name}"
+        if (interface.is_subIntf):
+            self.handle_sub_intf_netlink_message(interface)
 
         if status == "DOWN":
-            print(f"Interface {ifname} is down.")
+            print(f"Interface {interface.ifname} is down.")
             operstatus = INTF_OPER_DOWN
             linkstatus = INTF_LINK_DOWN
         else:
-            print(f"Interface {ifname} is up.")
+            print(f"Interface {interface.ifname} is up.")
             operstatus = INTF_OPER_UP
             linkstatus = INTF_LINK_UP
 
-        command = f'(echo -e "cd {sysdb_intf_path}"; echo -e "_.operStatus={operstatus}"; echo -e "_.linkStatus={linkstatus}") | python3 -m Acons Sysdb'
-
+        # update the Sysdb interface status 
+        command = f'(echo -e "cd {interface.sysdb_path}"; echo -e "_.operStatus={operstatus}"; echo -e "_.linkStatus={linkstatus}") | python3 -m Acons Sysdb'
         result = self.eapiClient.runCmds(version=1,cmds=[ f"bash  {self.timeout_cmd} '{command}' " ],format="text", requestTimeout=1 )
         if("Error" in result):
             print(f"Failed to run {command}")
 
+    # Intiliazes all the interface status into sysdb after the boot up
+    # This function is executed only once
     def init(self):
+        # Obtain all the status of all the interfaces from kernel
         interfaces = self.ipr.get_links()
         for interface in interfaces:
-            ifname, status = self.get_link_status(interface)
-            original_ifname = ifname
-            # grep the physical interface name if it is a subinterface
-            if ("." in ifname):
-                ifname = ifname.split(".")[0]
-
-            if ifname in self.interface_list:
-                self.handle_netlink_message(original_ifname, status)
+            ifname,status,is_subintf = self.get_link_status(interface)
+            if ifname in self.interface_dict:
+                self.handle_netlink_message(self.interface_dict[ifname], status)
 
         print(f"Initial Sync Up Done...")
 
+    # Runs an infinite while loop to detect for any netlink messages
+    # and passes an Interface object to handle_netlink_message
     def run(self):
         interface_states = {}
         print(f"Starting to poll for RTM_NEWLINK Messages")
@@ -159,28 +210,25 @@ class NetlinkHandler:
             msgs = self.ipr.get()
             for msg in msgs:
                 if msg['event'] == "RTM_NEWLINK":
-                    ifname = None
-                    operstate = None
 
-                    for attribute, value in msg['attrs']:
-                        if attribute == 'IFLA_IFNAME':
-                            ifname = value
-                        elif attribute == 'IFLA_OPERSTATE':
-                            operstate = value
+                    ifname, operstate, is_subintf = self.get_link_status(msg)
+                    # a new subintf is detected, add it to the list of interfaces that have to be tracked
+                    if(ifname not in self.interface_dict and is_subintf):
+                        self.interface_dict[ifname] = Interface(ifname,is_subintf)
+                        is_subintf = False
 
-                    if ifname and operstate:
+                    # update the status of the interface which we are interested for
+                    if ifname and operstate and ifname in self.interface_dict:
                         interface_states[ifname] = operstate
-
+            # Call handle_netlink_message on the interfaces that saw a netlink event
             if interface_states:
                 for ifname,state in interface_states.items():
-                    original_ifname = ifname
-                    if ("." in ifname):
-                        ifname = ifname.split(".")[0]
-                    if ifname in self.interface_list:
-                        self.handle_netlink_message(original_ifname, state)
+                    self.handle_netlink_message(self.interface_dict[ifname], state)
 
+            # Reset the interface states for next iteration
             interface_states = {}
 
 #instanitate the Netlinkhandler
 handler = NetlinkHandler()
+# Start the infinite while loop for detecting netlink messages
 handler.run()
