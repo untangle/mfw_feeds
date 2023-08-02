@@ -1,9 +1,8 @@
 define MFW/GoPackage/Build/Compile
 	cd $(1) ; \
-	export GOPATH=$(GO_PKG_BUILD_DIR) \
-               GOCACHE=$(GO_PKG_CACHE_DIR) \
-               GOTMPDIR=$(GO_PKG_TMP_DIR) \
-               GOROOT_FINAL=$(GO_TARGET_ROOT) \
+	export GOPATH="$(GO_PKG_BUILD_DIR)" \
+               GOCACHE="$(GO_BUILD_CACHE_DIR)" \
+               GOMODCACHE="$(GO_MOD_CACHE_DIR)" \
                GOOS="$(GO_OS)" \
                GOARCH="$(GO_ARCH)" \
                GO386="$(GO_386)" \
