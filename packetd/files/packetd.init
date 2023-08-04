@@ -18,18 +18,22 @@ start_service() {
     # --logfile to specify a logfile manually
     # as output goes to logd which will add timestamps
 
-    if [ -e /etc/config/dpdk ]
+    # if not hybrid mode, start the packetd 
+    if [ ! -e /etc/config/hybrid ]
     then
-    # TODO if dpdk/bess is enabled we load packetd from bess as a dynamic library.
-    # But for not just start it normally.
-    #   procd_set_param command /usr/bin/packetd --no-timestamp
-    else
-    #    procd_set_param command /usr/bin/packetd --no-timestamp
-    fi
-    # procd_set_param command /usr/bin/packetd --logfile /tmp/log/packetd.log
+        if [ -e /etc/config/dpdk ]
+        then
+        # TODO if dpdk/bess is enabled we load packetd from bess as a dynamic library.
+        # But for not just start it normally.
+            procd_set_param command /usr/bin/packetd --no-timestamp
+        else
+            procd_set_param command /usr/bin/packetd --no-timestamp
+        fi
+        # procd_set_param command /usr/bin/packetd --logfile /tmp/log/packetd.log
 
-    # restart indefinitely if crashed, 5 seconds between attempts
-    # procd_set_param respawn 3600 5 0
+        # restart indefinitely if crashed, 5 seconds between attempts
+        procd_set_param respawn 3600 5 0
+    fi
 
     # stdout to system log
     procd_set_param stdout 1
