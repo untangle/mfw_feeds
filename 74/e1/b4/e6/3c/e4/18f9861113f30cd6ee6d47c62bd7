@@ -18,19 +18,19 @@
     "commit": "0fed2b5d614c37603ea74d8aef373e10438cff64"
   },
   "barney.ci/golang": {
-    "commit": "2b6275f98356ea0c9baab7f4fdab867eb573ea3e"
+    "commit": "680b118834e93c959acbb4bd69e99bdf82157385"
   },
   "code.arista.io/infra/barney/barnzilla": {
     "commit": "d8f578803d954a8cb9932f99e1909c2f9ec143aa"
   },
   "code.arista.io/infra/barney/barnzilla-repos": {
-    "commit": "6c66e800e98378ac3e23715b582ac3fa85981eda"
+    "commit": "3c92f4212e8e9640ee54f1f7d6602210cd49fadc"
   },
   "code.arista.io/mfw/build": {
     "commit": "f4a134330ce47d8d1bbdb8408323e461aab3fcfd"
   },
   "github.com/golang/go": {
-    "commit": "c19c4c566c63818dfd059b352e52c4710eecf14d"
+    "commit": "adb775e309dea43157e931835e920ac9e7769abe"
   },
   "github.com/goreleaser/nfpm": {
     "commit": "4d89ab846ee135cbcf3085316bf15c739e8f1cc8"
