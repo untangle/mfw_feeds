@@ -33,6 +33,9 @@ start_service() {
 
         # restart indefinitely if crashed, 5 seconds between attempts
         procd_set_param respawn 3600 5 0
+    else
+        # Hybrid mode, start classd daemon
+        procd_set_param command  /usr/bin/classd -mfw -w65536 -d
     fi
 
     # stdout to system log
