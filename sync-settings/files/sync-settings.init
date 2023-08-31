@@ -1,12 +1,15 @@
 #!/bin/sh /etc/rc.common
 
 # 14 is right after haveged (13)
-START=14
-STOP=14
+START=24
+STOP=24
 
 boot() {
     # check if we should reset settings
     /usr/bin/check-for-usb-reset.sh && rm /etc/config/settings.json
+
+    cat /dev/null >/etc/config/network
+    /etc/init.d/network reload
 
     if [ ! -f /etc/config/settings.json ] ; then
         logger -t "sync-settings" "Creating /etc/config/settings.json"
