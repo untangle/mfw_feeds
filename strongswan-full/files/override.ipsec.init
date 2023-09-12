@@ -16,7 +16,7 @@ STRONGSWAN_CONF_FILE=/etc/strongswan.conf
 IPSEC_VAR_SECRETS_FILE=/var/ipsec/ipsec.secrets
 IPSEC_VAR_CONN_FILE=/var/ipsec/ipsec.conf
 STRONGSWAN_VAR_CONF_FILE=/var/ipsec/strongswan.conf
-platform=`cat /proc/cmdline  | xargs -n1 |grep platform |cut -d '=' -f2`
+platform=`awk '{for(i=1;i<=NF;i++) if($i ~ /platform/) print $i}' /proc/cmdline | cut -d '=' -f2`
 
 WAIT_FOR_INTF=0
 
