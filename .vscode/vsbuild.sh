@@ -22,16 +22,10 @@ for target_address in "${TARGET_ADDRESSES[@]}"; do
 
 	ssh-copy-id root@"$target_address"
 
-	rsync=$(ssh root@"$target_address" "which rsync")
-
 	isEos=true
 	if [ "$(ssh -p "$PORT" root@"$target_address" "uname -n")" == "mfw" ]; then
 		isEos=false
 		echo "${GREEN}Bare MFW found${NC}"
-
-		if [ "$rsync" = "" ]; then
-			ssh root@"$target_address" "opkg update; opkg install rsync"
-		fi
 	else
 		echo "${GREEN}MFW in EOS found${NC}"
 	fi
