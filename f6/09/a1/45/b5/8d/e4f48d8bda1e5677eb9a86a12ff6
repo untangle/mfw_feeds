@@ -18,7 +18,7 @@
     "commit": "bf0533d559fb6530d760eb47455327da9ea3fdbc"
   },
   "barney.ci/golang": {
-    "commit": "2b6275f98356ea0c9baab7f4fdab867eb573ea3e"
+    "commit": "8fb47be1c13bfc4ec4e7bab8db8ece4c5bb9e2a2"
   },
   "code.arista.io/infra/barney/barnzilla": {
     "commit": "16bcd1612f92c763189a52fa52df99fe54ba4592"
