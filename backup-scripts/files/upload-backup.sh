@@ -33,6 +33,7 @@ function createBackup() {
   TEMP_DIR_NAME=$(basename $TEMP_DIR)
 
   cp /etc/config/settings.json $TEMP_DIR
+  rsync -av --exclude /captive_portal/captive_portal_settings /etc/config/captive_portal $TEMP_DIR
   tar -C /tmp -zcf $BACKUP_FILE $TEMP_DIR_NAME
   rm -r $TEMP_DIR
 }
