@@ -23,7 +23,7 @@ for target_address in "${TARGET_ADDRESSES[@]}"; do
 	ssh-copy-id root@"$target_address"
 
 	isEos=true
-	if eval [ssh -p "$PORT" root@"$target_address" "ls /etc/Eos-release"]; then
+	if ! ssh -p "$PORT" root@"$target_address" "ls /etc/Eos-release"; then
 		isEos=false
 		echo "${GREEN}Bare MFW found${NC}"
 	else
