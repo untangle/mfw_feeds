@@ -31,9 +31,14 @@ function createBackup() {
   debug "Backing up settings to gunzipped tar archive file"
   TEMP_DIR=`mktemp -d -t ut-backup.XXXXXXX`
   TEMP_DIR_NAME=$(basename $TEMP_DIR)
+  CP_DIR="/etc/config/captive_portal"
 
   cp /etc/config/settings.json $TEMP_DIR
-  rsync -av --exclude /captive_portal/captive_portal_settings /etc/config/captive_portal $TEMP_DIR
+  if [ -d "$CP_DIR" ] ; then
+    cp $CP_DIR/* $TEMP_DIR
+    rm $TEMP_DIR/captive_portal_settings
+  fi
+
   tar -C /tmp -zcf $BACKUP_FILE $TEMP_DIR_NAME
   rm -r $TEMP_DIR
 }
