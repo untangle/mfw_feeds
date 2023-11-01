@@ -36,7 +36,7 @@ function createBackup() {
   cp /etc/config/settings.json $TEMP_DIR
   if [ -d "$CP_DIR" ] ; then
     cp $CP_DIR/* $TEMP_DIR
-    rm $TEMP_DIR/captive_portal_settings
+    rm -f $TEMP_DIR/captive_portal_settings
   fi
 
   tar -C /tmp -zcf $BACKUP_FILE $TEMP_DIR_NAME
