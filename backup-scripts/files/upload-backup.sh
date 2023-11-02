@@ -36,7 +36,7 @@ function createBackup() {
   cp /etc/config/settings.json $TEMP_DIR
 # TODO:Directory check condition is for the older builds 
 # where we dont support captive portal
-# in version 6 of MFW we can remove this condition
+# in version 6 of MFW remove if condition
   if [ -d "$CP_DIR" ] ; then
     cp $CP_DIR/* $TEMP_DIR
     rm -f $TEMP_DIR/captive_portal_settings
