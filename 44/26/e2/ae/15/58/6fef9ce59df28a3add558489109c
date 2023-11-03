@@ -3,7 +3,7 @@
     "commit": "4426e2ae15586fef9ce59df28a3add558489109c"
   },
   "barney.ci/alpine": {
-    "commit": "3cf008ec701fff8c463d2a86ad13b1bbe1c2525f"
+    "commit": "fb1ae6f324425a5f9260d60d7cc113146bb97913"
   },
   "barney.ci/barneyfile": {
     "commit": "9aba11995ac456d27c2fdc6ad46647ae5eb6586c"
@@ -24,7 +24,7 @@
     "commit": "db55cbb70e05cce973c96a7e3209bde77aeb5dad"
   },
   "code.arista.io/infra/barney/barnzilla-repos": {
-    "commit": "35251af62f1df2e0de4ff6eb9d40e42c2e67975f"
+    "commit": "efe2729d47de7c244b466b4b873ba201deec85d7"
   },
   "code.arista.io/mfw/build": {
     "commit": "f4a134330ce47d8d1bbdb8408323e461aab3fcfd"
