@@ -5,20 +5,24 @@ START=14
 STOP=14
 
 boot() {
-    # check if we should reset settings
-    /usr/bin/check-for-usb-reset.sh && rm /etc/config/settings.json
+	# check if we should reset settings
+	/usr/bin/check-for-usb-reset.sh && rm /etc/config/settings.json
 
-    if [ ! -f /etc/config/settings.json ] ; then
-        logger -t "sync-settings" "Creating /etc/config/settings.json"
-        /usr/bin/sync-settings -c -n -v force=true | logger -t "sync-settings"
-    else
-        /usr/bin/sync-settings -u -n -v force=true | logger -t "sync-settings"
-    fi
+	if [ ! -f /etc/config/settings.json ]; then
+		logger -t "sync-settings" "Creating /etc/config/settings.json"
+		/usr/bin/sync-settings -c -n -v force=true | logger -t "sync-settings"
+	else
+		/usr/bin/sync-settings -u -n -v force=true | logger -t "sync-settings"
+	fi
 
-    # ensure we have an up to date defaults.json file
-    /usr/bin/sync-settings -c -s -f /tmp/settings.json
-    mv /tmp/settings.json /etc/config/defaults.json
+	# ensure we have an up to date defaults.json file
+	/usr/bin/sync-settings -c -s -f /tmp/settings.json
+	mv /tmp/settings.json /etc/config/defaults.json
 
-    # Run sysctl on 9* prio files
-    sysctl -p /etc/sysctl.d/9*
+	# Run sysctl on 9* prio files if present
+    CUSTOM_COMMANDS="/etc/sysctl.d/9*"
+
+	if ls "$CUSTOM_COMMANDS"; then
+		sysctl -p "$CUSTOM_COMMANDS"
+	fi
 }
