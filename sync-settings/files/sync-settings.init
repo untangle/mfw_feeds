@@ -18,4 +18,7 @@ boot() {
     # ensure we have an up to date defaults.json file
     /usr/bin/sync-settings -c -s -f /tmp/settings.json
     mv /tmp/settings.json /etc/config/defaults.json
+
+    # Run sysctl on 9* prio files
+    sysctl -p /etc/sysctl.d/9*
 }
