@@ -6,7 +6,7 @@
     "commit": "fb1ae6f324425a5f9260d60d7cc113146bb97913"
   },
   "barney.ci/barneyfile": {
-    "commit": "9aba11995ac456d27c2fdc6ad46647ae5eb6586c"
+    "commit": "c982ff290580161cf773c422eb4088e150582727"
   },
   "barney.ci/byob": {
     "commit": "69e13b5780c61b3911421d6bf595bd35bb6824fc"
@@ -30,7 +30,7 @@
     "commit": "f4a134330ce47d8d1bbdb8408323e461aab3fcfd"
   },
   "github.com/golang/go": {
-    "commit": "ed817f1c4055a559a94afffecbb91c78e4f39942"
+    "commit": "883f062fc0a097bf561030ad453fd3e300896975"
   },
   "github.com/goreleaser/nfpm": {
     "commit": "4d89ab846ee135cbcf3085316bf15c739e8f1cc8"
