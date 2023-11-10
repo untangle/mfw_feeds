@@ -47,7 +47,7 @@ set)
 	;;
 
 *)
-	echo "Usage: set_affinity show|configure"
+	echo "Usage: set_affinity show|set"
 	exit 1
 esac
 
