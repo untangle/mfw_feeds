@@ -31,8 +31,17 @@ function createBackup() {
   debug "Backing up settings to gunzipped tar archive file"
   TEMP_DIR=`mktemp -d -t ut-backup.XXXXXXX`
   TEMP_DIR_NAME=$(basename $TEMP_DIR)
+  CP_DIR="/etc/config/captive_portal"
 
   cp /etc/config/settings.json $TEMP_DIR
+# TODO: Directory check is added for cases where upgrade from older builds 
+# to newer may not have the directory present. This check should probably 
+# be removed in future builds.
+  if [ -d "$CP_DIR" ] ; then
+    cp $CP_DIR/* $TEMP_DIR
+    rm -f $TEMP_DIR/captive_portal_settings
+  fi
+
   tar -C /tmp -zcf $BACKUP_FILE $TEMP_DIR_NAME
   rm -r $TEMP_DIR
 }
