@@ -19,8 +19,6 @@ include $(INCLUDE_DIR)/package.mk
 # Package/packetd/install
 include $(INCLUDE_DIR)/../feeds/packages/lang/golang/golang-package.mk
 
-include $(TOPDIR)/feeds/packages/lang/python/python3-package.mk
-
 define Package/restd
   SECTION:=utils
   CATEGORY:=Utilities
