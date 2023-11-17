@@ -7,7 +7,7 @@ STOP=17
 
 start() {
     if [ -f /etc/Eos-release ] ; then
-        load-eos-config
+        load-eos-config -b
     fi
 }
 
