@@ -7,7 +7,8 @@ STOP=17
 
 start() {
     if [ -f /etc/Eos-release ] ; then
-        load-eos-config -b
+        #load-eos-config -b
+        echo "Not running anything on load-eos-config" >> /tmp/load.log
     fi
 }
 
