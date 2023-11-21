@@ -23,12 +23,21 @@ boot() {
 
 		case "$platform" in
 		councilbluffs)
-			echo "CouncilBluffs" >/tmp/sysinfo/product_board_name
+			echo "Council Bluffs" >/tmp/sysinfo/product_board_name
 			exit 0
 			;;
 		independence)
-			echo "Independence" >/tmp/sysinfo/product_board_name
-			exit 0
+			Ind_version=$(cat /etc/prefdl | grep HwApi | awk -F ': ' '{print $2}' | cut -d '.' -f1)
+			case "$Ind_version" in
+			03)
+				echo "Independence P3" >/tmp/sysinfo/product_board_name
+				exit 0
+				;;
+			02)
+				echo "Independence P2" >/tmp/sysinfo/product_board_name
+				exit 0
+				;;
+			esac
 			;;
 		esac
 
