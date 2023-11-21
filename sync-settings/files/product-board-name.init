@@ -24,16 +24,15 @@ boot() {
 		case "$platform" in
 		councilbluffs)
 			echo "CouncilBluffs" >/tmp/sysinfo/product_board_name
+			exit 0
 			;;
 		independence)
 			echo "Independence" >/tmp/sysinfo/product_board_name
-			;;
-		*)
-			echo "Custom" >/tmp/sysinfo/product_board_name
+			exit 0
 			;;
 		esac
 
-  # Not exiting here, since we want VMs to overwrite.
+		# Not exiting here, since we want VMs to overwrite.
 	fi
 
 	case $(board_name) in
