@@ -12,9 +12,36 @@ boot() {
 		logger -t "sync-settings" "Creating /etc/config/settings.json"
 		/usr/bin/sync-settings -c -n -v force=true | logger -t "sync-settings"
 	else
-		/usr/bin/sync-settings -n -v force=true | logger -t "sync-settings"
-		ifdown -a -v --exclude=lo
+	  touch /tmp/ss-1
+	  ip a > /tmp/ss-1
+	  ip route show >> /tmp/ss-1
+	  ifstatus LAN14 >> /tmp/ss-1
+
+		/usr/bin/sync-settings -u -n -v force=true | logger -t "sync-settings"
+
+		touch /tmp/ss-2
+    ip a > /tmp/ss-2
+    ip route show >> /tmp/ss-2
+    ifstatus LAN14 >> /tmp/ss-2
+
     ifup -a -v --exclude=lo
+
+		touch /tmp/ss-3
+    ip a > /tmp/ss-3
+    ip route show >> /tmp/ss-3
+    ifstatus LAN14 >> /tmp/ss-3
+
+    sleep 30s
+		touch /tmp/ss-4
+    ip a > /tmp/ss-4
+    ip route show >> /tmp/ss-4
+    ifstatus LAN14 >> /tmp/ss-4
+
+    ifup -a -v --exclude=lo
+		touch /tmp/ss-5
+    ip a > /tmp/ss-5
+    ip route show >> /tmp/ss-5
+    ifstatus LAN14 >> /tmp/ss-5
 	fi
 
 	# ensure we have an up to date defaults.json file
