@@ -1,0 +1,530 @@
+[
+    {
+        "catid": 0,
+        "catremap": 0,
+        "catname": "Uncategorized",
+        "catgroup": "Misc"
+    },
+    {
+        "catid": 1,
+        "catremap": 1,
+        "catname": "Real Estate",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 2,
+        "catremap": 2,
+        "catname": "Computer and Internet Security",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 3,
+        "catremap": 3,
+        "catname": "Financial Services",
+        "catgroup": "Privacy"
+    },
+    {
+        "catid": 4,
+        "catremap": 4,
+        "catname": "Business and Economy",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 5,
+        "catremap": 5,
+        "catname": "Computer and Internet Info",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 6,
+        "catremap": 6,
+        "catname": "Auctions",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 7,
+        "catremap": 7,
+        "catname": "Shopping",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 8,
+        "catremap": 8,
+        "catname": "Cult and Occult",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 9,
+        "catremap": 9,
+        "catname": "Travel",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 10,
+        "catremap": 10,
+        "catname": "Abused Drugs",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 11,
+        "catremap": 11,
+        "catname": "Adult and Pornography",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 12,
+        "catremap": 12,
+        "catname": "Home and Garden",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 13,
+        "catremap": 13,
+        "catname": "Military",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 14,
+        "catremap": 14,
+        "catname": "Social Networking",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 15,
+        "catremap": 15,
+        "catname": "Dead Sites",
+        "catgroup": "Misc"
+    },
+    {
+        "catid": 16,
+        "catremap": 16,
+        "catname": "Individual Stock Advice and Tools",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 17,
+        "catremap": 17,
+        "catname": "Training and Tools",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 18,
+        "catremap": 18,
+        "catname": "Dating",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 19,
+        "catremap": 19,
+        "catname": "Sex Education",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 20,
+        "catremap": 20,
+        "catname": "Religion",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 21,
+        "catremap": 21,
+        "catname": "Entertainment and Arts",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 22,
+        "catremap": 22,
+        "catname": "Personal sites and Blogs",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 23,
+        "catremap": 23,
+        "catname": "Legal",
+        "catgroup": "Privacy"
+    },
+    {
+        "catid": 24,
+        "catremap": 24,
+        "catname": "Local Information",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 25,
+        "catremap": 25,
+        "catname": "Streaming Media",
+        "catgroup": "IT Resources"
+    },
+    {
+        "catid": 26,
+        "catremap": 26,
+        "catname": "Job Search",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 27,
+        "catremap": 27,
+        "catname": "Gambling",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 28,
+        "catremap": 28,
+        "catname": "Translation",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 29,
+        "catremap": 29,
+        "catname": "Reference and Research",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 30,
+        "catremap": 30,
+        "catname": "Shareware and Freeware",
+        "catgroup": "IT Resources"
+    },
+    {
+        "catid": 31,
+        "catremap": 31,
+        "catname": "Peer to Peer",
+        "catgroup": "IT Resources"
+    },
+    {
+        "catid": 32,
+        "catremap": 32,
+        "catname": "Marijuana",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 33,
+        "catremap": 33,
+        "catname": "Hacking",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 34,
+        "catremap": 34,
+        "catname": "Games",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 35,
+        "catremap": 35,
+        "catname": "Philosophy and Political Advocacy",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 36,
+        "catremap": 36,
+        "catname": "Weapons",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 37,
+        "catremap": 37,
+        "catname": "Pay to Surf",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 38,
+        "catremap": 38,
+        "catname": "Hunting and Fishing",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 39,
+        "catremap": 39,
+        "catname": "Society",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 40,
+        "catremap": 40,
+        "catname": "Educational Institutions",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 41,
+        "catremap": 41,
+        "catname": "Online Greeting Cards",
+        "catgroup": "IT Resources"
+    },
+    {
+        "catid": 42,
+        "catremap": 42,
+        "catname": "Sports",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 43,
+        "catremap": 43,
+        "catname": "Swimsuits and Intimate Apparel",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 44,
+        "catremap": 44,
+        "catname": "Questionable",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 45,
+        "catremap": 45,
+        "catname": "Kids",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 46,
+        "catremap": 46,
+        "catname": "Hate and Racism",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 47,
+        "catremap": 47,
+        "catname": "Personal Storage",
+        "catgroup": "IT Resources"
+    },
+    {
+        "catid": 48,
+        "catremap": 48,
+        "catname": "Violence",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 49,
+        "catremap": 49,
+        "catname": "Keyloggers and Monitoring",
+        "catgroup": "Security"
+    },
+    {
+        "catid": 50,
+        "catremap": 50,
+        "catname": "Search Engines",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 51,
+        "catremap": 51,
+        "catname": "Internet Portals",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 52,
+        "catremap": 52,
+        "catname": "Web Advertisements",
+        "catgroup": "IT Resources"
+    },
+    {
+        "catid": 53,
+        "catremap": 53,
+        "catname": "Cheating",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 54,
+        "catremap": 54,
+        "catname": "Gross",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 55,
+        "catremap": 55,
+        "catname": "Web-based Email",
+        "catgroup": "Privacy"
+    },
+    {
+        "catid": 56,
+        "catremap": 56,
+        "catname": "Malware Sites",
+        "catgroup": "Security"
+    },
+    {
+        "catid": 57,
+        "catremap": 57,
+        "catname": "Phishing and Other Frauds",
+        "catgroup": "Security"
+    },
+    {
+        "catid": 58,
+        "catremap": 58,
+        "catname": "Proxy Avoidance and Anonymizers",
+        "catgroup": "Security"
+    },
+    {
+        "catid": 59,
+        "catremap": 59,
+        "catname": "Spyware and Adware",
+        "catgroup": "Security"
+    },
+    {
+        "catid": 60,
+        "catremap": 60,
+        "catname": "Music",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 61,
+        "catremap": 61,
+        "catname": "Government",
+        "catgroup": "Privacy"
+    },
+    {
+        "catid": 62,
+        "catremap": 62,
+        "catname": "Nudity",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 63,
+        "catremap": 63,
+        "catname": "News and Media",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 64,
+        "catremap": 64,
+        "catname": "Illegal",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 65,
+        "catremap": 65,
+        "catname": "Content Delivery Networks",
+        "catgroup": "IT Resources"
+    },
+    {
+        "catid": 66,
+        "catremap": 66,
+        "catname": "Internet Communications",
+        "catgroup": "IT Resources"
+    },
+    {
+        "catid": 67,
+        "catremap": 67,
+        "catname": "Bot Nets",
+        "catgroup": "Security"
+    },
+    {
+        "catid": 68,
+        "catremap": 68,
+        "catname": "Abortion",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 69,
+        "catremap": 69,
+        "catname": "Health and Medicine",
+        "catgroup": "Privacy"
+    },
+    {
+        "catid": 70,
+        "catremap": 70,
+        "catname": "Confirmed SPAM Sources",
+        "catgroup": "Unmaintained"
+    },
+    {
+        "catid": 71,
+        "catremap": 71,
+        "catname": "SPAM URLs",
+        "catgroup": "Security"
+    },
+    {
+        "catid": 72,
+        "catremap": 72,
+        "catname": "Unconfirmed SPAM Sources",
+        "catgroup": "Unmaintained"
+    },
+    {
+        "catid": 73,
+        "catremap": 73,
+        "catname": "Open HTTP Proxies",
+        "catgroup": "Unmaintained"
+    },
+    {
+        "catid": 74,
+        "catremap": 74,
+        "catname": "Dynamically Generated Content",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 75,
+        "catremap": 75,
+        "catname": "Parked Domains",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 76,
+        "catremap": 76,
+        "catname": "Alcohol and Tobacco",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 77,
+        "catremap": 77,
+        "catname": "Private IP Addresses",
+        "catgroup": "Unmaintained"
+    },
+    {
+        "catid": 78,
+        "catremap": 78,
+        "catname": "Image and Video Search",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 79,
+        "catremap": 79,
+        "catname": "Fashion and Beauty",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 80,
+        "catremap": 80,
+        "catname": "Recreation and Hobbies",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 81,
+        "catremap": 81,
+        "catname": "Motor Vehicles",
+        "catgroup": "Productivity"
+    },
+    {
+        "catid": 82,
+        "catremap": 82,
+        "catname": "Web Hosting",
+        "catgroup": "IT Resources"
+    },
+    {
+        "catid": 83,
+        "catremap": 83,
+        "catname": "Food and Dining",
+        "catgroup": "Unmaintained"
+    },
+    {
+        "catid": 85,
+        "catremap": 48,
+        "catname": "Self Harm",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 86,
+        "catremap": 58,
+        "catname": "DNS Over HTTPS",
+        "catgroup": "Security"
+    },
+    {
+        "catid": 87,
+        "catremap": 32,
+        "catname": "Low-THC Cannabis Products",
+        "catgroup": "Sensitive"
+    },
+    {
+        "catid": 88,
+        "catremap": 5,
+        "catname": "Generative AI",
+        "catgroup": "Productivity"
+    }
+]
