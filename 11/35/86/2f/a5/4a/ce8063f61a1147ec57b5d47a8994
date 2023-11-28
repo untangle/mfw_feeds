@@ -18,13 +18,13 @@
     "commit": "d5a25438215f49111b323af35d0d858c17d882a1"
   },
   "barney.ci/golang": {
-    "commit": "e65a7b0113ce393b6250766401a421b1e00a1e1c"
+    "commit": "8fb47be1c13bfc4ec4e7bab8db8ece4c5bb9e2a2"
   },
   "code.arista.io/infra/barney/barnzilla": {
     "commit": "b983a749bcb6c9b3a26cc8452a32aa41e7e414e5"
   },
   "code.arista.io/infra/barney/barnzilla-repos": {
-    "commit": "42e8f77a3c3e9d63f6896e023c98095ea0b03a88"
+    "commit": "efa9b98ac904d2b0f675697e880dd610be408baf"
   },
   "code.arista.io/mfw/build": {
     "commit": "f4a134330ce47d8d1bbdb8408323e461aab3fcfd"
