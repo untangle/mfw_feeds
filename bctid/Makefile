@@ -34,6 +34,10 @@ endef
 TMP_BUILD_DIR:=$(PKG_BUILD_DIR)/tmp/
 
 define Package/bctid/install
+	# Copy bctid categories file
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_BIN) files/categories.json $(1)/etc/config/categories.json
+
 	$(INSTALL_DIR) $(1)/usr/bin $(1)/usr/lib/bctid $(1)/usr/share/bctid
 	$(INSTALL_BIN) $(TMP_BUILD_DIR)/src/bin/bctid $(1)/usr/bin/
 	$(CP) $(TMP_BUILD_DIR)/src/bin/bcti.cfg $(1)/usr/share/bctid/

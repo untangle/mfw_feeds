@@ -3,57 +3,90 @@
 # Copyright (C) 2016 LEDE-Project.org
 
 START=12
+
+In_eos_board_name() {
+	# running under EOS
+
+	platform=$(cat /proc/cmdline | xargs -n1 | grep platform | cut -d '=' -f2)
+
+	case "$platform" in
+	councilbluffs)
+		echo "Council Bluffs" >/tmp/sysinfo/product_board_name
+		exit 0
+		;;
+	independence)
+		Ind_version=$(cat /etc/prefdl | grep HwApi | awk -F ': ' '{print $2}' | cut -d '.' -f1)
+		case "$Ind_version" in
+		03)
+			echo "Independence P3" >/tmp/sysinfo/product_board_name
+			exit 0
+			;;
+		02)
+			echo "Independence P2" >/tmp/sysinfo/product_board_name
+			exit 0
+			;;
+		esac
+		;;
+	esac
+
+	# Not exiting here, since we want VMs to overwrite.
+}
+
 boot() {
-    . /lib/functions.sh
+	. /lib/functions.sh
 
-    if [ -f /tmp/sysinfo/product_board_name ] ; then
-        exit
-    fi
+	if [ -f /tmp/sysinfo/product_board_name ]; then
+		exit
+	fi
 
-    SERIAL=$(cat /etc/config/serial | tr -d '[ \t\r\n]')
-    # Q series serial pattern CTWYYWWSSSS
-    # YYWWSSSS is a series of digits representing the year, number of weeks, and a sequence number
-    qSerialPattern="^CTW([1-9][0-9])(0[1-9]|[1-4][0-9]|5[0-3])([0-9]{4})$"
+	# EOS additions
+	if [ -f /etc/Eos-release ]; then
+		In_eos_board_name
+	fi
 
-    case $(board_name) in
-        globalscale,espressobin-v7-emmc)
-            product_board_name="e3"
-            if [ -L /sys/class/ieee80211/phy0 ] ; then
-                product_board_name=$product_board_name"w"
-            fi
-            echo $product_board_name > /tmp/sysinfo/product_board_name
-            ;;
-        caswell-caf-0262|untangle-inc-default-string|arista-networks-inc-default-string)
-            if [[ $SERIAL =~ $qSerialPattern ]];
-            then
-                # Handle Q series board name.
-                product_board_name="Q6E"
-            else
-                # Handle NON Q series board name.
-                product_board_name="e6"
-            fi
+	SERIAL=$(cat /etc/config/serial | tr -d '[ \t\r\n]')
+	# Q series serial pattern CTWYYWWSSSS
+	# YYWWSSSS is a series of digits representing the year, number of weeks, and a sequence number
+	qSerialPattern="^CTW([1-9][0-9])(0[1-9]|[1-4][0-9]|5[0-3])([0-9]{4})$"
 
-            if [ -L /sys/class/ieee80211/phy0 ] ; then
-                product_board_name=$product_board_name"w"
-            fi
+	case $(board_name) in
+	globalscale,espressobin-v7-emmc)
+		product_board_name="e3"
+		if [ -L /sys/class/ieee80211/phy0 ]; then
+			product_board_name=$product_board_name"w"
+		fi
+		echo $product_board_name >/tmp/sysinfo/product_board_name
+		;;
+	caswell-caf-0262 | untangle-inc-default-string | arista-networks-inc-default-string)
+		if [[ $SERIAL =~ $qSerialPattern ]]; then
+			# Handle Q series board name.
+			product_board_name="Q6E"
+		else
+			# Handle NON Q series board name.
+			product_board_name="e6"
+		fi
 
-            if [ -L /sys/class/net/wwan0 ] ; then
-                product_board_name=$product_board_name"l"
-            fi
+		if [ -L /sys/class/ieee80211/phy0 ]; then
+			product_board_name=$product_board_name"w"
+		fi
 
-            echo $product_board_name > /tmp/sysinfo/product_board_name
-            ;;
-        vmware-inc-vmware-virtual-platform)
-            echo "VMware" > /tmp/sysinfo/product_board_name
-            ;;
-        innotek-gmbh-virtualbox)
-            echo "VirtualBox" > /tmp/sysinfo/product_board_name
-            ;;
-        microsoft-corporation-virtual-machine)
-            echo "HyperV" > /tmp/sysinfo/product_board_name
-            ;;
-        *)
-            echo "Custom" > /tmp/sysinfo/product_board_name
-            ;;
-    esac
+		if [ -L /sys/class/net/wwan0 ]; then
+			product_board_name=$product_board_name"l"
+		fi
+
+		echo $product_board_name >/tmp/sysinfo/product_board_name
+		;;
+	vmware-inc-vmware-virtual-platform)
+		echo "VMware" >/tmp/sysinfo/product_board_name
+		;;
+	innotek-gmbh-virtualbox)
+		echo "VirtualBox" >/tmp/sysinfo/product_board_name
+		;;
+	microsoft-corporation-virtual-machine)
+		echo "HyperV" >/tmp/sysinfo/product_board_name
+		;;
+	*)
+		echo "Custom" >/tmp/sysinfo/product_board_name
+		;;
+	esac
 }
