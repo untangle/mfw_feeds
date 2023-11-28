@@ -20,9 +20,10 @@ boot() {
 	mv /tmp/settings.json /etc/config/defaults.json
 
 	# Run sysctl on 9* prio files if present
-    CUSTOM_COMMANDS="/etc/sysctl.d/9*"
+	CUSTOM_COMMANDS="/etc/sysctl.d/9*"
 
-	if ls "$CUSTOM_COMMANDS"; then
-		sysctl -p "$CUSTOM_COMMANDS"
+	if ls $CUSTOM_COMMANDS; then
+		sysctl -p $CUSTOM_COMMANDS
+
 	fi
 }
