@@ -14,7 +14,7 @@ COMMAND_NAME=$0
 COMMAND_PID=$$
 # Debug mode for messages and other output
 DEBUG=false
-# If true, run in interative mode, otherwise in dameon mode.
+# If true, run in interactive mode, otherwise in daemon mode.
 INTERACTIVE=false
 # If non empty, log debug messages that match substring.  Commonly used to watch substring.
 LOG_WATCH=
@@ -51,7 +51,7 @@ LOG_MESSAGE_PRIORITY_DEBUG=1
 if [ "$INTERACTIVE" = "true" ] ; then
 	# In interactive mode use echo
 	LOGGER_COMMAND="echo"
-	LOGGER_TIMESTAMP=date
+	LOGGER_TIMESTAMP="date"
 else
 	# LOGGER_COMMAND="logger -t wan-manager"
 	LOGGER_COMMAND="logger -t wan-manager"
@@ -195,7 +195,7 @@ get_wan_path(){
 }
 
 # check_for_table
-# Verifies requried nft tables to exists
+# Verifies required nft tables to exists
 #
 # @param $1    nft ip version type (ip or ipv6)
 # @param $2    Table name to check
@@ -218,14 +218,14 @@ check_for_table()
 handle_term()
 {
 	local __function_name="handle_term"
-	log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: recevied term signal"
+	log_message $LOG_MESSAGE_PRIORITY_ANY "$__function_name: received term signal"
 	kill -9 $COMMAND_PID
 }
 
 # wait_for_change
 # Use inotify to wait for specific files to change
 #
-# @param $1    Comma separated lsit of files to monitor
+# @param $1    Comma separated list of files to monitor
 wait_for_change()
 {
 	local __function_name="wait_for_change"
@@ -595,6 +595,7 @@ get_policy_wans_and_up_wans()
 		fi
 	done
 
+  # FIXME: __wans is undefined
 	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy_wans=$__policy_wans wans=$__wans"
 	eval "$__return_policy_wans=\"$__policy_wans\""
 	eval "$__return_up_wans=\"$__up_wans\""
@@ -847,7 +848,7 @@ criteria_always_up()
 # @param $2    Numeric policy id
 # @param $3    Interface name
 # @param $4    IP family
-# @param $5    Attribtute key
+# @param $5    Attribute key
 # @param $6    Attribute value to match
 # @param $7    Status to set (up or down)
 criteria_attribute()
@@ -869,6 +870,7 @@ criteria_attribute()
 		status=$(head -n 1 $status_file)
 	fi
 
+  # FIXME: attribute is undefined
 	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, interfaceId=$interfaceId, interface=$interface, attribute=$attribute, family=$family, key=$key, value=$value, new_status=$new_status"
 
 	log_state="status"
@@ -989,7 +991,7 @@ criteria_connectivity()
 	local threshold=$8
 	local host=$9
 
-	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, interfaceId=$interfaceId, interface=$interface, family=$family, critera=$critera, interval=$interval, timeout=$timeout, threshold=$threshold, host=$host"
+	log_message $LOG_MESSAGE_PRIORITY_DEBUG "$__function_name: policy=$policy, interfaceId=$interfaceId, interface=$interface, family=$family, criteria=$criteria, interval=$interval, timeout=$timeout, threshold=$threshold, host=$host"
 
 	local device
 	local ip_address
@@ -1194,7 +1196,7 @@ policy_best_of()
 
 		if [ $stat_name = "latency" ] ; then
 			if [ "$stat" = 0 ] || [ "$stat" = -1 ] ; then
-				# NOTE: A latency of 0  means 100% pakcet loss, so ignore during best_of calculations
+				# NOTE: A latency of 0  means 100% packet loss, so ignore during best_of calculations
 				continue
 			fi
 		fi
