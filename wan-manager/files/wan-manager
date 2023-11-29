@@ -141,7 +141,7 @@ ALLOW_LOG_UPDATE_START=$(date +%s)
 # - Log policy status for polices that otherwise log a lot like balance.
 check_allow_log_update()
 {
-	local __function_nane="check_allow_log_update"
+	local __function_name="check_allow_log_update"
 	local currentTime=$(date +%s)
 	local elapsedTime=$((currentTime - $ALLOW_LOG_UPDATE_START))
 	if [ $elapsedTime -gt $ALLOW_LOG_UPDATE_INTERVAL ]; then
