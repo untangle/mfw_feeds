@@ -14,3 +14,7 @@ start_service() {
 	procd_set_param respawn 3600 5 0
 	procd_close_instance
 }
+
+stop_service() {
+	ps | grep "/usr/bin/interface_watcher.sh" | awk '{print $1}' | xargs kill -9 "$1" 2>&1
+}
