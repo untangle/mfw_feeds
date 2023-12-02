@@ -11,8 +11,6 @@ ip -o monitor link | while read -r index interface status remaining; do
 
 	# If iface goes to UP
 	if [ "$operstate" = "UP" ]; then
-		echo "PEOS"
-
 		# For both ipv6 and ipv4
 		grab_intf_name "$iface"
 		echo "$interfaces" | while read -r line; do ifup "$line"; done
