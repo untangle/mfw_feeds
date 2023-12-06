@@ -337,5 +337,5 @@ if __name__ == "__main__":
     # check_pid_file()
 
     while True:
-        debug("")
+        debug("Attempting to read from cmd")
         read_from_cmd()
