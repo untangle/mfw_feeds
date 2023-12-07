@@ -30,7 +30,7 @@ define Py3Package/runtests/install
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/runtests $(1)/usr/bin
 
 	$(INSTALL_DIR) $(1)/usr/lib/runtests
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/runtests $(1)/usr/lib
+	$(CP) $(PKG_INSTALL_DIR)$(PYTHON3_PKG_DIR)/usr/lib/runtests $(1)/usr/lib
 
 	# Tests
 	$(INSTALL_DIR) $(1)$(PYTHON3_PKG_DIR)/tests
