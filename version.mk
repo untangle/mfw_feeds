@@ -42,6 +42,8 @@ endif
 PKG_SOURCE_SUBDIR := $(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE := $(PKG_NAME)-$(PKG_SOURCE_VERSION)-$(PKG_VERSION).tar.xz
 
+PYTHON3_PKG_WHEEL_VERSION:=undefined
+
 # this target is meant for testing
 test-mfw-version:
 	@echo "PKG_NAME: $(PKG_NAME)"
