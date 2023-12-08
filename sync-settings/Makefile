@@ -42,7 +42,6 @@ define Py3Package/sync-settings/install
 	$(INSTALL_BIN) files/set_affinity.sh $(1)/usr/bin
 	$(INSTALL_BIN) files/set_rpsxps.sh $(1)/usr/bin
 	$(INSTALL_BIN) files/quota_cron.sh $(1)/usr/bin
-	$(INSTALL_BIN) files/interface_watcher.sh $(1)/usr/bin
 
 	# init.d
 	$(INSTALL_DIR) $(1)/etc/init.d
@@ -55,7 +54,6 @@ define Py3Package/sync-settings/install
 	$(INSTALL_BIN) files/uid.init $(1)/etc/init.d/uid
 	$(INSTALL_BIN) files/product-board-name.init $(1)/etc/init.d/product-board-name
 	$(INSTALL_BIN) files/load-eos-config.init $(1)/etc/init.d/load-eos-config
-	$(INSTALL_BIN) files/interface-watcher.init $(1)/etc/init.d/interface-watcher
 
 	# config/startup.d
 	$(INSTALL_DIR) $(1)/etc/config/startup.d
