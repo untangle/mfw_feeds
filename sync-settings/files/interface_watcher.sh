@@ -35,7 +35,7 @@ ip -o monitor link | while read -r index interface status remaining; do
 			continue
 		}
 
-		ubus call network.interface $action "{ \"interface\" : \"$intfc\" }"
+		[ "$operstate" = "UP" ] && ubus call network.interface $action "{ \"interface\" : \"$intfc\" }"
 		logger -p Info -t "Interface Watch" "Interface $intfc of device $interface changed state to $operstate"
 	done
 
