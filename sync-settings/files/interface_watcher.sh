@@ -9,8 +9,8 @@ ip -o monitor link | while read -r index interface status remaining; do
 	iface=$(printf '%s\n' "$interface" | sed -E 's/(@.*)?:$//')
 	operstate=$(printf '%s\n' "$remaining" | grep -Eo ' state [^ ]+' | sed 's/^ state //')
 
-	# | tr '[:upper:]' '[:lower:]' does not work on busybox atm
 	grab_intf_name "$iface"
+	# | tr '[:upper:]' '[:lower:]' does not work on busybox atm
 	if [ "$operstate" = "UP" ]; then
 		action="up"
 	elif [ "$operstate" = "DOWN" ]; then
@@ -35,7 +35,11 @@ ip -o monitor link | while read -r index interface status remaining; do
 			continue
 		}
 
-		[ "$operstate" = "UP" ] && ubus call network.interface $action "{ \"interface\" : \"$intfc\" }"
+		if [ "$operstate" = "UP" ]; then
+			ubus call network.interface down "{ \"interface\" : \"$intfc\" }"
+			ubus call network.interface up "{ \"interface\" : \"$intfc\" }"
+		fi
+
 		logger -p Info -t "Interface Watch" "Interface $intfc of device $interface changed state to $operstate"
 	done
 
