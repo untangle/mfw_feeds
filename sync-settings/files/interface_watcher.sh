@@ -11,16 +11,10 @@ ip -o monitor link | while read -r index interface status remaining; do
 
 	grab_intf_name "$iface"
 	# | tr '[:upper:]' '[:lower:]' does not work on busybox atm
-	if [ "$operstate" = "UP" ]; then
-		action="up"
-	elif [ "$operstate" = "DOWN" ]; then
-		action="down"
-	else
-		logger -p Error -t "Interface Watch" "Unknown operating state: $operstate"
+	if [ "$operstate" != "UP" ] && [ "$operstate" != "DOWN" ]; then
+		logger -p Error -t "Interface Watch" "Not acting on operating state: $operstate"
 		continue
 	fi
-
-	[ "$operstate" = "UP" ] && ubus call network reload
 
 	# For both ipv6 and ipv4
 	echo "$interfaces" | while read -r intfc; do
@@ -37,7 +31,9 @@ ip -o monitor link | while read -r index interface status remaining; do
 
 		if [ "$operstate" = "UP" ]; then
 			ubus call network.interface down "{ \"interface\" : \"$intfc\" }"
+			ubus call network reload
 			ubus call network.interface up "{ \"interface\" : \"$intfc\" }"
+			ubus call network reload
 		fi
 
 		logger -p Info -t "Interface Watch" "Interface $intfc of device $interface changed state to $operstate"
