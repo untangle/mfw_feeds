@@ -18,6 +18,9 @@
         },{
             "uri": "https://cmd.untangle.com/",
             "host": "cmd-eu.untangle.com"
+        },{
+            "uri": "https://launchpad.edge.arista.com",
+            "host": "eu.edge.arista.com"
         }]
     }
 }

@@ -33,10 +33,15 @@ define Py3Package/sync-settings/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/sync-settings $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/load-eos-config $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/updateSysdbSignal $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/run-eos-command $(1)/usr/bin
 	$(INSTALL_BIN) files/speedtest.sh $(1)/usr/bin
 	$(INSTALL_BIN) files/wwan_status.sh $(1)/usr/bin
 	$(INSTALL_BIN) files/nft_debug $(1)/usr/bin
 	$(INSTALL_BIN) files/check-for-usb-reset.sh $(1)/usr/bin
+	$(INSTALL_BIN) files/set_affinity.sh $(1)/usr/bin
+	$(INSTALL_BIN) files/set_rpsxps.sh $(1)/usr/bin
+	$(INSTALL_BIN) files/quota_cron.sh $(1)/usr/bin
 
 	# init.d
 	$(INSTALL_DIR) $(1)/etc/init.d
