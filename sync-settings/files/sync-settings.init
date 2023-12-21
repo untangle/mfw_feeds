@@ -24,6 +24,8 @@ boot() {
 
 	if ls $CUSTOM_COMMANDS; then
 		sysctl -p $CUSTOM_COMMANDS
-
 	fi
+
+  ubus call network restart
+
 }
