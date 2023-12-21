@@ -14,7 +14,7 @@ start_service() {
     procd_set_param env LD_LIBRARY_PATH=/usr/lib/bctid
 
     # command
-    procd_set_param command /usr/bin/bctid -c /etc/config/bcti.cfg 8484
+    procd_set_param command /usr/bin/bctid -m 1024 -c /etc/config/bcti.cfg 8484
 
     # stdout to system log
     procd_set_param stdout 1
