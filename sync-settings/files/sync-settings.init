@@ -26,6 +26,4 @@ boot() {
 		sysctl -p $CUSTOM_COMMANDS
 	fi
 
-  ubus call network restart
-
 }
