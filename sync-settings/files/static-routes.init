@@ -1,0 +1,9 @@
+#!/bin/sh /etc/rc.common
+
+# Needs to be started after network!
+START=99
+STOP=99
+
+boot() {
+	ubus call network restart
+}
