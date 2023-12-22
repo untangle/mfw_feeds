@@ -4,6 +4,6 @@
 START=99
 STOP=99
 
-start_service() {
-  ubus call network restart
+boot() {
+	ubus call network restart
 }
