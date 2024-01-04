@@ -20,6 +20,9 @@
   "barney.ci/golang": {
     "commit": "8ddeed6bfa8ad35eefa2840ca790275e8a8ce50b"
   },
+  "barney.ci/model": {
+    "commit": "e3779c8cf557a4fb108f07910304b8a1e5e43699"
+  },
   "code.arista.io/infra/barney/barnzilla": {
     "commit": "35780283d4e0ef2c59bc76425553d08a19e2d6e1"
   },
