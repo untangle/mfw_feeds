@@ -35,6 +35,9 @@
   "code.arista.io/mfw/build": {
     "commit": "f4a134330ce47d8d1bbdb8408323e461aab3fcfd"
   },
+  "code.arista.io/tools/breadman": {
+    "commit": "1c8a4ff184cab0c44dee8ab7adf8d5a3cb8ca17a"
+  },
   "github.com/golang/go": {
     "commit": "cc85462b3d23193e4861813ea85e254cfe372403"
   },
