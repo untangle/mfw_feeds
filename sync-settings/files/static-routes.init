@@ -4,6 +4,12 @@
 START=99
 STOP=99
 
-boot() {
-	ubus call network restart
+start() {
+	true 
+	echo "NO restart of network" >>/tmp/test.log
+	#ubus call network restart
+}
+stop() {
+	# Not implemented
+	true
 }
