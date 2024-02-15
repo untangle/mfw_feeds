@@ -19,7 +19,7 @@ start_service() {
     # as output goes to logd which will add timestamps
 
     # if not hybrid mode, start the packetd 
-    if [ -e /etc/config/dpdk ]
+    if [ -e /etc/config/hybrid ]
     then
     # TODO: if dpdk/bess is enabled we load packetd from bess as a dynamic library.
     # But for now just start it normally.
