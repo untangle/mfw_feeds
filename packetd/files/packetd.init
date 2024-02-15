@@ -21,11 +21,11 @@ start_service() {
     # if not hybrid mode, start the packetd 
     if [ -e /etc/config/dpdk ]
     then
-    # TODO if dpdk/bess is enabled we load packetd from bess as a dynamic library.
-    # But for not just start it normally.
-        #procd_set_param command /usr/bin/packetd --no-timestamp
+    # TODO: if dpdk/bess is enabled we load packetd from bess as a dynamic library.
+    # But for now just start it normally.
+        procd_set_param command /usr/bin/packetd --no-timestamp
     else
-        #procd_set_param command /usr/bin/packetd --no-timestamp
+        procd_set_param command /usr/bin/packetd --no-timestamp
     fi
     # procd_set_param command /usr/bin/packetd --logfile /tmp/log/packetd.log
 
