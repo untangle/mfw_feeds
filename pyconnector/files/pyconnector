@@ -22,7 +22,6 @@ import traceback
 import base64
 import ssl
 import platform
-import requests
 
 UNTANGLE_CMD_PORTS = [4443,443,80,587,993,995,8080,53]
 UNTANGLE_CMD_SERVERS = ["cmd.untangle.com"]
@@ -327,26 +326,6 @@ def parse_args():
         global UNTANGLE_CMD_PORTS
         UNTANGLE_CMD_PORTS = cmd_ports
 
-# Wait for restd to come up to prevent a race condition where
-# pyconnector starts first, but sends incomplete information 
-# since the api enpoints from restd couldn't send back system status info
-def wait_for_restd_start(endpoint, max_retries=20, retry_delay=.5):
-    url = f"http://localhost/api/{endpoint}"
-
-    for attempt in range(1, max_retries + 1):
-        try: 
-            response = requests.get(url)
-            response.raise_for_status()
-
-            data = response.json()
-            debug(f"restd status: {data['status']}")
-            return
-        except requests.exceptions.RequestException as e:
-            debug(f"Attempt {attempt} to reach restd failed. Error: {e}")
-            time.sleep(retry_delay)
-
-    debug(f"restd failed to start after {max_retries * retry_delay} seconds. Continuing...")
-
 #
 # Main
 #
@@ -356,8 +335,6 @@ if __name__ == "__main__":
     parse_args()
     # Commented out to allow multiple pyconnectors
     # check_pid_file()
-    
-    wait_for_restd_start("health")
 
     while True:
         debug("Attempting to read from cmd")
