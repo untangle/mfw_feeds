@@ -44,7 +44,7 @@ wait_for_restd_start() {
             logger -t pyconnector "restd status: $status. Starting pyconnector"
             return
         else
-            logger -t pyconnector "Attempt $attempt to reach restd failed. Error: $response"
+            logger -t pyconnector "Attempt $attempt to reach restd failed."
             sleep "$retry_delay"
         fi
     done
