@@ -32,16 +32,14 @@ get_translated_host()
 # pyconnector starts first, but sends incomplete information 
 # since the api enpoints from restd couldn't send back system status info
 wait_for_restd_start() {
-    local endpoint="health"
     local max_retries=20
     local retry_delay=1
-    local url="http://localhost/api/${endpoint}"
+    local url="http://localhost/ping"
 
     for attempt in $(seq 1 $max_retries); do
         response=$(curl -s "$url")
         if [ $? -eq 0 ]; then
-            status=$(echo "$response" | jq -r '.status')
-            logger -t pyconnector "restd status: $status. Starting pyconnector"
+            logger -t pyconnector "restd is up. Starting pyconnector"
             return
         else
             logger -t pyconnector "Attempt $attempt to reach restd failed."
