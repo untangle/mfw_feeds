@@ -28,6 +28,29 @@ get_translated_host()
 	eval "$__return_host=$host"
 }
 
+# Wait for restd to come up to prevent a race condition where
+# pyconnector starts first, but sends incomplete information 
+# since the api enpoints from restd couldn't send back system status info
+wait_for_restd_start() {
+    local max_retries=20
+    local retry_delay=1
+    local url="http://localhost/ping"
+
+    for attempt in $(seq 1 $max_retries); do
+        response=$(curl -s "$url")
+        if [ $? -eq 0 ]; then
+            logger -t pyconnector "restd is up. Starting pyconnector"
+            return
+        else
+            logger -t pyconnector "Attempt $attempt to reach restd failed."
+            sleep "$retry_delay"
+        fi
+    done
+
+    logger -t pyconnector "restd failed to start after $((max_retries * retry_delay)) seconds. Continuing..."
+}
+
+
 start_service() {
     CLOUD=`jsonfilter -i /etc/config/current.json -e '@["system"]["cloud"]'`
     # If there are no cloud settings, just enable cloud access
@@ -39,6 +62,8 @@ start_service() {
     fi
 
     if [ $ENABLED = "true" ] ; then
+        wait_for_restd_start
+
         SERVERS=`jsonfilter -i /etc/config/current.json -e '@["system"]["cloud"]["cloudServers"]' | tr -d ',"[]'`
 
         for server in $SERVERS ; do
