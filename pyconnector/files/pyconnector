@@ -235,7 +235,7 @@ def read_from_cmd():
 
     # run command
     output = run_cmd(cmd)
-    debug("Result: %s" % output.strip())
+    debug("Result: %s" % output.strip(), 2)
     try:
         output_len = len(output)
         message = str(output_len) + "\n" + output
