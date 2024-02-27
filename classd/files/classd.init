@@ -12,8 +12,12 @@ start_service() {
     # procd_set_param env GODEBUG=schedtrace=30000
     # procd_set_param env GODEBUG=schedtrace=30000,scheddetail=1
 
-    # procd command to run
-    procd_set_param command  /usr/bin/classd -mfw -w65536 -d
+    # if not hybrid mode, start the packetd
+    if [ -e /etc/config/hybrid ]
+    then
+        # procd command to run
+        procd_set_param command  /usr/bin/classd -mfw -w65536 -d
+    fi
 
     # restart indefinitely if crashed, 5 seconds between attempts
     procd_set_param respawn 3600 5 0
