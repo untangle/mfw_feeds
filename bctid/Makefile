@@ -73,6 +73,9 @@ define Package/bctid/install
 	# Upper the connection pool to 25
 	sed -i -e  's/\(ThreadPoolSize=\).*/\125/' $(1)/usr/share/bctid/bcti.cfg
 	sed -i -e  's/\(ConnectionPoolSize=\).*/\125/' $(1)/usr/share/bctid/bcti.cfg
+
+	# Force IPv4, MFW-4353	
+	sed -i -e 's/\(IsisProtocol=\).*/\14/' $(1)/usr/share/bctid/bcti.cfg
 endef
 
 $(eval $(call BuildPackage,bctid))
