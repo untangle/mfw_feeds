@@ -1,29 +1,23 @@
 #!/bin/sh /etc/rc.common
 # Copyright (C) 2006-2011 OpenWrt.org
 
-# 21 is right after networking (20)
-START=21
-STOP=21
+START=92
+STOP=02
 
 USE_PROCD=1
 
 start_service() {
-    procd_open_instance packetd
+    procd_open_instance classd
 
     # procd_set_param env GODEBUG=schedtrace=30000
     # procd_set_param env GODEBUG=schedtrace=30000,scheddetail=1
 
-    # command
-    # --no-timestamps disable timestamps in log
-    # --logfile to specify a logfile manually
-    # as output goes to logd which will add timestamps
-
-    # if not hybrid mode, start the packetd 
-    if [ ! -e /etc/config/hybrid ]
+    # if not hybrid mode, start the packetd
+    if [ -e /etc/config/hybrid ]
     then
-        procd_set_param command /usr/bin/packetd --no-timestamp
+        # procd command to run
+        procd_set_param command  /usr/bin/classd -mfw -w65536 -d
     fi
-    # procd_set_param command /usr/bin/packetd --logfile /tmp/log/packetd.log
 
     # restart indefinitely if crashed, 5 seconds between attempts
     procd_set_param respawn 3600 5 0
@@ -35,4 +29,3 @@ start_service() {
 
     procd_close_instance
 }
-
