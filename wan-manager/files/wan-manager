@@ -385,6 +385,11 @@ get_static_weight()
 	eval "$__return_weight=$__weight"
 }
 
+ceil()
+{
+	  echo "$1" | awk '{printf "%d\n", ($1 == int($1)) ? $1 : int($1) + 1}'
+}
+
 # get_stat
 # Retrieve specific stats from the /tmp/stats.json file, per interface id
 #
@@ -434,7 +439,13 @@ get_stat()
 							json_select $metric
 							json_get_vars name value
 							if [ $metric_name = $name ] ; then
-								stat_value=$(echo ${value%%.*})
+								if [ $stat_name = "latency" ] ; then
+									# During policy_best_of calculations, a latency of 0 gets ignored (this is only for latency),
+									# so instead of flooring, ceil the latency value because 0.45 latency is also valid, ceil it to 1.
+									stat_value=$(ceil $value)
+								else
+									stat_value=$(echo ${value%%.*})
+								fi
 							fi
 							json_select ..
 						done
