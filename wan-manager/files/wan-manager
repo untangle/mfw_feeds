@@ -385,6 +385,10 @@ get_static_weight()
 	eval "$__return_weight=$__weight"
 }
 
+# ceil
+# It ceils or it rounds up the input number to the next nearest integer.
+#
+# @param $1	   The number that is to be ceiled.
 ceil()
 {
 	  echo "$1" | awk '{printf "%d\n", ($1 == int($1)) ? $1 : int($1) + 1}'
