@@ -22,7 +22,8 @@ endef
 define Build/Prepare
 	rm -rf $(PKG_BUILD_DIR)
 	mkdir -p $(PKG_BUILD_DIR)
-	tar -C $(PKG_BUILD_DIR) --strip=1 -xavf $(DL_DIR)/$(PKG_SOURCE)
+	touch $(PKG_BUILD_DIR)/GeoLite2-Country.mmdb
+	tar -C $(PKG_BUILD_DIR) --overwrite --strip=1 -xavf $(DL_DIR)/$(PKG_SOURCE) &> /dev/null
 endef
 
 define Build/Compile
