@@ -21,13 +21,13 @@
     "commit": "f3714b98b2fc112906b22d64049e682470153986"
   },
   "barney.ci/model": {
-    "commit": "19ea63f27704b59941b731ccb110b27fce63718c"
+    "commit": "bbb606540d7463b53470c2e34e58b1ceea75ab67"
   },
   "code.arista.io/infra/barney/barnzilla": {
     "commit": "cb83f90c3d297f03dc0a0b4f5093db188b953b09"
   },
   "code.arista.io/infra/barney/barnzilla-repos": {
-    "commit": "d29cdf94b85931e0ba35b0b9f14d81eb6f9527ee"
+    "commit": "6713141cef066addc4610dac5b21f381024d2bd4"
   },
   "code.arista.io/infra/barney/tools/qube": {
     "commit": "827a55491610108558da644d2a25dc7616f1f926"
