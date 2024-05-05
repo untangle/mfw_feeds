@@ -15,7 +15,7 @@
     "commit": "5b0987ec7a205c49584ea3c5f2d268dd817a4dd4"
   },
   "barney.ci/docker": {
-    "commit": "444ef1a4fe4b84f98f114f2a7d214528dc7b2103"
+    "commit": "54e51dbed1f8871d6415afc913fb72830351c26b"
   },
   "barney.ci/golang": {
     "commit": "fd7924d7bd05bbd7845c1117b38f35922e25f5b2"
@@ -27,7 +27,7 @@
     "commit": "e859db746840cf7a70f0e7b147011a8d2ee9b72f"
   },
   "code.arista.io/infra/barney/barnzilla-repos": {
-    "commit": "4321e42b024e5010aa8f12d83dc52ace8ec1a983"
+    "commit": "527e844b99735bfe0a817b89e49bf6f0132f2125"
   },
   "code.arista.io/infra/barney/tools/qube": {
     "commit": "63a02edafb722371d3b1f0f1f367e9485726d4dd"
