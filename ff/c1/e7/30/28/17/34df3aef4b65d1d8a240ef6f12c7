@@ -6,7 +6,7 @@
     "commit": "1fc7fba9ef99c08ca89b629908f26a5a159f8ad0"
   },
   "barney.ci/barneyfile": {
-    "commit": "160badf687fca3cb8a7c4fe7ddf03ae9a4520abe"
+    "commit": "e43a5dcade6108cab69ac3015f1f69fa75721dfc"
   },
   "barney.ci/byob": {
     "commit": "987493ed5237c2220e1a4b8b83e35f4a1158b508"
@@ -15,7 +15,7 @@
     "commit": "5b0987ec7a205c49584ea3c5f2d268dd817a4dd4"
   },
   "barney.ci/docker": {
-    "commit": "54e51dbed1f8871d6415afc913fb72830351c26b"
+    "commit": "444ef1a4fe4b84f98f114f2a7d214528dc7b2103"
   },
   "barney.ci/golang": {
     "commit": "fd7924d7bd05bbd7845c1117b38f35922e25f5b2"
