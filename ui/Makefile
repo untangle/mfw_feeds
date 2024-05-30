@@ -27,7 +27,16 @@ define Build/Compile
 endef
 
 define Package/ui/install
-	make -C $(PKG_BUILD_DIR) DESTDIR=$(1)/www/admin install
+	# FIXME: because this build *really* *insists* on creating
+	# .config/postcssrc in make's TOPDIR, and nowhere else. No
+	# environment variable will convince it otherwise. We yield
+	# and temporarily move openvwrt's main .config file out of the
+	# way before restoring it
+	OWRT_CONF=$(TOPDIR)/.config ; \
+	mv $(OWRT_CONF) $(OWRT_CONF).bak ; \
+	make -C $(PKG_BUILD_DIR) DESTDIR=$(1)/www/admin install ; \
+	rm -fr $(OWRT_CONF) ; \
+	mv $(OWRT_CONF).bak $(OWRT_CONF)
 endef
 
 $(eval $(call BuildPackage,ui))
