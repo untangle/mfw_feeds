@@ -12,16 +12,16 @@ include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/python/python3-package.mk
 
 define Package/runtests
+  SUBMENU:=Python
   SECTION:=lang
   CATEGORY:=Languages
-  SUBMENU:=Python3
   TITLE:=Library for running MFW tests
   URL:=https://github.com/untangle/runtests
-  DEPENDS:= +python3-pytest +python3-unittest +python3-requests
+  DEPENDS:= +python3 +python3-requests +python3-unittest
 endef
 
 define Package/runtests/description
-	This module is a Library for running funcitonal MFW tests.
+	This module is a Library for running functional MFW tests.
 endef
 
 define Py3Package/runtests/install
