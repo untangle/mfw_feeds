@@ -33,10 +33,10 @@ define Package/ui/install
 	# and temporarily move openvwrt's main .config file out of the
 	# way before restoring it
 	OWRT_CONF=$(TOPDIR)/.config ; \
-	mv $(OWRT_CONF) $(OWRT_CONF).bak ; \
+	mv ${OWRT_CONF} ${OWRT_CONF}.bak ; \
 	make -C $(PKG_BUILD_DIR) DESTDIR=$(1)/www/admin install ; \
-	rm -fr $(OWRT_CONF) ; \
-	mv $(OWRT_CONF).bak $(OWRT_CONF)
+	rm -fr ${OWRT_CONF} ; \
+	mv ${OWRT_CONF}.bak ${OWRT_CONF}
 endef
 
 $(eval $(call BuildPackage,ui))
