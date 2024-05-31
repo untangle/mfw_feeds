@@ -51,6 +51,7 @@ define Py3Package/sync-settings/install
 	$(INSTALL_BIN) files/nftables-rules.init $(1)/etc/init.d/nftables-rules
 	$(INSTALL_BIN) files/qos.init $(1)/etc/init.d/qos
 	$(INSTALL_BIN) files/serial.init $(1)/etc/init.d/serial
+	$(INSTALL_BIN) files/disable-dnsmasq.init $(1)/etc/init.d/disable-dnsmasq
 	$(INSTALL_BIN) files/setup.init $(1)/etc/init.d/setup
 	$(INSTALL_BIN) files/startup.init $(1)/etc/init.d/startup
 	$(INSTALL_BIN) files/static-routes.init $(1)/etc/init.d/static-routes

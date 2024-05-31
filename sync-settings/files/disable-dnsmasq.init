@@ -1,0 +1,12 @@
+#!/bin/sh /etc/rc.common
+
+# 11 is right after boot (10)
+START=11
+STOP=11
+
+boot() {
+	if [ -f "/etc/Eos-release" ] ; then
+	    /etc/init.d/dnsmasq disable
+		mkdir /tmp/disable-dnsmasq-executed
+	fi
+}
