@@ -6,6 +6,6 @@ STOP=11
 
 boot() {
 	if [ -f "/etc/Eos-release" ] ; then
-		/etc/init.d/dnsmasq disable
+		/etc/init.d/odhcpd disable
 	fi
 }
