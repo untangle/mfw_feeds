@@ -16,7 +16,7 @@ define Package/wan-manager
   CATEGORY:=Network
   TITLE:=WAN Manager
   URL:=https://github.com/untangle/mfw_feeds
-  DEPENDS:=+python3 +openssh-client +openssh-server +wan-utils +nftables +inotify-tools
+  DEPENDS:=+python3 +openssh-client +openssh-server +wan-utils +nftables +inotifywait
 
 endef
 
