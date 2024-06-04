@@ -39,7 +39,7 @@
     "commit": "22991ad5358d156e9b6e5811a0eea26e1ac26a6b"
   },
   "github.com/golang/go": {
-    "commit": "adbfb672ba485630d75f8b5598228a63f4af08a4"
+    "commit": "ace5bb40d027b718b67556afcd31bf54cff050ab"
   },
   "github.com/goreleaser/nfpm": {
     "commit": "4d89ab846ee135cbcf3085316bf15c739e8f1cc8"
