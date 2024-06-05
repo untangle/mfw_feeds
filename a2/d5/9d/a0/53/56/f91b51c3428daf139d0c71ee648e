@@ -30,7 +30,7 @@
     "commit": "721f233fdbad994bf0f74085037161b82dc43b23"
   },
   "code.arista.io/infra/barney/tools/qube": {
-    "commit": "63a02edafb722371d3b1f0f1f367e9485726d4dd"
+    "commit": "0369eb1635581cb697776a89d1c30f64bd3ff44b"
   },
   "code.arista.io/mfw/build": {
     "commit": "1d13d74e38e53166b2531d68a3520fa2cdb0b577"
