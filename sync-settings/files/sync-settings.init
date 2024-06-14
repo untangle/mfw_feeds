@@ -10,6 +10,8 @@ boot() {
 	# check if we should reset settings
 	/usr/bin/check-for-usb-reset.sh && rm /etc/config/settings.json
 	
+	touch /tmp/sync-settings-boot-log
+
 	if [ ! -f /etc/config/settings.json ]; then
 		logger -t "sync-settings" "Creating /etc/config/settings.json"
 		/usr/bin/sync-settings -c -n -v force=true | logger -t "sync-settings"
@@ -27,8 +29,10 @@ boot() {
 
 		if [ $signal_status -eq 0 ]; then
 			logger -t "sync-settings" "Notified Packetd in EOS to reload the settings file successfully"
+			echo "nice" >> /tmp/sync-settings-boot-log
 		else
 			logger -t "sync-settings" "Failed to notify Packetd in EOS to reload the settings file: $signal_output"
+			echo "ugh" >> /tmp/sync-settings-boot-log
 		fi
 	fi
 
