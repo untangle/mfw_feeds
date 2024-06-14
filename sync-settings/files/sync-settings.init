@@ -5,35 +5,21 @@ START=14
 STOP=14
 
 boot() {
-	logger -t "sync-settings" "Running sync-settings for system initialization"
-
 	# check if we should reset settings
 	/usr/bin/check-for-usb-reset.sh && rm /etc/config/settings.json
 	
 	touch /tmp/sync-settings-boot-log
 
 	if [ ! -f /etc/config/settings.json ]; then
-		logger -t "sync-settings" "Creating /etc/config/settings.json"
-		/usr/bin/sync-settings -c -n -v force=true | logger -t "sync-settings"
+		/usr/bin/sync-settings -c -n -v force=true
 		sync_settings_status=$?
 	else
-		/usr/bin/sync-settings -u -n -v force=true | logger -t "sync-settings"
+		/usr/bin/sync-settings -u -n -v force=true
 		sync_settings_status=$?
 	fi
 
-	logger -t "sync-settings" "sync-settings command status: $sync_settings_status"
 	if [ $sync_settings_status -eq 0 ] && [ -e /etc/config/hybrid ]; then
-		logger -t "sync-settings" "Notifying Packetd in EOS to reload the settings file..."
-		signal_output=$(/usr/bin/updateSysdbSignal --sighup 2>&1)
-		signal_status=$?
-
-		if [ $signal_status -eq 0 ]; then
-			logger -t "sync-settings" "Notified Packetd in EOS to reload the settings file successfully"
-			echo "nice" >> /tmp/sync-settings-boot-log
-		else
-			logger -t "sync-settings" "Failed to notify Packetd in EOS to reload the settings file: $signal_output"
-			echo "ugh" >> /tmp/sync-settings-boot-log
-		fi
+		/usr/bin/updateSysdbSignal --sighup
 	fi
 
 	# ensure we have an up to date defaults.json file
