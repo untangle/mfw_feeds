@@ -19,6 +19,7 @@ boot() {
 		sync_settings_status=$?
 	fi
 
+	logger -t "sync-settings" "sync-settings command status: $sync_settings_status"
 	if [ $sync_settings_status -eq 0 ] && [ -e /mnt/flash/mfw-settings/hybrid ]; then
 		logger -t "sync-settings" "Notifying Packetd in EOS to reload the settings file..."
 		signal_output=$(/usr/bin/updateSysdbSignal --sighup 2>&1)
