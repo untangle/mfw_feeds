@@ -34,9 +34,9 @@ boot() {
 		signal_status=$?
 
 		if [ $signal_status -eq 0 ]; then
-			logger -t "sync-settings" "Notified Packetd in EOS to reload the settings file successfully"
+			write_log "Notified Packetd in EOS to reload the settings file successfully"
 		else
-			logger -t "sync-settings" "Failed to notify Packetd in EOS to reload the settings file: $signal_output"
+			write_log "Failed to notify Packetd in EOS to reload the settings file: $signal_output"
 		fi
 	fi
 
