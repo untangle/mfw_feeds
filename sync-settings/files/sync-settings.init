@@ -4,15 +4,40 @@
 START=14
 STOP=14
 
+LOG_FILE=/tmp/sync_settings_boot.log
+
+write_log() {
+	echo "$(date "+%Y-%m-%d %H:%M:%S") - $1" >> "$LOG_FILE"
+}
+
 boot() {
+	touch "$LOG_FILE"
+	write_log "Running sync-settings for system initialization."
+
 	# check if we should reset settings
 	/usr/bin/check-for-usb-reset.sh && rm /etc/config/settings.json
-
 	if [ ! -f /etc/config/settings.json ]; then
-		logger -t "sync-settings" "Creating /etc/config/settings.json"
-		/usr/bin/sync-settings -c -n -v force=true | logger -t "sync-settings"
+		write_log "Creating /etc/config/settings.json"
+		output=$(/usr/bin/sync-settings -c -n -v force=true)
+		sync_settings_status=$?
+		write_log "$output"
 	else
-		/usr/bin/sync-settings -u -n -v force=true | logger -t "sync-settings"
+		output=$(/usr/bin/sync-settings -u -n -v force=true)
+		sync_settings_status=$?
+		write_log "$output"
+	fi
+
+	write_log "sync-settings command status: $sync_settings_status"
+	if [ $sync_settings_status -eq 0 ] && [ -e /etc/config/hybrid ]; then
+		write_log "Notifying Packetd in EOS to reload the settings file..."
+		signal_output=$(/usr/bin/updateSysdbSignal --sighup 2>&1)
+		signal_status=$?
+
+		if [ $signal_status -eq 0 ]; then
+			write_log "Notified Packetd in EOS to reload the settings file successfully"
+		else
+			write_log "Failed to notify Packetd in EOS to reload the settings file: $signal_output"
+		fi
 	fi
 
 	# ensure we have an up to date defaults.json file
@@ -22,8 +47,7 @@ boot() {
 	# Run sysctl on 9* prio files if present
 	CUSTOM_COMMANDS="/etc/sysctl.d/9*"
 
-	if ls $CUSTOM_COMMANDS; then
-		sysctl -p $CUSTOM_COMMANDS
+	if ls "$CUSTOM_COMMANDS"; then
+		sysctl -p "$CUSTOM_COMMANDS"
 	fi
-
 }
