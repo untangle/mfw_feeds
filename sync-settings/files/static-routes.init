@@ -5,11 +5,5 @@ START=99
 STOP=99
 
 boot() {
-  # Make sure communication works with EOS.
-  while ! run-eos-command -c "bash timeout 5 bash -c 'echo -e \"config\nshow ip route\n\" | Cli -A -p15'"
-  do
-    echo "Try again running EOS command" | logger -t "static-routes"
-  done
-
   /usr/bin/sync-settings -v force-network-restart=true | logger -t "static-routes"
 }
