@@ -5,5 +5,7 @@ START=99
 STOP=99
 
 boot() {
-	ubus call network restart
+  /usr/bin/sync-settings | logger -t "static-routes"
+  /etc/init.d/network reload | logger -t "static-routes"
+  /usr/bin/notify-mtu-sysdb | logger -t "static-routes"
 }
