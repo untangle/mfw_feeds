@@ -5,5 +5,7 @@ START=99
 STOP=99
 
 boot() {
-  /usr/bin/sync-settings -v force-network-restart=true | logger -t "static-routes"
+  /usr/bin/sync-settings | logger -t "static-routes"
+  /etc/init.d/network reload | logger -t "static-routes"
+  /usr/bin/notify-mtu-sysdb | logger -t "static-routes"
 }
