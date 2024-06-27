@@ -5,9 +5,7 @@ START=99
 STOP=99
 
 boot() {
-	ubus call network restart
-
-	while ! run-eos-command -c "bash timeout 5 bash -c 'echo -e \"config\nshow ip route\n\" | Cli -A -p15'"
+  while ! run-eos-command -c "bash timeout 5 bash -c 'echo -e \"config\nshow ip route\n\" | Cli -A -p15'"
   do
     echo "Try again running EOS command" | logger -t "sync-settings"
   done
