@@ -5,7 +5,10 @@ START=99
 STOP=99
 
 boot() {
-  /usr/bin/sync-settings | logger -t "static-routes"
-  /etc/init.d/network reload | logger -t "static-routes"
-  /usr/bin/notify-mtu-sysdb | logger -t "static-routes"
+  # When running MFW in BST there is a conflict between netifd and netconfig for static routes.
+  # For example ip rules are not set up properly for static routes on (re)boot.
+  # We recover from this issue running sync-settings, reloading the network and notifying sysdb.
+  /usr/bin/sync-settings | logger -t "static-routes.init"
+  /etc/init.d/network reload | logger -t "static-routes.init"
+  /usr/bin/notify-mtu-sysdb | logger -t "static-routes.init"
 }
