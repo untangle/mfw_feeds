@@ -1,0 +1,53 @@
+{
+  "": {
+    "commit": "381c18b3e104161292c8f48b436c190f523f653d"
+  },
+  "barney.ci/alpine": {
+    "commit": "b19857f1eec3fc3f40c151deb2074c74030f965f"
+  },
+  "barney.ci/barneyfile": {
+    "commit": "963a03aa0fc5f96fbe785a7505c7876667015ce0"
+  },
+  "barney.ci/byob": {
+    "commit": "987493ed5237c2220e1a4b8b83e35f4a1158b508"
+  },
+  "barney.ci/debian": {
+    "commit": "5b0987ec7a205c49584ea3c5f2d268dd817a4dd4"
+  },
+  "barney.ci/docker": {
+    "commit": "d93be52a3c7e4fee7bdf5fcc0d812c9bbd2bea33"
+  },
+  "barney.ci/golang": {
+    "commit": "dd612eba506a1c084a80920c879586c5ca196f7a"
+  },
+  "barney.ci/model": {
+    "commit": "4c9e43fdb692806bb229313eac91f52e923bde96"
+  },
+  "code.arista.io/infra/barney/barnzilla": {
+    "commit": "f4c19bf0c8ea012d89f13b88f6d34b47215b68f1"
+  },
+  "code.arista.io/infra/barney/barnzilla-repos": {
+    "commit": "745439e427df868ae847b5831f1da5f0f6e28d57"
+  },
+  "code.arista.io/infra/barney/tools/qube": {
+    "commit": "e0097bc9fc1918fac90f11f2d2223954bca8eae4"
+  },
+  "code.arista.io/mfw/build": {
+    "commit": "1d13d74e38e53166b2531d68a3520fa2cdb0b577"
+  },
+  "code.arista.io/tools/breadman": {
+    "commit": "22991ad5358d156e9b6e5811a0eea26e1ac26a6b"
+  },
+  "github.com/golang/go": {
+    "commit": "ace5bb40d027b718b67556afcd31bf54cff050ab"
+  },
+  "github.com/goreleaser/nfpm": {
+    "commit": "4d89ab846ee135cbcf3085316bf15c739e8f1cc8"
+  },
+  "github.com/sivel/speedtest-cli": {
+    "commit": "42e96b13dda2afabbcec2622612d13495a415caa"
+  },
+  "github.com/untangle/openwrt": {
+    "commit": "69eda95e879f022a1bf78226d8ed71f65bb01eab"
+  }
+}
