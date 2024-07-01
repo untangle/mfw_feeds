@@ -21,7 +21,7 @@ define Package/sync-settings
   DEPENDS:= +diffutils +tc +kmod-sched +kmod-sched-cake +kmod-ifb +kmod-sched-connmark \
 	  +uuidgen +kmod-nft-fib +openvpn-proto +wan-manager +speedtest-cli \
 	  +python3 +python3-urllib3 +python3-pyroute2 +python3-requests +strongswan-default +strongswan-mod-gcm \
-	  +jq +nmap-ssl +lldpd +kmod-wireguard +wireguard-tools
+	  +jq +nmap-ssl +lldpd +kmod-wireguard +wireguard-tools +python3-cryptography
 endef
 
 define Package/sync-settings/description
@@ -33,6 +33,7 @@ define Py3Package/sync-settings/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/sync-settings $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/load-eos-config $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/password-manager $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/updateSysdbSignal $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/run-eos-command $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/notify-mtu-sysdb $(1)/usr/bin
