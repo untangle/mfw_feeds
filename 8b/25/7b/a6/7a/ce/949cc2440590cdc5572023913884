@@ -33,7 +33,7 @@
     "commit": "e0097bc9fc1918fac90f11f2d2223954bca8eae4"
   },
   "code.arista.io/mfw/build": {
-    "commit": "1d13d74e38e53166b2531d68a3520fa2cdb0b577"
+    "commit": "b32572b603d9fdc4545d63a5e025b81139fb3435"
   },
   "code.arista.io/tools/breadman": {
     "commit": "22991ad5358d156e9b6e5811a0eea26e1ac26a6b"
