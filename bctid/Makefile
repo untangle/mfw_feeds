@@ -49,33 +49,7 @@ define Package/bctid/install
 	$(INSTALL_BIN) files/bctid.init $(1)/etc/init.d/bctid
 
 	# Modify bcti.cfg template for our licensed services
-
-	# Our base credentials
-	sed -i -e  's/\(OEM=\).*/\1Untangle/' $(1)/usr/share/bctid/bcti.cfg
-	sed -i -e  's/\(Device=\).*/\1SDWanRouter/' $(1)/usr/share/bctid/bcti.cfg
-	sed -i -e  's/\(UID=\).*/\1XXX/' $(1)/usr/share/bctid/bcti.cfg
-
-	# Disable unlicensed services
-	sed -i -e  's/\(EnableUrlDb=\).*/\1False/' $(1)/usr/share/bctid/bcti.cfg
-	sed -i -e  's/\(EnableIpDb=\).*/\1False/' $(1)/usr/share/bctid/bcti.cfg
-	sed -i -e  's/\(EnableMd5=\).*/\1False/' $(1)/usr/share/bctid/bcti.cfg
-	sed -i -e  's/\(EnablePhishing=\).*/\1False/' $(1)/usr/share/bctid/bcti.cfg
-	sed -i -e  's/\(EnableCDB=\).*/\1False/' $(1)/usr/share/bctid/bcti.cfg
-	sed -i -e  's/\(EnableCSI=\).*/\1False/' $(1)/usr/share/bctid/bcti.cfg
-
-	# Logfile
-	sed -i -e  's/\(LogFile=\).*/\1\/tmp\/log\/bcti.log/' $(1)/usr/share/bctid/bcti.cfg
-
-	# Database
-	sed -i -e  's/\(LocalDatabaseDirectory=\).*/\1\/usr\/share\/bctid/' $(1)/usr/share/bctid/bcti.cfg
-	sed -i -e  's/\(TLDPath=\).*/\1\/usr\/share\/bctid\/public_suffix_list.dat/' $(1)/usr/share/bctid/bcti.cfg
-
-	# Upper the connection pool to 25
-	sed -i -e  's/\(ThreadPoolSize=\).*/\125/' $(1)/usr/share/bctid/bcti.cfg
-	sed -i -e  's/\(ConnectionPoolSize=\).*/\125/' $(1)/usr/share/bctid/bcti.cfg
-
-	# Force IPv4, MFW-4353	
-	sed -i -e 's/\(IsisProtocol=\).*/\14/' $(1)/usr/share/bctid/bcti.cfg
+	$(PKG_BUILD_DIR)/update_bcti_cfg.sh $(1)/usr/share/bctid/bcti.cfg
 endef
 
 $(eval $(call BuildPackage,bctid))
