@@ -12,7 +12,7 @@
     "commit": "987493ed5237c2220e1a4b8b83e35f4a1158b508"
   },
   "barney.ci/debian": {
-    "commit": "5b0987ec7a205c49584ea3c5f2d268dd817a4dd4"
+    "commit": "25ecf9fa9f56a467df833fa193fd77ba889d84d1"
   },
   "barney.ci/docker": {
     "commit": "dcf06383f24b7666deaf18869d2bc92455195782"
