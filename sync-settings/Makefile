@@ -57,6 +57,7 @@ define Py3Package/sync-settings/install
 	$(INSTALL_BIN) files/uid.init $(1)/etc/init.d/uid
 	$(INSTALL_BIN) files/product-board-name.init $(1)/etc/init.d/product-board-name
 	$(INSTALL_BIN) files/load-eos-config.init $(1)/etc/init.d/load-eos-config
+	$(INSTALL_BIN) files/serial-eos.init $(1)/etc/init.d/serial-eos
 
 	# config/startup.d
 	$(INSTALL_DIR) $(1)/etc/config/startup.d
