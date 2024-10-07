@@ -5,16 +5,19 @@ START=11
 STOP=11
 
 boot() {
-	if [ ! -f /etc/config/serial ] ; then
-	    if [ -f /sys/devices/virtual/dmi/id/product_serial ] ; then
-	        cp /sys/devices/virtual/dmi/id/product_serial /etc/config/serial
-            else
-	        if [ -x "$(command -v fw_printenv)" ] ; then
-                    serial_number=$(fw_printenv serial_number | cut -d '=' -f 2)
-                    if [ "$serial_number" != "" ] ; then
-                        echo $serial_number > /etc/config/serial
-                    fi
-	        fi
-	    fi
+	# Do not run this if in hybrid mode - EOS will set the serialno
+	if [ ! -f /etc/config/hybrid ] ; then
+		if [ ! -f /etc/config/serial ] ; then
+			if [ -f /sys/devices/virtual/dmi/id/product_serial ] ; then
+				cp /sys/devices/virtual/dmi/id/product_serial /etc/config/serial
+				else
+				if [ -x "$(command -v fw_printenv)" ] ; then
+						serial_number=$(fw_printenv serial_number | cut -d '=' -f 2)
+						if [ "$serial_number" != "" ] ; then
+							echo $serial_number > /etc/config/serial
+						fi
+				fi
+			fi
+		fi
 	fi
 }
