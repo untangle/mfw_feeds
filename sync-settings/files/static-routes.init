@@ -10,5 +10,4 @@ boot() {
   # We recover from this issue running sync-settings, reloading the network and notifying sysdb.
   /usr/bin/sync-settings | logger -t "static-routes.init"
   /etc/init.d/network reload | logger -t "static-routes.init"
-  /usr/bin/notify-mtu-sysdb | logger -t "static-routes.init"
 }
