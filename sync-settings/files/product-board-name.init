@@ -61,7 +61,7 @@ boot() {
 		if [[ $SERIAL =~ $qSerialPattern ]]; then
 			# Handle Q series board name.
 			product_board_name="Q${eth_intf_count}"
-			if [ eth_intf_count==6 ]; then
+			if [ $eth_intf_count == 6 ]; then
 				product_board_name=$product_board_name"E"
 			fi
 		else
