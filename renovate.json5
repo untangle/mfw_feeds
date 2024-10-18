@@ -1,0 +1,11 @@
+{
+    "automergeSchedule": ["at any time"],
+
+    packageRules: [
+        {
+            "matchDatasources": ["custom.bar"],
+            "matchPackageNames": ["code.arista.io/infra/barney/barnzilla-repos"],
+            "automergeSchedule": ["at any time"]
+        }
+    ]
+}
