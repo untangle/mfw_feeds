@@ -239,6 +239,10 @@ images:
   mfw_pkg/mfw-feeds-rpm:
     units:
     - floor: .%build-floor
+      entry:
+        mutables:
+          - /var/lib
+          - /var/tmp
       sources:
         - github.com/untangle/mfw_feeds
         - github.com/sivel/speedtest-cli
