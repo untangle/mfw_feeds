@@ -36,4 +36,71 @@ users:
     - tkovalev@arista.com
 x-bar:
   version: production
+
+x-github-bridge:
+  reviews:
+  - image: test/mfw_pkg/backup-scripts
+    events:
+    - type: merge_group
+      branch-re: ^master$
+    - type: pull_request
+      branch-re: ^master$
+    - type: push
+      branch-re: ^master$
+
+  - image: test/mfw_pkg/crash-collector
+    events:
+    - type: merge_group
+      branch-re: ^master$
+    - type: pull_request
+      branch-re: ^master$
+    - type: push
+      branch-re: ^master$
+
+  - image: test/mfw_pkg/credentials
+    events:
+    - type: merge_group
+      branch-re: ^master$
+    - type: pull_request
+      branch-re: ^master$
+    - type: push
+      branch-re: ^master$
+
+  - image: test/mfw_pkg/mfw-eu
+    events:
+    - type: merge_group
+      branch-re: ^master$
+    - type: pull_request
+      branch-re: ^master$
+    - type: push
+      branch-re: ^master$
+
+  - image: test/mfw_pkg/pyconnector
+    events:
+    - type: merge_group
+      branch-re: ^master$
+    - type: pull_request
+      branch-re: ^master$
+    - type: push
+      branch-re: ^master$
+
+  - image: test/mfw_pkg/upgrade-scripts
+    events:
+    - type: merge_group
+      branch-re: ^master$
+    - type: pull_request
+      branch-re: ^master$
+    - type: push
+      branch-re: ^master$
+
+  - image: test/mfw_pkg/mfw-feeds-rpm
+    events:
+    - type: merge_group
+      branch-re: ^master$
+    - type: pull_request
+      branch-re: ^master$
+    - type: push
+      branch-re: ^master$
+
+
 epoch: 1
