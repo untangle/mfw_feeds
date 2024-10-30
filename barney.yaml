@@ -239,6 +239,10 @@ images:
   mfw_pkg/mfw-feeds-rpm:
     units:
     - floor: .%build-floor
+      entry:
+        mutables:
+          - /var/lib
+          - /var/tmp
       sources:
         - github.com/untangle/mfw_feeds
         - github.com/sivel/speedtest-cli
@@ -287,6 +291,10 @@ images:
   test/mfw_pkg/mfw-feeds-rpm:
     units:
     - floor: .%testImage/mfw_pkg/mfw-feeds-rpm
+      entry:
+        mutables:
+          - /var/lib
+          - /var/tmp
       build: |
         # Remove once barnzilla%base is fixed to no longer break rpmdb
         /usr/libexec/barnzilla/init-rpmdb-from-rpmcache
