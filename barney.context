@@ -11,7 +11,7 @@
 			"commit": "42569bcd45edf664ef3724b76384d831e436ec1a"
 		},
 		"barney.ci/debian": {
-			"commit": "56a065437749c7cfa7ba06af53311b54c4b855ee"
+			"commit": "a8b990da6e74b41609db2a4233dc157378b3c213"
 		},
 		"barney.ci/docker": {
 			"commit": "dcb450791c55d7ce31d648fecd7ee75ffbe92815"
