@@ -19,7 +19,7 @@ define Package/bctid
   SUBMENU:=Firewall
   TITLE:=Brightcloud classification daemon
   URL:=https://github.com/untangle/bctid
-  DEPENDS:=+libidn2 +libstdcpp +libopenssl +zlib
+  DEPENDS:=+libidn2 +libstdcpp +libopenssl +zlib +cJSON
 endef
 
 define Package/bctid/description
