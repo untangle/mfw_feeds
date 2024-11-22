@@ -23,6 +23,7 @@ cp backup-scripts/files/* upgrade-scripts/files/*  %{buildroot}/usr/bin
 cp wan-manager/files/wan-manager %{buildroot}/usr/bin
 cp geoip-database/GeoLite2-Country.mmdb %{buildroot}/usr/share/geoip/
 install -m 755 speedtest-cli/speedtest.py %{buildroot}/usr/bin/speedtest-cli
+cp sync-settings/files/password-manager %{buildroot}/usr/bin
 
 %files
 
