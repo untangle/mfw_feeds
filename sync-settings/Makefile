@@ -41,7 +41,6 @@ define Py3Package/sync-settings/install
 	$(INSTALL_BIN) files/nft_debug $(1)/usr/bin
 	$(INSTALL_BIN) files/check-for-usb-reset.sh $(1)/usr/bin
 	$(INSTALL_BIN) files/set_affinity.sh $(1)/usr/bin
-	$(INSTALL_BIN) files/set_rpsxps.sh $(1)/usr/bin
 	$(INSTALL_BIN) files/quota_cron.sh $(1)/usr/bin
 
 	# init.d
