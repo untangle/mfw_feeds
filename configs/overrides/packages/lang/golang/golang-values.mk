@@ -59,11 +59,13 @@ unexport \
 # Architecture-specific environment variables:
 unexport \
   GOARM \
+  GOARM64 \
   GO386 \
   GOAMD64 \
   GOMIPS \
   GOMIPS64 \
   GOPPC64 \
+  GORISCV64 \
   GOWASM
 
 # Environment variables for use with code coverage:
@@ -128,10 +130,11 @@ unexport \
 go_arch=$(subst \
   aarch64,arm64,$(subst \
   i386,386,$(subst \
+  loongarch64,loong64,$(subst \
   mipsel,mipsle,$(subst \
   mips64el,mips64le,$(subst \
   powerpc64,ppc64,$(subst \
-  x86_64,amd64,$(1)))))))
+  x86_64,amd64,$(1))))))))
 
 GO_OS:=linux
 GO_ARCH:=$(call go_arch,$(ARCH))
@@ -202,7 +205,7 @@ endif
 
 # Target Go
 
-GO_ARCH_DEPENDS:=@(aarch64||arm||i386||i686|||mips||mips64||mips64el||mipsel||powerpc64||x86_64)
+GO_ARCH_DEPENDS:=@(aarch64||arm||i386||i686||loongarch64||mips||mips64||mips64el||mipsel||powerpc64||riscv64||x86_64)
 
 
 # ASLR/PIE
@@ -211,7 +214,7 @@ GO_ARCH_DEPENDS:=@(aarch64||arm||i386||i686|||mips||mips64||mips64el||mipsel||po
 GO_PIE_SUPPORTED_OS_ARCH:= \
   android_386  android_amd64  android_arm  android_arm64 \
   linux_386    linux_amd64    linux_arm    linux_arm64 \
-  windows_386 windows_amd64 windows_arm \
+  windows_386  windows_amd64  windows_arm  windows_arm64 \
   \
   darwin_amd64 darwin_arm64 \
   ios_amd64    ios_arm64 \
@@ -220,7 +223,7 @@ GO_PIE_SUPPORTED_OS_ARCH:= \
   \
   aix_ppc64 \
   \
-  linux_ppc64le linux_riscv64 linux_s390x
+  linux_loong64 linux_ppc64le linux_riscv64 linux_s390x
 
 # From https://go.dev/src/cmd/go/internal/work/init.go
 go_pie_install_suffix=$(if $(filter $(1),aix_ppc64 windows_386 windows_amd64 windows_arm windows_arm64),,shared)
