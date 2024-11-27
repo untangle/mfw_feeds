@@ -1,0 +1,11 @@
+--- src/cmd/link/internal/ld/lib.go	2024-08-29 14:56:24.000000000 -0600
++++ src/cmd/link/internal/ld/lib1.go	2024-11-27 14:27:47.064944364 -0700
+@@ -28,7 +28,7 @@
+ // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ // THE SOFTWARE.
+ 
+-package ld
++package ld
+ 
+ import (
+ 	"bytes"
