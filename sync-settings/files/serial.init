@@ -4,7 +4,18 @@
 START=11
 STOP=11
 
-boot() {
+#!/bin/sh /etc/rc.common
+
+# 11 is right after boot (10)
+START=11
+STOP=11
+
+start() {
+    if [ -f /etc/Eos-release ] ; then
+        if [ -f /sys/devices/virtual/dmi/id/product_serial ] ; then
+            cp /sys/devices/virtual/dmi/id/product_serial /mnt/flash/mfw-settings/serial
+        fi
+	else
 	if [ ! -f /etc/config/serial ] ; then
 	    if [ -f /sys/devices/virtual/dmi/id/product_serial ] ; then
 	        cp /sys/devices/virtual/dmi/id/product_serial /etc/config/serial
@@ -16,5 +27,13 @@ boot() {
                     fi
 	        fi
 	    fi
-	fi
+    fi
+}
+
+stop() {
+    # Not implemented
+    true
+}
+
+boot() {
 }
