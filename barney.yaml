@@ -11,6 +11,7 @@ images:
     - image: code.arista.io/infra/barney/barnzilla%rpms/wget/fakeroot/sudo/EosImage/EosImageBuildUtils/EosUtils/EosSwimUtils
     - image: code.arista.io/infra/barney/barnzilla%rpms/rpm-build
     - image: code.arista.io/infra/barney/barnzilla%rpmdb
+    - image: code.arista.io/infra/barney/barnzilla%rpms/jq
 
   mfw_pkg/backup-scripts:
     units:
@@ -252,14 +253,14 @@ images:
 
         MFWFEEDS_DIR="/src/github.com/untangle/mfw_feeds"
         MFWFEEDS_TARDIR="/dest/mfw-tardir/"
-        RPMDIR="/dest/mfw_rpms"
+        RPMDIR="/dest/mfw-rpms"
 
         # Build rpm build root
         mkdir -p /tmp/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS,BUILDROOT}
         mkdir -p $MFWFEEDS_TARDIR/{geoip-database,speedtest-cli}
         mkdir -p $RPMDIR
 
-        cp -r $MFWFEEDS_DIR/{wan-manager,upgrade-scripts,backup-scripts} $MFWFEEDS_TARDIR
+        cp -r $MFWFEEDS_DIR/{wan-manager,upgrade-scripts,backup-scripts,pyconnector} $MFWFEEDS_TARDIR
         cd $MFWFEEDS_TARDIR 
         wget -O - https://downloads.untangle.com/download.php?resource=geoipCountry | \
         tar -xz --strip-components=1 -C geoip-database/
