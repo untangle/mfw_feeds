@@ -1,7 +1,5 @@
 #!/bin/bash
 
-export SYSTEMCTL_SKIP_REDIRECT=1
-
 # source function library
 . /etc/init.d/functions
 
