@@ -60,6 +60,7 @@ start() {
     
     # If there are no cloud settings, just enable cloud access
     # This is for backward compatibility
+    CLOUD=`jq '.system.cloud' /mnt/flash/mfw-settings/settings.json`
     if [ -z "$CLOUD" ] ; then
         ENABLED="true"
     else
