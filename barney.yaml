@@ -300,7 +300,7 @@ images:
         # Remove once barnzilla%base is fixed to no longer break rpmdb
         /usr/libexec/barnzilla/init-rpmdb-from-rpmcache
 
-        sudo yum --releasever 7 -y --installroot=/dest/testRoot install /mfw_rpms/*.rpm
+        sudo yum --releasever 7 -y --installroot=/dest/testRoot install /mfw-rpms/*.rpm
         echo "mfw-feeds-rpm Installed Files" > /dest/testResults
 
         ls /dest/testRoot/usr/bin/wan-manager && echo "/usr/bin/wan-manager" >> /dest/testResults
