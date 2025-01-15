@@ -1,0 +1,14 @@
+[Unit]
+Description=Start pyconnector
+After=sync-settings.service
+Wants=network-online.target
+After=network-online.target
+After=restd.service
+
+[Service]
+Type=forking
+ExecStart=/etc/rc.d/init.d/pyconnector start
+ExecStop=/etc/rc.d/init.d/pyconnector stop
+
+[Install]
+WantedBy=multi-user.target

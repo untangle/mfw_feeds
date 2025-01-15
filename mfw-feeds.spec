@@ -24,6 +24,7 @@ mkdir -p %{buildroot}/usr/bin
 mkdir -p %{buildroot}/usr/lib64
 mkdir -p %{buildroot}/etc/rc.d/init.d
 mkdir -p %{buildroot}/usr/share/geoip
+mkdir -p %{buildroot}/etc/systemd/system
 cp backup-scripts/files/* upgrade-scripts/files/*  %{buildroot}/usr/bin
 cp wan-manager/files/wan-manager %{buildroot}/usr/bin
 cp geoip-database/GeoLite2-Country.mmdb %{buildroot}/usr/share/geoip/
@@ -33,10 +34,12 @@ cp /lib64/libjq.so.1 %{buildroot}/usr/lib64
 cp /lib64/libonig.so.5 %{buildroot}/usr/lib64
 install -m 755 pyconnector/files/pyconnector %{buildroot}/usr/bin
 install -m 755 pyconnector/files/connector.init %{buildroot}/etc/rc.d/init.d/pyconnector
+install -m 755 pyconnector/files/pyconnector.service %{buildroot}/etc/systemd/system/pyconnector.service
 install -m 755 speedtest-cli/speedtest.py %{buildroot}/usr/bin/speedtest-cli
 
 %files
 /etc/rc.d/init.d/pyconnector
+/etc/systemd/system/pyconnector.service
 /usr/bin/pyconnector
 /usr/bin/speedtest-cli
 /usr/bin/upgrade.sh
@@ -48,3 +51,6 @@ install -m 755 speedtest-cli/speedtest.py %{buildroot}/usr/bin/speedtest-cli
 
 %dir
 /usr/share/geoip
+
+%post
+systemctl enable pyconnector.service
