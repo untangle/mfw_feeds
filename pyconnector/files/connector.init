@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# chkconfig: - 85 15
 # source function library
 . /etc/init.d/functions
 

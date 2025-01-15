@@ -1,9 +1,7 @@
 [Unit]
 Description=Start pyconnector
-After=sync-settings.service
 Wants=network-online.target
 After=network-online.target
-After=restd.service
 
 [Service]
 Type=forking
