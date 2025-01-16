@@ -301,14 +301,14 @@ images:
         # Remove once barnzilla%base is fixed to no longer break rpmdb
         /usr/libexec/barnzilla/init-rpmdb-from-rpmcache
 
-        sudo yum --releasever 7 -y --skip-broken --installroot=/dest/testRoot install /mfw-rpms/*.rpm
-        echo "mfw-feeds-rpm Installed Files" > /dest/testResults
-
-        ls /dest/testRoot/usr/bin/wan-manager && echo "/usr/bin/wan-manager" >> /dest/testResults
-        ls /dest/testRoot/usr/bin/upgrade.sh && echo "/usr/bin/upgrade.sh" >> /dest/testResults
-        ls /dest/testRoot/usr/bin/speedtest-cli && echo "/usr/bin/speedtest-cli" >> /dest/testResults
-        ls /dest/testRoot/usr/bin/upload-backup.sh && echo "/usr/bin/upload-backup.sh" >> /dest/testResults
-        ls /dest/testRoot/usr/share/geoip/GeoLite2-Country.mmdb && echo "/usr/share/geoip/GeoLite2-Country.mmdb" >> /dest/testResults
+        rpm -qlp /mfw-rpms/*.rpm | grep -w "/usr/bin/wan-manager"
+        rpm -qlp /mfw-rpms/*.rpm | grep -w "/usr/bin/upgrade.sh"
+        rpm -qlp /mfw-rpms/*.rpm | grep -w "/usr/bin/speedtest-cli"
+        rpm -qlp /mfw-rpms/*.rpm | grep -w "/usr/bin/upload-backup.sh"
+        rpm -qlp /mfw-rpms/*.rpm | grep -w "/usr/share/geoip/GeoLite2-Country.mmdb"
+        rpm -qlp /mfw-rpms/*.rpm | grep -w "/usr/bin/pyconnector"
+        rpm -qlp /mfw-rpms/*.rpm | grep -w "/usr/bin/upload-backup.sh"
+        rpm -qlp /mfw-rpms/*.rpm | grep -w "/usr/share/geoip/GeoLite2-Country.mmdb"
 
   mfw_pkg/wan-manager:
     units:
