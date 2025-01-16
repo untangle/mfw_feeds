@@ -12,6 +12,7 @@ images:
     - image: code.arista.io/infra/barney/barnzilla%rpms/rpm-build
     - image: code.arista.io/infra/barney/barnzilla%rpmdb
     - image: code.arista.io/infra/barney/barnzilla%rpms/jq
+    - image: code.arista.io/infra/barney/barnzilla%rpms/bash
 
   mfw_pkg/backup-scripts:
     units:
@@ -307,6 +308,7 @@ images:
         ls /dest/testRoot/usr/bin/upgrade.sh && echo "/usr/bin/upgrade.sh" >> /dest/testResults
         ls /dest/testRoot/usr/bin/speedtest-cli && echo "/usr/bin/speedtest-cli" >> /dest/testResults
         ls /dest/testRoot/usr/bin/upload-backup.sh && echo "/usr/bin/upload-backup.sh" >> /dest/testResults
+        ls /dest/testRoot/usr/bin/pyconnector && echo "/usr/bin/pyconnector" >> /dest/testResults
         ls /dest/testRoot/usr/share/geoip/GeoLite2-Country.mmdb && echo "/usr/share/geoip/GeoLite2-Country.mmdb" >> /dest/testResults
 
   mfw_pkg/wan-manager:
