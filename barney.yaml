@@ -261,7 +261,7 @@ images:
 
         cp -r $MFWFEEDS_DIR/{wan-manager,upgrade-scripts,backup-scripts} $MFWFEEDS_TARDIR
         cd $MFWFEEDS_TARDIR 
-        wget -O - https://downloads.untangle.com/download.php?resource=geoipCountry | \
+        wget -O - https://downloads.edge.arista.com/download.php?resource=geoipCountry | \
         tar -xz --strip-components=1 -C geoip-database/
 
         # Patch speedtest-cli 

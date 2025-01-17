@@ -41,13 +41,13 @@ DEVICE="`grep DEVICE_MANUFACTURER_URL /etc/os-release | sed -rn 's/.*(mfw|sdwan)
 for ARG in VERSION FULL_VERSION BOARD UID DEVICE ; do
     VAL=$(eval echo \$$ARG)
     if [ -z "$VAL" ] ; then
-        logException "Missing param for updates.untangle.com API call:  $ARG"
+        logException "Missing param for updates.edge.arista.com API call:  $ARG"
         exit 1
     fi
 done
 
 ARGS="version=${VERSION}&fullVersion=${FULL_VERSION}&board=${BOARD}&uid=${UID}"
-URL="https://updates.untangle.com/api/v1/releases/${DEVICE}/latest?${ARGS}"
+URL="https://updates.edge.arista.com/api/v1/releases/${DEVICE}/latest?${ARGS}"
 TRANSLATED_URL=$(wget -qO- "http://127.0.0.1/api/uri/geturiwithpath/uri=$URL")
 if [ "$TRANSLATED_URL" != "" ] ; then
     URL=$TRANSLATED_URL
