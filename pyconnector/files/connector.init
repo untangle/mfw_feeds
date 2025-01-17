@@ -1,10 +1,12 @@
-#!/bin/sh /etc/rc.common
-# Copyright (C) 2006-2011 OpenWrt.org
+#!/bin/bash
 
-START=99
-STOP=99
+# chkconfig: - 85 15
+# source function library
+. /etc/init.d/functions
 
-USE_PROCD=1
+RETVAL=0
+prog="pyconnector"
+binary=/usr/bin/pyconnector
 
 get_translated_host()
 {
@@ -39,50 +41,86 @@ wait_for_restd_start() {
     for attempt in $(seq 1 $max_retries); do
         response=$(curl -s "$url")
         if [ $? -eq 0 ]; then
-            logger -t pyconnector "restd is up. Starting pyconnector"
+            echo "pyconnector: restd is up. Starting pyconnector"
             return
         else
-            logger -t pyconnector "Attempt $attempt to reach restd failed."
+            echo "pyconnector: Attempt $attempt to reach restd failed."
             sleep "$retry_delay"
         fi
     done
 
-    logger -t pyconnector "restd failed to start after $((max_retries * retry_delay)) seconds. Continuing..."
+    echo "pyconnector: restd failed to start after $((max_retries * retry_delay)) seconds. Continuing..."
 }
 
-
-start_service() {
-    CLOUD=`jq '.system.cloud' /etc/config/current.json`
+start() {
+    status $prog > /dev/null
+    if [ $? -eq 0 ]; then
+    	echo "$prog is already running."
+	return 0
+    fi
+    
     # If there are no cloud settings, just enable cloud access
     # This is for backward compatibility
+    CLOUD=`jq '.system.cloud' /mnt/flash/mfw-settings/settings.json`
     if [ -z "$CLOUD" ] ; then
         ENABLED="true"
     else
-        ENABLED=`jq '.system.cloud.enabled' /etc/config/current.json`
+        ENABLED=`jq '.system.cloud.enabled' /mnt/flash/mfw-settings/settings.json`
     fi
 
     if [ $ENABLED = "true" ] ; then
         wait_for_restd_start
 
-        SERVERS=`jq '.system.cloud.cloudServers[]' /etc/config/current.json`
+        SERVERS=`jq '.system.cloud.cloudServers[]' /mnt/flash/mfw-settings/settings.json`
 
         for server in $SERVERS ; do
             host=""
-            logger -t pyconnector "Checking URI translation for $server..."
+            echo "pyconnector Checking URI translation for $server..."
             get_translated_host host $server
             if [ -z $host ] ; then
-                logger -t pyconnector "Unable to find $server in URI translations, assuming $server"
+                echo "pyconnector: Unable to find $server in URI translations, assuming $server"
                 host=$server
             fi
-
-            procd_open_instance
-	        procd_set_param command /usr/bin/pyconnector -s $host
-	        procd_set_param stdout 1
-	        procd_set_param stderr 1
-
-            # restart indefinitely if crashed, 120 seconds between attempts
-            procd_set_param respawn 3600 120 0
-	        procd_close_instance
+            # Start pyconnector
+            [ -x $binary ] || exit 5
+            echo -n "Starting $prog: "
+            $binary -s $host 2>&1 &
+            status $prog > /dev/null
+            RETVAL=$?
         done
     fi
 }
+
+
+stop() {
+	echo -n "Stopping $prog:"
+	killproc $binary
+        RETVAL=$?
+	echo
+	return $RETVAL
+}
+
+case "$1" in
+  start)
+	start
+	RETVAL=$?
+	;;
+  stop)
+	stop
+	RETVAL=$?
+	;;
+  restart)
+	stop 
+	start
+	RETVAL=$?
+        ;;
+  status)
+        status $prog
+	RETVAL=$?
+        ;;
+  *)
+	echo $"Usage: $0 {start|stop|status|restart}"
+	RETVAL=2
+esac
+
+exit $RETVAL
