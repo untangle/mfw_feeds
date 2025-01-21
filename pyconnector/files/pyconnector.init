@@ -68,6 +68,10 @@ start_service() {
 
         for server in $SERVERS ; do
             host=""
+            #strip out any quotes.
+            t="${server%\"}"
+            t="${t#\"}"
+            server=$t
             logger -t pyconnector "Checking URI translation for $server..."
             get_translated_host host $server
             if [ -z $host ] ; then
