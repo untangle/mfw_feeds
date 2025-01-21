@@ -71,14 +71,10 @@ start() {
     if [ $ENABLED = "true" ] ; then
         wait_for_restd_start
 
-        SERVERS=`jq '.system.cloud.cloudServers[]' /mnt/flash/mfw-settings/settings.json`
+        SERVERS=`jq -r '.system.cloud.cloudServers[]' /mnt/flash/mfw-settings/settings.json`
 
         for server in $SERVERS ; do
             host=""
-            #strip out any quotes.
-            t="${server%\"}"
-            t="${t#\"}"
-            server=$t
             echo "pyconnector Checking URI translation for $server..."
             get_translated_host host $server
             if [ -z $host ] ; then
