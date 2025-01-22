@@ -71,7 +71,7 @@ start() {
     if [ $ENABLED = "true" ] ; then
         wait_for_restd_start
 
-        SERVERS=`jq '.system.cloud.cloudServers[]' /mnt/flash/mfw-settings/settings.json`
+        SERVERS=`jq -r '.system.cloud.cloudServers[]' /mnt/flash/mfw-settings/settings.json`
 
         for server in $SERVERS ; do
             host=""

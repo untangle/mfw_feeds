@@ -64,7 +64,7 @@ start_service() {
     if [ $ENABLED = "true" ] ; then
         wait_for_restd_start
 
-        SERVERS=`jq '.system.cloud.cloudServers[]' /etc/config/current.json`
+        SERVERS=`jq -r '.system.cloud.cloudServers[]' /etc/config/current.json`
 
         for server in $SERVERS ; do
             host=""
