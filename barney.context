@@ -20,7 +20,7 @@
 			"commit": "9b0ca0d48fb7f84bd946a79db6b9823e38f77336"
 		},
 		"barney.ci/model": {
-			"commit": "f11eb1e1459dd6ac88b10802d6e04bf3f6a93c7a"
+			"commit": "ebfb4a52111f66cc87b0c4623d2b7624dd0bd338"
 		},
 		"code.arista.io/infra/barney/barnzilla": {
 			"commit": "8368a70d58d0f7071bc83335cf4953615160d0ec"
