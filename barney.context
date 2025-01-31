@@ -23,7 +23,7 @@
 			"commit": "d62a0b3f3a652d1dbf8ac54ccdb9af240cf6b929"
 		},
 		"code.arista.io/infra/barney/barnzilla": {
-			"commit": "02c776fad8d24abf1e7db9c4ccd49fcd1dc5ddf7"
+			"commit": "83b2df9d84de6124174e8bb9ae57c90acee094d9"
 		},
 		"code.arista.io/infra/barney/barnzilla-repos": {
 			"commit": "8cac2b4d8e6e1cc77013937488026750ff73ce2e"
