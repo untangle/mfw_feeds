@@ -32,7 +32,7 @@ class EnvironmentTests(MFWTestCase):
     def test_13_client_has_necessary_tools(self):
         """verify client has necessary tools"""
         # to configure client:
-        # https://test.untangle.com/test/setup_testshell.sh
+        # https://test.edge.arista.com/test/setup_testshell.sh
         assert remote_control.run_command("which wget") == 0
         assert remote_control.run_command("which curl") == 0
         assert remote_control.run_command("which netcat") == 0
