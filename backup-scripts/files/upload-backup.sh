@@ -58,7 +58,7 @@ createBackup() {
 # (is that "continue?) then a "404", so we choose the *last*
 # response code as the status.
 getHTTPStatus() {
-  cat "${1}" | sed -n "/HTTP\/1.1/ p" | awk '{ print $2; }' | tail -1
+  sed -n "/HTTP\/1.1/ p" "${1}" | awk '{ print $2; }' | tail -1
 }
 
 # 1 = name of backup file
