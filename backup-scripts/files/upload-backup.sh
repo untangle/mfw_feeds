@@ -11,8 +11,10 @@ TRANSLATED_URL=$(wget -qO- "http://127.0.0.1/api/uri/geturiwithpath/uri=$URL")
 # As a default, make this run in OpenWrt / BST
 SETTINGS_ROOT_DIR="/etc/config"
 
+# Check for native EOS
 if [ -d /mnt/flash/mfw-settings ]; then
   SETTINGS_ROOT_DIR="/mnt/flash/mfw-settings"
+  TAR_OPTIONS="--force-local"
 fi
 
 if [ "$TRANSLATED_URL" != "" ]; then
@@ -47,7 +49,7 @@ createBackup() {
     rm -f "$TEMP_DIR"/captive_portal_settings
   fi
 
-  tar -C /tmp -zcf "$BACKUP_FILE" "$TEMP_DIR_NAME"
+  tar -C /tmp -zcf "$BACKUP_FILE" "$TEMP_DIR_NAME" "$TAR_OPTIONS"
   rm -r "$TEMP_DIR"
 }
 
@@ -73,8 +75,8 @@ callCurl() {
   debug "Calling CURL.  Dumping headers to $2"
   md5=$(md5sum "$1" | awk '{ print $1 }')
   debug "Backup file MD5: $md5"
-  debug "curl $URL -k -F uid=$UID -F uploadedfile=@$1 -F md5=$md5 -F version=$mfw_version --dump-header $2 --max-time $TIMEOUT"
-  curl "$URL" -k -F uid="$UID" -F uploadedfile=@"$1" -F md5="$md5" -F version="$mfw_version" --dump-header "$2" --max-time $TIMEOUT >/dev/null 2>&1
+  debug "curl $URL -k -F uid=$Unique_ID -F uploadedfile=@$1 -F md5=$md5 -F version=$mfw_version --dump-header $2 --max-time $TIMEOUT"
+  curl "$URL" -k -F uid="$Unique_ID" -F uploadedfile=@"$1" -F md5="$md5" -F version="$mfw_version" --dump-header "$2" --max-time $TIMEOUT >/dev/null 2>&1
   return $?
 }
 
@@ -98,7 +100,7 @@ checkLicense() {
 # check if autobackup is enabled
 checkEnable() {
   settings_file=$SETTINGS_ROOT_DIR/settings.json
-  output=$(jq ".system.autoBackup.Enabled" "$settings_file")
+  output=$(jq ".system.autoBackup.enabled" "$settings_file")
 
   if [ "$output" = null ]; then
     debug "Couldn't find enable status"
@@ -148,7 +150,7 @@ if $SEND_CURL; then
 fi
 
 # get uid
-UID=$(cat $SETTINGS_ROOT_DIR/uid)
+Unique_ID=$(cat $SETTINGS_ROOT_DIR/uid)
 
 # create backup file
 createBackup
@@ -171,7 +173,7 @@ fi
 
 debug "Running backup"
 debug "URL: " "$URL"
-debug "UID: " "$UID"
+debug "UID: " "$Unique_ID"
 debug "File: " "$BACKUP_FILE"
 
 HEADER_FILE=$(mktemp -t ut-remotebackup.XXXXXXXXXX)
