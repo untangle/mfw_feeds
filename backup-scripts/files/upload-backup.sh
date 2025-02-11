@@ -8,17 +8,15 @@ BACKUP_COPY_DIR=""
 BACKUP_FILE=mfw_$(date -Iseconds).backup.tar.gz
 URL='https://boxbackup.untangle.com/boxbackup/backup.php'
 TRANSLATED_URL=$(wget -qO- "http://127.0.0.1/api/uri/geturiwithpath/uri=$URL")
-# As a default, make this run in OpenWrt / BST
-SETTINGS_ROOT_DIR="/etc/config"
 
-# Check for native EOS
+# As a default, run on openwrt
+PLATFORM="OpenWRT"
+PRODUCT="mfw"
+
+# If this path exists, script is running on Native EOS
 if [ -d /mnt/flash/mfw-settings ]; then
-  SETTINGS_ROOT_DIR="/mnt/flash/mfw-settings"
-  TAR_OPTIONS="--force-local"
-fi
-
-if [ "$TRANSLATED_URL" != "" ]; then
-  URL=$TRANSLATED_URL
+  PLATFORM="EOS"
+  PRODUCT="efw"
 fi
 
 # Debug function
@@ -33,6 +31,30 @@ err() {
   echo "$*" >>/dev/stderr
 }
 
+# read MFW version from /etc/os-release as a default for OpenWRT
+
+if [ $PLATFORM = "EOS" ]; then
+  full_mfw_version=$(grep 'VERSION' /etc/efw-version | cut -d '=' -f 2 | tr -d '"')
+else
+  full_mfw_version=$(grep 'VERSION=' /etc/os-release | cut -d '=' -f 2 | tr -d '"')
+fi
+
+version_string="${full_mfw_version#*v}" # Remove the leading 'v'
+product_version="${version_string%%-*}" # Remove everything after the first '-'
+product_version="$PRODUCT-$product_version"
+debug "MFW version detected: $product_version"
+
+# As a default, make this run in OpenWrt / BST
+SETTINGS_ROOT_DIR="/etc/config"
+
+if [ $PLATFORM = "EOS" ]; then
+  SETTINGS_ROOT_DIR="/mnt/flash/mfw-settings"
+fi
+
+if [ "$TRANSLATED_URL" != "" ]; then
+  URL=$TRANSLATED_URL
+fi
+
 # Create backup coping settings file to a temp dir
 createBackup() {
   debug "Backing up settings to gunzipped tar archive file"
@@ -41,12 +63,11 @@ createBackup() {
   CP_DIR="$SETTINGS_ROOT_DIR/captive_portal"
 
   cp $SETTINGS_ROOT_DIR/settings.json "$TEMP_DIR"
-  # TODO: Directory check is added for cases where upgrade from older builds
-  # to newer may not have the directory present. This check should probably
-  # be removed in future builds.
-  if [ -d "$CP_DIR" ]; then
-    cp $CP_DIR/* "$TEMP_DIR"
-    rm -f "$TEMP_DIR"/captive_portal_settings
+  cp $CP_DIR/* "$TEMP_DIR"
+  rm -f "$TEMP_DIR"/captive_portal_settings
+
+  if [ $PLATFORM = "EOS" ]; then
+    TAR_OPTIONS="--force-local"
   fi
 
   tar -C /tmp -zcf "$BACKUP_FILE" "$TEMP_DIR_NAME" "$TAR_OPTIONS"
@@ -66,17 +87,12 @@ getHTTPStatus() {
 #
 # returns the return of CURL
 callCurl() {
-  # read MFW version from /etc/os-release
-  full_mfw_version=$(grep 'VERSION=' /etc/os-release | cut -d '=' -f 2 | tr -d '"')
-  version_string="${full_mfw_version#*v}" # Remove the leading 'v'
-  mfw_version="${version_string%%-*}"     # Remove everything after the first '-'
-  debug "MFW version detected: $mfw_version"
 
   debug "Calling CURL.  Dumping headers to $2"
   md5=$(md5sum "$1" | awk '{ print $1 }')
   debug "Backup file MD5: $md5"
-  debug "curl $URL -k -F uid=$Unique_ID -F uploadedfile=@$1 -F md5=$md5 -F version=$mfw_version --dump-header $2 --max-time $TIMEOUT"
-  curl "$URL" -k -F uid="$Unique_ID" -F uploadedfile=@"$1" -F md5="$md5" -F version="$mfw_version" --dump-header "$2" --max-time $TIMEOUT >/dev/null 2>&1
+  debug "curl $URL -k -F uid=$Unique_ID -F uploadedfile=@$1 -F md5=$md5 -F version=$product_version --dump-header $2 --max-time $TIMEOUT"
+  curl "$URL" -k -F uid="$Unique_ID" -F uploadedfile=@"$1" -F md5="$md5" -F version="$product_version" --dump-header "$2" --max-time $TIMEOUT >/dev/null 2>&1
   return $?
 }
 
