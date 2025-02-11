@@ -91,8 +91,8 @@ callCurl() {
   debug "Calling CURL.  Dumping headers to $2"
   md5=$(md5sum "$1" | awk '{ print $1 }')
   debug "Backup file MD5: $md5"
-  debug "curl $URL -k -F uid=$Unique_ID -F uploadedfile=@$1 -F md5=$md5 -F version=$product_version --dump-header $2 --max-time $TIMEOUT"
-  curl "$URL" -k -F uid="$Unique_ID" -F uploadedfile=@"$1" -F md5="$md5" -F version="$product_version" --dump-header "$2" --max-time $TIMEOUT >/dev/null 2>&1
+  cmd="curl $URL -k -F uid=$Unique_ID -F uploadedfile=@$1 -F md5=$md5 -F version=$product_version --dump-header $2 --max-time $TIMEOUT"
+  $cmd >/dev/null 2>&1
   return $?
 }
 
