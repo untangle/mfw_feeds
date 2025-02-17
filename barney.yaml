@@ -307,8 +307,6 @@ images:
         rpm -qlp /mfw-rpms/*.rpm | grep -w "/usr/bin/upload-backup.sh"
         rpm -qlp /mfw-rpms/*.rpm | grep -w "/usr/share/geoip/GeoLite2-Country.mmdb"
         rpm -qlp /mfw-rpms/*.rpm | grep -w "/usr/bin/pyconnector"
-        rpm -qlp /mfw-rpms/*.rpm | grep -w "/usr/bin/upload-backup.sh"
-        rpm -qlp /mfw-rpms/*.rpm | grep -w "/usr/share/geoip/GeoLite2-Country.mmdb"
 
   mfw_pkg/wan-manager:
     units:
