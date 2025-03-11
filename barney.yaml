@@ -84,3 +84,31 @@ images:
         rpm -qlp /mfw-rpms/*.rpm | grep -w "/usr/bin/upload-backup.sh"
         rpm -qlp /mfw-rpms/*.rpm | grep -w "/usr/share/geoip/GeoLite2-Country.mmdb"
         rpm -qlp /mfw-rpms/*.rpm | grep -w "/usr/bin/pyconnector"
+
+  ################
+  #
+  # Validate non-code files
+  #
+  #########
+
+  tests/internal/renovate-json5-floor:
+    entry:
+      mutables:
+        - /etc        # for error unable to clean up mess surrounding './etc/apache2' before installing another version: Read-only file system
+        - /usr        # for apt
+        - /var/cache  # for apt
+        - /var/lib    # for apt
+        - /var/log    # for apt
+    units:
+    - image: barney.ci/debian%minbase
+    - image: barney.ci/debian%network
+
+  tests/renovate-json5:
+    units:
+    - floor: .%tests/internal/renovate-json5-floor
+      sources:
+      - github.com/untangle/mfw_feeds # to get sources under stable path
+      build: |
+        apt update
+        apt install -y node-json5
+        json5 --validate /src/github.com/untangle/mfw_feeds/renovate.json5
