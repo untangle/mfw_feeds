@@ -44,7 +44,7 @@ product_version="${version_string%%-*}" # Remove everything after the first '-'
 product_version="$PRODUCT-$product_version"
 debug "MFW version detected: $product_version"
 
-# As a default, make this run in OpenWrt / BST
+# As a default, make this run in OpenWrt
 SETTINGS_ROOT_DIR="/etc/config"
 
 if [ $PLATFORM = "EOS" ]; then
