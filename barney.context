@@ -26,7 +26,7 @@
 			"commit": "320f394383038199a986dba215093569b8cddc90"
 		},
 		"github.com/golang/go": {
-			"commit": "339c903a75c3fe936fb4ed6c355d15e6081d6af3"
+			"commit": "49860cf92a9a3ba434d2bc393faaefabe48d181e"
 		},
 		"github.com/sivel/speedtest-cli": {
 			"commit": "42e96b13dda2afabbcec2622612d13495a415caa"
