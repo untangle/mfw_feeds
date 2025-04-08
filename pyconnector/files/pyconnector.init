@@ -16,7 +16,7 @@ get_translated_host()
         # Only host - add https:// for lookup
         uri="https://"$uri"/"
     fi
-    translated_url=$(wget -qO- "http://127.0.0.1/api/uri/geturiwithpath/uri=$uri")
+    translated_url=$(wget --timeout=30 --tries=1 -qO- "http://127.0.0.1/api/uri/geturiwithpath/uri=$uri")
     if [ "translated_url" != "" ] ; then
         host=$translated_url
     fi
