@@ -1,0 +1,126 @@
+#!/bin/bash
+
+# chkconfig: - 85 15
+# source function library
+. /etc/init.d/functions
+
+RETVAL=0
+prog="pyconnector"
+binary=/usr/bin/pyconnector
+
+get_translated_host()
+{
+    # Lookup host as a uri and return just host
+    local __return_host=$1
+    local uri=$2
+
+    if case $uri in https*) false;; esac; then
+        # Only host - add https:// for lookup
+        uri="https://"$uri"/"
+    fi
+    translated_url=$(wget -qO- "http://127.0.0.1/api/uri/geturiwithpath/uri=$uri")
+    if [ "translated_url" != "" ] ; then
+        host=$translated_url
+    fi
+    # Strip leading https://
+    host=${host##https://}
+    # Strip trailing path
+    host=${host%%/*}
+
+	eval "$__return_host=$host"
+}
+
+# Wait for restd to come up to prevent a race condition where
+# pyconnector starts first, but sends incomplete information 
+# since the api enpoints from restd couldn't send back system status info
+wait_for_restd_start() {
+    local max_retries=20
+    local retry_delay=1
+    local url="http://localhost/ping"
+
+    for attempt in $(seq 1 $max_retries); do
+        response=$(curl -s "$url")
+        if [ $? -eq 0 ]; then
+            echo "pyconnector: restd is up. Starting pyconnector"
+            return
+        else
+            echo "pyconnector: Attempt $attempt to reach restd failed."
+            sleep "$retry_delay"
+        fi
+    done
+
+    echo "pyconnector: restd failed to start after $((max_retries * retry_delay)) seconds. Continuing..."
+}
+
+start() {
+    status $prog > /dev/null
+    if [ $? -eq 0 ]; then
+    	echo "$prog is already running."
+	return 0
+    fi
+    
+    # If there are no cloud settings, just enable cloud access
+    # This is for backward compatibility
+    CLOUD=`jq '.system.cloud' /mnt/flash/mfw-settings/settings.json`
+    if [ -z "$CLOUD" ] ; then
+        ENABLED="true"
+    else
+        ENABLED=`jq '.system.cloud.enabled' /mnt/flash/mfw-settings/settings.json`
+    fi
+
+    if [ $ENABLED = "true" ] ; then
+        wait_for_restd_start
+
+        SERVERS=`jq -r '.system.cloud.cloudServers[]' /mnt/flash/mfw-settings/settings.json`
+
+        for server in $SERVERS ; do
+            host=""
+            echo "pyconnector Checking URI translation for $server..."
+            get_translated_host host $server
+            if [ -z $host ] ; then
+                echo "pyconnector: Unable to find $server in URI translations, assuming $server"
+                host=$server
+            fi
+            # Start pyconnector
+            [ -x $binary ] || exit 5
+            echo -n "Starting $prog: "
+            $binary -s $host 2>&1 &
+            status $prog > /dev/null
+            RETVAL=$?
+        done
+    fi
+}
+
+
+stop() {
+	echo -n "Stopping $prog:"
+	killproc $binary
+        RETVAL=$?
+	echo
+	return $RETVAL
+}
+
+case "$1" in
+  start)
+	start
+	RETVAL=$?
+	;;
+  stop)
+	stop
+	RETVAL=$?
+	;;
+  restart)
+	stop 
+	start
+	RETVAL=$?
+        ;;
+  status)
+        status $prog
+	RETVAL=$?
+        ;;
+  *)
+	echo $"Usage: $0 {start|stop|status|restart}"
+	RETVAL=2
+esac
+
+exit $RETVAL

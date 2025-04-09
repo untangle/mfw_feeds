@@ -2,52 +2,34 @@
 	"version": 1,
 	"repomap": {
 		"barney.ci/alpine": {
-			"commit": "f2fa545e3fafa3387f2d7269721d16f3f499cc3b"
+			"commit": "453f5b721ea0cab5aed1ae209644734ff63884f0"
 		},
 		"barney.ci/barneyfile": {
-			"commit": "ed88c1c8bb4f634a5ec1b75578cd10a63dd31585"
+			"commit": "309a269aec9c3656013ed4cb99d6782cb17eed7d"
 		},
 		"barney.ci/byob": {
-			"commit": "42569bcd45edf664ef3724b76384d831e436ec1a"
+			"commit": "c3a49dcd93bd98b45a3450d88bd5416844d506f8"
 		},
 		"barney.ci/debian": {
-			"commit": "a8b990da6e74b41609db2a4233dc157378b3c213"
-		},
-		"barney.ci/docker": {
-			"commit": "dcb450791c55d7ce31d648fecd7ee75ffbe92815"
+			"commit": "eb84e7903cfd32bffe2b0ab068bc6c87aa810885"
 		},
 		"barney.ci/golang": {
-			"commit": "d7f023afaa04440c08ad00296fe3dd01b7f5c437"
+			"commit": "57eea7a7f99ae84c1c1e6847ca92f4bb6ae497e0"
 		},
 		"barney.ci/model": {
-			"commit": "f11eb1e1459dd6ac88b10802d6e04bf3f6a93c7a"
+			"commit": "9a72089e85e4f4020470453e44cf7d3814361951"
 		},
 		"code.arista.io/infra/barney/barnzilla": {
-			"commit": "d909fa71e4fe270577d2419e0250302d20b4b07a"
+			"commit": "07c2fa251086468fe356d340c1438694f9c2f750"
 		},
 		"code.arista.io/infra/barney/barnzilla-repos": {
-			"commit": "5d915dad06a41f628f6238521288ccc1e042dabd"
-		},
-		"code.arista.io/infra/barney/tools/qube": {
-			"commit": "7ea12f3a4f3683689fd7670b26015bf374216d10"
-		},
-		"code.arista.io/mfw/build": {
-			"commit": "b32572b603d9fdc4545d63a5e025b81139fb3435"
-		},
-		"code.arista.io/tools/breadman": {
-			"commit": "778d649d57a4792539538eac154f8f64a9370604"
+			"commit": "f5eb46f5fd997d566bf553c9928ec37ddefc79ac"
 		},
 		"github.com/golang/go": {
-			"commit": "194de8fbfaf4c3ed54e1a3c1b14fc67a830b8d95"
-		},
-		"github.com/goreleaser/nfpm": {
-			"commit": "4d89ab846ee135cbcf3085316bf15c739e8f1cc8"
+			"commit": "49860cf92a9a3ba434d2bc393faaefabe48d181e"
 		},
 		"github.com/sivel/speedtest-cli": {
 			"commit": "42e96b13dda2afabbcec2622612d13495a415caa"
-		},
-		"github.com/untangle/openwrt": {
-			"commit": "c1819ca6bf968f1df35fcedfd93f6a4b5a600f10"
 		}
 	}
 }

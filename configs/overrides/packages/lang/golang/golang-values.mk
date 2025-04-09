@@ -22,7 +22,6 @@ unexport \
   GOARCH \
   GOBIN \
   GOCACHE \
-  GOMODCACHE \
   GODEBUG \
   GOENV \
   GOFLAGS \

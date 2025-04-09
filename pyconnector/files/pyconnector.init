@@ -52,19 +52,19 @@ wait_for_restd_start() {
 
 
 start_service() {
-    CLOUD=`jsonfilter -i /etc/config/current.json -e '@["system"]["cloud"]'`
+    CLOUD=`jq '.system.cloud' /etc/config/current.json`
     # If there are no cloud settings, just enable cloud access
     # This is for backward compatibility
     if [ -z "$CLOUD" ] ; then
         ENABLED="true"
     else
-        ENABLED=`jsonfilter -i /etc/config/current.json -e '@["system"]["cloud"]["enabled"]'`
+        ENABLED=`jq '.system.cloud.enabled' /etc/config/current.json`
     fi
 
     if [ $ENABLED = "true" ] ; then
         wait_for_restd_start
 
-        SERVERS=`jsonfilter -i /etc/config/current.json -e '@["system"]["cloud"]["cloudServers"]' | tr -d ',"[]'`
+        SERVERS=`jq -r '.system.cloud.cloudServers[]' /etc/config/current.json`
 
         for server in $SERVERS ; do
             host=""

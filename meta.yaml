@@ -4,27 +4,22 @@ description: |
 users:
   maintainers:
     - abriles@arista.com
-    - aornstein@arista.com
     - al.parker@arista.com
-    - amit.mishra@arista.com
     - acooke@arista.com
     - avinash.dige@arista.com
     - crasmussen@arista.com
     - cblaise@arista.com
-    - cvarga@arista.com
     - dhadarau@arista.com
     - iramasamy@arista.com
     - jphillips@arista.com
     - jsommerville@arista.com
+    - k.skrzypczyn@arista.com
     - ksridhar@arista.com
-    - lnicoara@arista.com
-    - manuwela.kanade@arista.com
     - sdelafond@arista.com
     - smitropoulos@arista.com
     - sumedha.game@arista.com
     - utkarsh.pratapsingh@arista.com
     - vishal.mane-ext@arista.com
-    - yogesh.chhetri@arista.com
   watchers:
     - bruce@arista.com
     - cmercer@arista.com
@@ -39,60 +34,6 @@ x-bar:
 
 x-github-bridge:
   reviews:
-  - image: test/mfw_pkg/backup-scripts
-    events:
-    - type: merge_group
-      branch-re: ^master$
-    - type: pull_request
-      branch-re: ^master$
-    - type: push
-      branch-re: ^master$
-
-  - image: test/mfw_pkg/crash-collector
-    events:
-    - type: merge_group
-      branch-re: ^master$
-    - type: pull_request
-      branch-re: ^master$
-    - type: push
-      branch-re: ^master$
-
-  - image: test/mfw_pkg/credentials
-    events:
-    - type: merge_group
-      branch-re: ^master$
-    - type: pull_request
-      branch-re: ^master$
-    - type: push
-      branch-re: ^master$
-
-  - image: test/mfw_pkg/mfw-eu
-    events:
-    - type: merge_group
-      branch-re: ^master$
-    - type: pull_request
-      branch-re: ^master$
-    - type: push
-      branch-re: ^master$
-
-  - image: test/mfw_pkg/pyconnector
-    events:
-    - type: merge_group
-      branch-re: ^master$
-    - type: pull_request
-      branch-re: ^master$
-    - type: push
-      branch-re: ^master$
-
-  - image: test/mfw_pkg/upgrade-scripts
-    events:
-    - type: merge_group
-      branch-re: ^master$
-    - type: pull_request
-      branch-re: ^master$
-    - type: push
-      branch-re: ^master$
-
   - image: test/mfw_pkg/mfw-feeds-rpm
     events:
     - type: merge_group
@@ -102,5 +43,13 @@ x-github-bridge:
     - type: push
       branch-re: ^master$
 
+    - image: tests/renovate-json5
+      events:
+        - type: pull_request
+          branch-re: ^main$
+        - type: merge_group
+          branch-re: ^main$
+        - type: push
+          branch-re: ^main$
 
 epoch: 1

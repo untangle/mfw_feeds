@@ -28,17 +28,6 @@ boot() {
 	fi
 
 	write_log "sync-settings command status: $sync_settings_status"
-	if [ $sync_settings_status -eq 0 ] && [ -e /etc/config/hybrid ]; then
-		write_log "Notifying Packetd in EOS to reload the settings file..."
-		signal_output=$(/usr/bin/updateSysdbSignal --sighup 2>&1)
-		signal_status=$?
-
-		if [ $signal_status -eq 0 ]; then
-			write_log "Notified Packetd in EOS to reload the settings file successfully"
-		else
-			write_log "Failed to notify Packetd in EOS to reload the settings file: $signal_output"
-		fi
-	fi
 
 	# ensure we have an up to date defaults.json file
 	/usr/bin/sync-settings -c -s -f /tmp/settings.json
