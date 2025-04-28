@@ -26,11 +26,13 @@ endef
 
 define Py3Package/runtests/install
 	# bin
-	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/runtests $(1)/usr/bin
+	#$(INSTALL_DIR) $(1)/usr/bin
+	#$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/runtests $(1)/usr/bin
 
-	$(INSTALL_DIR) $(1)/usr/lib/runtests
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/runtests $(1)/usr/lib
+	#$(INSTALL_DIR) $(1)/usr/lib/runtests
+	#$(CP) $(PKG_INSTALL_DIR)/usr/lib/runtests $(1)/usr/lib
+
+        $(call Py3Package/runtests/install,$(1))
 
 	# Tests
 	$(INSTALL_DIR) $(1)$(PYTHON3_PKG_DIR)/tests
