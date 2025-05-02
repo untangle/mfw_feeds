@@ -27,7 +27,7 @@ endef
 # Build the Python wheel
 define Build/Compile
 	mkdir -p $(PKG_BUILD_DIR)/openwrt-build
-	cd $(PKG_BUILD_DIR)/runtests; \
+	cd $(PKG_BUILD_DIR); \
 		$(HOST_PYTHON3) setup.py bdist_wheel --dist-dir openwrt-build
 endef
 
