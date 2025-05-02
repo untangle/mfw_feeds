@@ -23,38 +23,23 @@ define Package/runtests/description
 	This module is a Library for running functional MFW tests.
 endef
 
-define Py3Package/runtests/installdefine Build/Prepare
+define Build/Prepare
   $(Build/Prepare/Default)
   $(CP) -r "$(PKG_SOURCE_DIR)/files" "$(PKG_BUILD_DIR)/"
 endef
 
 define Build/Compile
-  #  Explicitly build the wheel.
+  #  Explicitly build the wheel.  This is crucial.
   $(HOSTPYTHON) setup.py sdist bdist_wheel
 endef
 
 define Package/$(PKG_NAME)/install
-  # Install the Python package from the wheel (handled by Py3Package)
-  $(call Py3Package/$(PKG_NAME)/install,$(1))
-
-  # Install extra data files (including tests)
-  $(INSTALL_DIR) $(1)$(PYTHON3_PKG_DIR)/runtests/tests  # Install to package's tests dir
-  $(CP) -r "$(PKG_BUILD_DIR)/files/*" "$(1)$(PYTHON3_PKG_DIR)/runtests/tests/"
+  # Install everything from the staging directory
+  $(INSTALL_DIR_RUNTIME) $(1)
+  $(CP) -r "$(PKG_BUILD_DIR)/usr" "$(1)/"
 endef
 
 $(eval $(call Py3Package,$(PKG_NAME)))
 $(eval $(call BuildPackage,$(PKG_NAME)))
-	# bin
-	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/runtests $(1)/usr/bin
 
-	$(INSTALL_DIR) $(1)/usr/lib/runtests
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/runtests $(1)/usr/lib
-
-	# Tests
-	$(INSTALL_DIR) $(1)$(PYTHON3_PKG_DIR)/tests
-	$(CP) files/usr/lib/python/tests/* $(1)$(PYTHON3_PKG_DIR)/tests
-endef
-
-$(eval $(call Py3Package,$(PKG_NAME)))
 $(eval $(call BuildPackage,$(PKG_NAME)))
