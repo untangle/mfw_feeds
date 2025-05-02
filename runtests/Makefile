@@ -9,7 +9,6 @@ PKG_SOURCE_URL:=git@github.com:untangle/runtests.git
 include ../version.mk
 
 include $(INCLUDE_DIR)/package.mk
-include $(TOPDIR)/feeds/packages/lang/python/python3-package.mk
 
 define Package/runtests
   SUBMENU:=Python
