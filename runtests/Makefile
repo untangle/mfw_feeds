@@ -24,14 +24,40 @@ define Package/runtests/description
 	This module is a Library for running functional MFW tests.
 endef
 
-define Py3Package/runtests/install
-	# bin
+# Build the Python wheel
+define Build/Compile
+	mkdir -p $(PKG_BUILD_DIR)/openwrt-build
+	cd $(PKG_BUILD_DIR); \
+		$(HOST_PYTHON3) setup.py bdist_wheel --dist-dir openwrt-build
+endef
+
+# Install the wheel using python3 -m installer
+define Py3Build/Install/Default
+	$(call Python3/Run, \
+		$(PKG_BUILD_DIR), \
+		-m installer \
+			--destdir "$(PKG_INSTALL_DIR)" \
+			--no-compile-bytecode \
+			--prefix /usr \
+			"$(PKG_BUILD_DIR)/openwrt-build/"*.whl \
+		, \
+		$(PYTHON3_PKG_INSTALL_VARS) \
+	)
+endef
+
+# Install additional files like test scripts
+define Package/runtests/install
+	# Binaries (if any)
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/runtests $(1)/usr/bin
 
+	# Library (if needed)
 	$(INSTALL_DIR) $(1)/usr/lib/runtests
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/runtests $(1)/usr/lib
 
+	# Tests from feeds/mfw/runtests/files/
+	$(INSTALL_DIR) $(1)$(PYTHON3_PKG_DIR)/tests
+	$(CP) files/usr/lib/python/tests/* $(1)$(PYTHON3_PKG_DIR)/tests
 endef
 
 $(eval $(call Py3Package,$(PKG_NAME)))
