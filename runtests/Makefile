@@ -23,33 +23,18 @@ define Package/runtests/description
 	This module is a Library for running functional MFW tests.
 endef
 
-define Py3Package/runtests/Build/Prepare
-	$(call Build/Prepare/Default)
-	$(CP) -r $(CURDIR)/files/usr/lib/python/tests \
-	       $(PKG_BUILD_DIR)/runtests/tests
+define Py3Package/runtests/install
+	# bin
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/runtests $(1)/usr/bin
+
+	$(INSTALL_DIR) $(1)/usr/lib/runtests
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/runtests $(1)/usr/lib
+
+	# Tests
+	$(INSTALL_DIR) $(1)$(PYTHON3_PKG_DIR)/tests
+	$(CP) files/usr/lib/python/tests/* $(1)$(PYTHON3_PKG_DIR)/tests
 endef
 
-# 2) Compile: build one wheel under openwrt-build/
-define Py3Package/runtests/Build/Compile
-	cd $(PKG_BUILD_DIR) && \
-	$(HOST_PYTHON3) -m build --wheel --outdir openwrt-build
-endef
-
-# 3) InstallDev: pick that wheel (no wildcard!) and install it
-define Py3Package/runtests/Build/InstallDev
-	WHEEL=$(firstword $(wildcard $(PKG_BUILD_DIR)/openwrt-build/*.whl)); \
-	[ -n "$$WHEEL" ] || (echo "no .whl found" >&2; exit 1); \
-	$(HOST_PYTHON3) -m installer \
-	  --destdir="$(PKG_INSTALL_DIR)" \
-	  --no-compile-bytecode \
-	  --prefix=/usr \
-	  "$$WHEEL"
-endef
-
-# 4) Package/install: let Py3Package do its thing (tests are now in the wheel)
-define Package/runtests/install
-	$(call Py3Package/runtests/install,$(1))
-endef
-
-$(eval $(call Py3Package,runtests))
-$(eval $(call BuildPackage,runtests))
+$(eval $(call Py3Package,$(PKG_NAME)))
+$(eval $(call BuildPackage,$(PKG_NAME)))
