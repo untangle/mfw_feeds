@@ -27,9 +27,14 @@ endef
 # Build the Python wheel
 define Build/Compile
 	mkdir -p $(PKG_BUILD_DIR)/openwrt-build
-	cd $(PKG_BUILD_DIR) && \
-		$(HOST_PYTHON3) setup.py bdist_wheel --dist-dir openwrt-build
+	cd $(PKG_BUILD_DIR); \
+		python3 setup.py bdist_wheel --dist-dir openwrt-build
 endef
+
+$(info [DEBUG] Installing to $(PYTHON3_PKG_DIR))
+$(info [DEBUG] Installing to $(HOST_PYTHON3))
+$(info [DEBUG] Installing to $(PYTHON3_PKG_DIR))
+
 
 # Install the wheel using python3 -m installer
 define Py3Build/Install/Default
@@ -50,10 +55,10 @@ define Package/runtests/install
 	# Binaries (if any)
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/runtests $(1)/usr/bin
-
 	# Library (if needed)
-	$(INSTALL_DIR) $(1)/usr/lib/runtests
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/runtests $(1)/usr/lib
+
+	$(INSTALL_DIR) $(1)$(PYTHON3_PKG_DIR)/runtests
+	$(CP) -r $(PKG_INSTALL_DIR)$(PYTHON3_PKG_DIR)/runtests/* $(1)$(PYTHON3_PKG_DIR)/runtests/
 
 	# Tests from feeds/mfw/runtests/files/
 	$(INSTALL_DIR) $(1)$(PYTHON3_PKG_DIR)/tests
