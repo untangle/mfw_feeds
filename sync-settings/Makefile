@@ -14,10 +14,9 @@ include $(TOPDIR)/feeds/packages/lang/python/python3-package.mk
 define Package/sync-settings
   SECTION:=lang
   CATEGORY:=Languages
-  SUBMENU:=Python3
+  SUBMENU:=Python
   TITLE:=Library for manipulating MFW system settings
   URL:=https://github.com/untangle/sync-settings
-  PKG_BUILD_DEPENDS:=python3-urllib3 python3-pyroute2
   DEPENDS:= +diffutils +tc +kmod-sched +kmod-sched-cake +kmod-ifb +kmod-sched-connmark +kmod-nf-conncount +kmod-nft-connlimit \
 	  +uuidgen +kmod-nft-fib +openvpn-proto +wan-manager +speedtest-cli \
 	  +python3 +python3-urllib3 +python3-pyroute2 +python3-requests +strongswan-default +strongswan-mod-gcm \
