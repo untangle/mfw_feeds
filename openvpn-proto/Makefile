@@ -16,6 +16,7 @@ define Package/openvpn-proto
   CATEGORY:=Network
   SUBMENU:=VPN
   TITLE:=openvpn protocol support for netifd
+  URL:=https://github.com/untangle/mfw_feeds
   DEPENDS:=+openvpn-openssl
 endef
 
