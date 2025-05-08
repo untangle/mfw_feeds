@@ -27,6 +27,35 @@ define Package/sync-settings/description
 	This module is a Library for manipulating MFW system settings.
 endef
 
+
+
+# Build the Python wheel
+define Build/Compile
+	mkdir -p $(PKG_BUILD_DIR)/openwrt-build
+	cd $(PKG_BUILD_DIR); \
+		python3 setup.py bdist_wheel --dist-dir openwrt-build
+endef
+
+$(info [DEBUG] Installing to $(PYTHON3_PKG_DIR))
+$(info [DEBUG] Installing to $(HOST_PYTHON3))
+$(info [DEBUG] Installing to $(PYTHON3_PKG_DIR))
+
+
+# Install the wheel using python3 -m installer
+define Py3Build/Install/Default
+	$(call Python3/Run, \
+		$(PKG_BUILD_DIR), \
+		-m installer \
+			--destdir "$(PKG_INSTALL_DIR)" \
+			--no-compile-bytecode \
+			--prefix /usr \
+			"$(PKG_BUILD_DIR)/openwrt-build/"*.whl \
+		, \
+		$(PYTHON3_PKG_INSTALL_VARS) \
+	)
+endef
+
+
 define Py3Package/sync-settings/install
 	# bin
 	$(INSTALL_DIR) $(1)/usr/bin
