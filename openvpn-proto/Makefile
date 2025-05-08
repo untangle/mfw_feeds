@@ -3,7 +3,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=openvpn-proto
 PKG_LICENSE:=GPL-2.0
 PKG_VERSION:=1.0
-PKG_RELEASE:=1 
+PKG_RELEASE:=1
 PKG_MAINTAINER:=Brett Mastbergen <bmastbergen@untangle.com>
 PKG_SOURCE_PROTO:=git
 # FIXME: we really don't need *any* source from git right now
