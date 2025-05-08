@@ -19,7 +19,7 @@ define Package/sync-settings
   URL:=https://github.com/untangle/sync-settings
   DEPENDS:= +diffutils +tc +kmod-sched +kmod-sched-cake +kmod-ifb +kmod-sched-connmark +kmod-nf-conncount +kmod-nft-connlimit \
 	  +uuidgen +kmod-nft-fib +openvpn-proto +wan-manager +speedtest-cli \
-	  +python3 +python3-urllib3 +python3-pyroute2 +python3-requests +strongswan-default +strongswan-mod-gcm \
+	  +python3 +python3-urllib3 +python3-pyroute2 +python3-requests +strongswan-default +strongswan-mod-gcm +strongswan-mod-openssl \
 	  +jq +nmap-ssl +lldpd +kmod-wireguard +wireguard-tools +python3-cryptography +secret-manager
 endef
 
