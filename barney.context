@@ -23,7 +23,7 @@
 			"commit": "e31e795f8b98ab03ebe85c1a0e7fc6bb7107ae0b"
 		},
 		"code.arista.io/infra/barney/barnzilla-repos": {
-			"commit": "75228330c4d19ed71d3b59748dde9142ec8cedcd"
+			"commit": "4be6ec520e50b92b1630d7acb12640095457a942"
 		},
 		"github.com/golang/go": {
 			"commit": "34c8b14ca9f4096383d658fbd748322a993a2bd2"
