@@ -32,10 +32,13 @@ cp geoip-database/GeoLite2-Country.mmdb %{buildroot}/usr/share/geoip/
 cp /usr/bin/jq %{buildroot}/usr/bin
 cp /lib64/libjq.so.1 %{buildroot}/usr/lib64
 cp /lib64/libonig.so.5 %{buildroot}/usr/lib64
+# patch is required by intrusion-prevention-get-updates
+cp /usr/bin/patch %{buildroot}/usr/bin
 install -m 755 pyconnector/files/pyconnector %{buildroot}/usr/bin
 install -m 755 pyconnector/files/connector.init %{buildroot}/etc/rc.d/init.d/pyconnector
 install -m 755 pyconnector/files/pyconnector.service %{buildroot}/etc/systemd/system/pyconnector.service
 install -m 755 speedtest-cli/speedtest.py %{buildroot}/usr/bin/speedtest-cli
+install -m 755 intrusion-prevention/files/intrusion-prevention-get-updates %{buildroot}/usr/bin
 
 %files
 /etc/rc.d/init.d/pyconnector
@@ -45,9 +48,11 @@ install -m 755 speedtest-cli/speedtest.py %{buildroot}/usr/bin/speedtest-cli
 /usr/bin/upgrade.sh
 /usr/bin/upload-backup.sh
 /usr/bin/wan-manager
+/usr/bin/intrusion-prevention-get-updates
 /usr/bin/jq
 /usr/lib64/libjq.so.1
 /usr/lib64/libonig.so.5
+/usr/bin/patch
 
 %dir
 /usr/share/geoip
