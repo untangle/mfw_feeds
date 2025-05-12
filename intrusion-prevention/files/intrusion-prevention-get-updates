@@ -462,7 +462,6 @@ class Updater:
 
         for url in urls:
             logger.debug("url=%s", url)
-            # logger.debug("***********************************************",)
 
             url_update = UrlUpdate(self.signatures_directory, url)
 
