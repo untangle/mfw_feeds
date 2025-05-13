@@ -1,0 +1,555 @@
+#!/usr/bin/python3
+"""
+Get signature updates
+"""
+import argparse
+# import getopt
+import logging
+import os
+import pathlib
+import re
+import requests
+import subprocess
+import shutil
+import sys
+import tarfile
+import time
+
+# from typing import TYPE_CHECKING, ClassVar, Literal
+from sync.common import Logger
+
+logger = Logger.getInstance()
+
+Debug = False
+Update_ran_file_name = "/tmp/intrusion-prevention-update.ran"
+
+Suricata_path = "/usr/bin/suricata"
+Suricata_version_regex = re.compile(r'Suricata version (\d+)\.')
+def get_suricata_verison() -> str:
+    """
+    Get version of Suricata
+    """
+    version = None
+    if os.path.exists(Suricata_path):
+        version = subprocess.check_output([Suricata_path,"-V"])
+        match = re.search(Suricata_version_regex, suricata_version.decode('ascii'))
+        if match:
+            version = match.group(1)
+        else:
+            version = None
+    return version
+
+class UrlUpdate:
+    """
+    Update
+    """
+    downloaded_status_code = 0
+    chunk_size = 1024 * 1024
+
+    ##
+    ## If True, we stopped complete processing prematurely, such as
+    ## detectng that the remote and local URL sizes haven't changed (they're the same).
+    ## This indicates we don't need to process further.
+    ##
+    short_circuit_success = False
+
+    def is_short_circuit_success(self) -> bool:
+        """
+        Determine if we had a short circuit success.
+        """
+        return self.short_circuit_success
+
+    def __init__(self, base_path: str, url: str) -> None:
+        self.debug = Debug
+
+        self.base_path = base_path
+
+        self.current_relative_path = "current"
+        self.working_relative_path = "working"
+        self.extract_relative_path = "extract"
+
+        self.current_path = f"{self.base_path}/{self.current_relative_path}"
+        self.working_path = f"{self.base_path}/{self.working_relative_path}"
+
+        self.working_extract_path = f"{self.working_path}/{self.extract_relative_path}"
+        self.working_current_path = f"{self.working_path}/{self.current_relative_path}"
+
+
+        self.url = url
+        if "patch" in self.url:
+            self.patch = True
+        else:
+            self.patch = False
+
+        self.url_file_name = os.path.basename(url)
+        self.current_url_file_name = f"{self.base_path}/{self.url_file_name}"
+        self.working_url_file_name = f"{self.working_path}/{self.url_file_name}"
+
+    def setup(self) -> bool:
+        """
+        Prepare update working directory
+        """
+        logger.debug("cleanup and create work directories")
+
+        if os.path.isdir(self.working_path):
+            try:
+                shutil.rmtree(self.working_path)
+            except Exception as e:
+                logger.error("cannot remove existing working directory=%s, %s", self.working_path,e)
+                return False
+
+        try:
+            os.makedirs(self.working_path)
+        except Exception as e:
+            logger.error("cannot create working directory=%s, %s", self.working_path, e)
+            return False
+
+        return True
+
+    def download(self) -> bool:
+        """
+        Download
+        """
+        logger.debug("get signature set")
+
+        ## Get file size to determine if we need to download
+        if os.path.isfile(self.current_url_file_name):
+            live_signatures_file_size = os.path.getsize(self.current_url_file_name)
+        else:
+            live_signatures_file_size = 0
+
+        request = None
+        try:
+            request = requests.head(self.url)
+        except Exception as e:
+            logger.error("cannot open url=%s, %s", self.url, e)
+            return False
+
+        self.downloaded_status_code = request.status_code
+        if self.downloaded_status_code == 404:
+            logger.error("url=%s, 404 download status", self.url)
+            return False
+
+        url_file_size = int(request.headers['content-length'])
+        if url_file_size == 0:
+            logger.info("content length is 0")
+            return False
+
+        if live_signatures_file_size == url_file_size:
+            logger.debug("current and url sizes are the same=%s", live_signatures_file_size)
+            self.short_circuit_success = True
+            return False
+
+        try:
+            url = requests.get(self.url)
+        except Exception as e:
+            logger.error("cannot get url=%s, %s", self.url, e)
+            return False
+
+        try:
+            write_file = open(self.working_url_file_name, 'wb')
+        except Exception as e:
+            logger.error("cannot create working_url_file_name=%s, %s", self.working_url_file_name, e)
+            return False
+
+        try:
+            for chunk in url.iter_content(chunk_size=UrlUpdate.chunk_size):
+                if chunk:
+                    write_file.write(chunk)
+        except Exception as e:
+            logger.error("cannot write to working_url_file_name=%s, %s", self.working_url_file_name, e)
+            return False
+
+        write_file.close()
+        logger.debug("save %s as %s", self.url, self.working_url_file_name)
+        return True
+
+    def extract(self) -> bool:
+        """
+        Extract to working directory
+        """
+        logger.debug("extract download to %s", self.working_extract_path)
+
+        if os.path.isfile(self.working_url_file_name) is False:
+            logger.error("missing download file=%s", self.working_url_file_name)
+            return False
+
+        try:
+            os.makedirs(self.working_extract_path)
+        except Exception as e:
+            logger.error("cannot create working directory=%s, %s", self.working_path, e)
+            return False
+
+        # Extract to working directory
+        try:
+            tar = tarfile.open(self.working_url_file_name)
+            tar.extractall(path=self.working_extract_path)
+            tar.close()
+        except Exception as e:
+            logger.error("cannot extract downloaded files from %s to %s, %s", self.working_url_file_name, self.working_path, e)
+            return False
+
+        return True
+
+    def validate(self) -> bool:
+        """
+        Validate extracted files
+        """
+        if self.patch:
+            return self.validate_patch()
+        else:
+            return self.validate_full()
+
+    def validate_patch(self) -> bool:
+        """
+        Find and verify patch and companion files.
+        """
+        logger.debug("validate patch files")
+
+        self.patches = []
+        for file_name in os.listdir( self.working_extract_path ):
+            stem = pathlib.Path(file_name).stem
+            suffix = pathlib.Path(file_name).suffix
+            if suffix == ".patch":
+                if os.path.exists( f"{self.working_extract_path}/{stem}.md5") is False:
+                    # Missing .md5 means incomplete patch
+                    logger.error("missing md5 file for patch=%s", stem)
+                    return False
+                else:
+                    self.patches.append(stem)
+
+        if len(self.patches) > 0:
+            logger.debug("found patches=%s", ",".join(self.patches))
+            return True
+        else:
+            return False
+
+    def validate_full(self) -> bool:
+        logger.debug("validate full files")
+
+        return True
+
+    def install(self) -> bool:
+        if self.patch:
+            return self.install_patches()
+        else:
+            return self.install_full()
+
+    def install_patches(self) -> bool:
+        """
+        Patch to copy of current
+        """
+        logger.debug("apply patch to copy of current")
+
+        ##
+        ## Copy current to update directory
+        ##
+        logger.debug("copy %s to %s", self.current_path, self.working_current_path)
+
+        if os.path.isdir(self.working_current_path):
+            try:
+                shutil.rmtree(self.working_current_path)
+            except Exception as e:
+                logger.error("cannot remove existing working_current_path=%s, %s", self.working_current_path, e)
+                return False
+
+        try:
+            shutil.copytree(self.current_path, self.working_current_path)
+        except Exception as e:
+            logger.error("cannot copy existing current_path=%s to working_current_path=%s, %s", self.current_path, self.working_current_path, e)
+            return False
+
+        for patch in self.patches:
+            ##
+            ## We support set of diffs although in practice we're only expecting one
+            ## for the entire set.
+            ##
+            logger.info("processing patch=%s", patch)
+
+            ## Apply patch
+            logger.debug("patch operation: %s", ' '.join(["patch","-p2","-ruN", "-i", f"../{self.extract_relative_path}/{patch}.patch"]))
+
+            patch_command_output = None
+            patch_command = None
+            try:
+                patch_command = subprocess.Popen(["patch","-p2","-ruN", "-i", f"../{self.extract_relative_path}/{patch}.patch"], stderr=subprocess.STDOUT,stdout=subprocess.PIPE, cwd=self.working_current_path, text=True)
+                patch_command_output = patch_command.communicate()[0]
+            except Exception as e:
+                logger.error("unable to apply patch=%s to patch directory=%s, %s", patch, self.working_current_path, e)
+                if patch_command is not None:
+                    logger.error("patch returncode=%d", patch_command.returncode)
+                    if patch_command_output is not None:
+                        for output in patch_command_output.decode("ascii").split("\n"):
+                            if len(output) > 0:
+                                logger.error("patch result=%s", output)
+                return False
+
+            if patch_command.returncode != 0:
+                logger.info("patch returncode=%d", patch_command.returncode)
+                for output in patch_command_output.split("\n"):
+                    if len(output) > 0:
+                        logger.info("patch result=%s", output)
+
+            if patch_command.returncode != 0:
+                return False
+
+            ## validate md5
+            logger.debug("validate md5")
+
+            ## Read patch's md5
+            patch_md5 = None
+            patch_md5_file_name = f"{self.working_extract_path}/{patch}.md5"
+            try:
+                with open(patch_md5_file_name,"r") as file:
+                    patch_md5 = [line.rstrip('\n') for line in file]
+                patch_md5.sort()
+            except Exception as e:
+                logger.error("unable to read patch md5=%s, %s", patch_md5_file_name, e)
+
+            for output in patch_md5:
+                logger.debug("patch md5: %s", output)
+
+            # Get md5 from applied patch
+            md5 = None
+            md5_output = None
+            try:
+                md5 = subprocess.Popen(["find", ".", "!", "-name", "suricatasignatures*.md5", "-type", "f", "-exec", "md5sum", "{}", "+"], stdout=subprocess.PIPE, cwd=self.working_current_path, text=True)
+                md5_output = md5.communicate()[0]
+            except Exception as e:
+                logger.error("unable to validate md5sum, %s", e)
+
+            applied_md5 = []
+            if md5_output is not None:
+                for output in md5_output.split("\n"):
+                    if len(output) > 0:
+                        applied_md5.append(output)
+                applied_md5.sort()
+
+            for output in applied_md5:
+                logger.debug("applied md5: %s", output)
+
+            diffs = set(patch_md5) ^ set(applied_md5)
+            if len(diffs):
+                for diff in list(diffs):
+                    logger.info("md5 mismatch: %s", diff)
+                return False
+            else:
+                logger.debug("md5sums match")
+                working_current_md5_file_name = f"{self.working_current_path}/{patch}.md5"
+
+                try:
+                    shutil.copyfile(patch_md5_file_name, working_current_md5_file_name)
+                except Exception as e:
+                    logger.error("unable to copy=%s to %s, %s", patch_md5_file_name, working_current_md5_file_name, e)
+                    return False
+
+        # All patches applied successfully.  Install to live.
+        logger.debug("copy %s to %s", self.working_current_path, self.current_path)
+
+        ## Remove current directory
+        if os.path.isdir(self.current_path):
+            try:
+                shutil.rmtree(self.current_path)
+            except Exception as e:
+                logger.error("unable to remove %s, %s", self.current_path, e)
+                return False
+
+        ## Move working build to current
+        try:
+            os.rename(self.working_current_path, self.current_path)
+        except Exception as e:
+            logger.error("unable to rename %s to %s, %s", self.working_current_path, self.current_path, e)
+            return False
+
+        return True
+
+    def install_full(self) -> bool:
+        """
+        Install full to live
+        """
+        logger.debug("copy %s to %s", self.working_extract_path, self.current_path)
+
+        ## Remove current directory
+        if os.path.isdir(self.current_path):
+            try:
+                shutil.rmtree(self.current_path)
+            except Exception as e:
+                logger.error("unable to remove %s, %s", self.current_path, e)
+                return False
+
+        ## Move extract to current
+        try:
+            os.rename(self.working_extract_path, self.current_path)
+        except Exception as e:
+            logger.error("unable to rename %s to %s, %s", self.working_extract_path, self.current_path, e)
+            return False
+
+        return True
+
+    def finish(self) -> bool:
+        """
+        Finish up
+        """
+        logger.debug("move %s to %s", self.working_url_file_name, self.current_url_file_name)
+
+        if os.path.isfile(self.current_url_file_name):
+            try:
+                os.remove(self.current_url_file_name)
+            except Exception as e:
+                logger.error("unable to remove=%s, %s", self.current_url_file_name, e)
+                return False
+
+        try:
+            shutil.copyfile(self.working_url_file_name, self.current_url_file_name)
+        except Exception as e:
+            logger.error("unable to copy=%s to %s, %s", self.working_url_file_name, self.current_url_file_name, e)
+            return False
+
+        self.remove_working_path()
+        return True
+
+    def remove_working_path(self) -> bool:
+        """
+        Remove working directory
+        """
+        if os.path.isdir(self.working_path):
+            try:
+                shutil.rmtree(self.working_path)
+            except Exception as e:
+                logger.error("cannot remove existing working directory=%s, %s", self.working_path, e)
+                return False
+
+class Updater:
+    signatures_directory = None
+    url_template = None
+    suricata_version = None
+
+    def __init__(self, signatures_directory: str, url_template: str, suricata_version: int) -> None:
+        """
+        """
+        self.signatures_directory = signatures_directory
+        self.url_template = url_template
+        self.suricata_version = suricata_version
+        return
+
+    def build_urls(self) -> list[str]:
+        """
+        Create precedence list of patch and full URLs to download based on name the version.
+        End list with non-versioned URLs for fallback.    
+        """
+        urls = []
+
+        if self.suricata_version:
+            # Versioned
+            url = self.url_template.replace(".tar.gz", f"{self.suricata_version}.tar.gz")
+            urls.append(url.replace(".tar.gz", ".patch.tar.gz"))
+            urls.append(url)
+
+        # Non-versioned set.
+        urls.append(self.url_template.replace(".tar.gz", ".patch.tar.gz"))
+        urls.append(self.url_template)
+
+        return urls
+
+    def process(self) -> None:
+        """
+        """
+        logger.debug("process")
+
+        urls = self.build_urls()
+    
+        logger.debug("urls=%s",", ".join(urls))
+
+        for url in urls:
+            logger.debug("url=%s", url)
+
+            url_update = UrlUpdate(self.signatures_directory, url)
+
+            if not url_update.setup() \
+                or not url_update.download() \
+                or not url_update.extract() \
+                or not url_update.validate() \
+                or not url_update.install() \
+                or not url_update.finish():
+                
+                if not url_update.is_short_circuit_success():
+                    logger.error("url=%s, failure to process", url)
+                    continue
+                else:
+                    url_update.remove_working_path()
+
+            # Success.
+            logger.info("url=%s, success", url)
+            return
+
+def main() -> None:
+    global Debug
+
+    # Arguments
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    # Debug flag
+    parser.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        default=False,
+        help="debug mode"
+    )
+    # Top level path to store/work with signatures
+    parser.add_argument(
+        "-s", 
+        "--signatures-directory", 
+        action="store", 
+        default="/usr/local/intrusion-prevention-signatures", 
+        help="Signatures download directory"
+    )
+    # URI template.  Will be used to determine actual name based on suricata version
+    parser.add_argument(
+        "-u",
+        "--url-template",
+        action="store",
+        default='https://ids.edge.arista.com/suricatasignatures.tar.gz',
+        help="URL template",
+    )
+    # Suricata version.
+    parser.add_argument(
+        "-v",
+        "--suricata-version",
+        action="store",
+        default=get_suricata_verison(),
+        help="Suricata version",
+    )
+    parser_options = parser.parse_args()
+
+    # Setup debug mode
+    Debug = parser_options.debug
+    if Debug:
+        Logger.setLogLevel(logging.DEBUG)
+        for key,value in vars(parser_options).items():
+            logger.debug(f"{key}={value}")
+
+    time_begin = time.time()
+    updater = Updater(parser_options.signatures_directory, parser_options.url_template, parser_options.suricata_version)
+    updater.process()
+
+    """
+    Always update last updated time even if nothing was downloaded
+    (suricata signatures aren't updated every day)
+    Otherwise customers will call to complain.
+    """
+    if os.path.exists(Update_ran_file_name):
+        os.utime(Update_ran_file_name, None)
+    else:
+        update_ran_file = open(Update_ran_file_name, "a")
+        update_ran_file.close()
+
+    logger.info("elapsed=%.2fs", (time.time() - time_begin))
+
+if __name__ == "__main__":
+    try:
+        main()
+    except OSError as e:
+        logger.critical("error: %s", e)
+        sys.exit(1)
+    except KeyboardInterrupt:
+        sys.exit(1)
