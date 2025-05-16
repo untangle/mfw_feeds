@@ -1,7 +1,7 @@
-From cdb3119d46c60e03112efe5731efa3e805430dfb Mon Sep 17 00:00:00 2001
+From fa61003d976a1151573295fccf3bbc170c3e2f84 Mon Sep 17 00:00:00 2001
 From: singhrohit23 <rohitsingh@arista.com>
-Date: Fri, 16 May 2025 12:53:20 +0530
-Subject: [PATCH] Final commit for dict support with warnings fixed
+Date: Fri, 16 May 2025 17:38:38 +0530
+Subject: [PATCH] Overridden datatype integer to ct_type
 
 ---
  include/Makefile.am       |   1 +
@@ -10,6 +10,7 @@ Subject: [PATCH] Final commit for dict support with warnings fixed
  include/expression.h      |  18 +++
  include/statement.h       |  16 +++
  src/Makefile.am           |   1 +
+ src/ct.c                  |   2 +-
  src/datatype.c            | 100 ++++++++++++++++
  src/dict.c                | 163 ++++++++++++++++++++++++++
  src/evaluate.c            |  43 +++++++
@@ -18,7 +19,7 @@ Subject: [PATCH] Final commit for dict support with warnings fixed
  src/netlink_linearize.c   |  99 +++++++++++++++-
  src/parser_bison.y        | 234 +++++++++++++++++++++++++++++++++++---
  src/scanner.l             |  10 ++
- 14 files changed, 829 insertions(+), 16 deletions(-)
+ 15 files changed, 830 insertions(+), 17 deletions(-)
  create mode 100644 include/dict.h
  create mode 100644 src/dict.c
 
@@ -183,6 +184,19 @@ index ace38bd7..8bbd83f7 100644
  		meta.c				\
  		rt.c				\
  		numgen.c			\
+diff --git a/src/ct.c b/src/ct.c
+index 64327561..315f08ea 100644
+--- a/src/ct.c
++++ b/src/ct.c
+@@ -300,7 +300,7 @@ const struct ct_template ct_templates[__NFT_CT_MAX] = {
+ 					      BYTEORDER_BIG_ENDIAN, 128),
+ 	[NFT_CT_SECMARK]	= CT_TEMPLATE("secmark", &integer_type,
+ 					      BYTEORDER_HOST_ENDIAN, 32),
+-	[NFT_CT_ID]		= CT_TEMPLATE("id", &integer_type,
++	[NFT_CT_ID]		= CT_TEMPLATE("id", &ct_id_type,
+ 					      BYTEORDER_BIG_ENDIAN, 32),
+ };
+ 
 diff --git a/src/datatype.c b/src/datatype.c
 index da802a18..1f9bf773 100644
 --- a/src/datatype.c
