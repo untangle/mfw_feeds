@@ -6,13 +6,11 @@ images:
     units:
     - image: code.arista.io/infra/barney/barnzilla%base
     - image: code.arista.io/infra/barney/barnzilla%network
-    - image: code.arista.io/infra/barney/barnzilla%rpms/yum
-    - image: code.arista.io/infra/barney/barnzilla%rpms/yum-utils
-    - image: code.arista.io/infra/barney/barnzilla%rpms/wget/fakeroot/sudo/EosImage/EosImageBuildUtils/EosUtils/EosSwimUtils
-    - image: code.arista.io/infra/barney/barnzilla%rpms/rpm-build
-    - image: code.arista.io/infra/barney/barnzilla%rpmdb
-    - image: code.arista.io/infra/barney/barnzilla%rpms/jq
     - image: code.arista.io/infra/barney/barnzilla%rpms/bash
+    - image: code.arista.io/infra/barney/barnzilla%rpms/jq
+    - image: code.arista.io/infra/barney/barnzilla%rpms/rpm-build
+    - image: code.arista.io/infra/barney/barnzilla%rpms/wget
+    - image: code.arista.io/infra/barney/barnzilla%rpmdb
 
   # Create the mfw-feeds RPM consisting of some basic scripts
   mfw_pkg/mfw-feeds-rpm:
