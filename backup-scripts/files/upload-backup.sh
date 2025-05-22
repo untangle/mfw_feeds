@@ -6,7 +6,7 @@ VERBOSE=false
 SEND_CURL=true
 BACKUP_COPY_DIR=""
 BACKUP_FILE=mfw_$(date -Iseconds).backup.tar.gz
-URL='https://boxbackup.untangle.com/boxbackup/backup.php'
+URL='https://boxbackup.edge.arista.com/boxbackup/backup.php'
 TRANSLATED_URL=$(wget -qO- "http://127.0.0.1/api/uri/geturiwithpath/uri=$URL")
 
 # As a default, run on openwrt
