@@ -5,7 +5,7 @@
 CLIENT_TARGET=$1
 
 SETUP_TESTSHELL_SCRIPT=/root/setup_testshell.sh
-SETUP_TESTSHELL_URI=http://test.untangle.com/test/setup_testshell.sh
+SETUP_TESTSHELL_URI=http://test.edge.arista.com/test/setup_testshell.sh
 
 ##
 ## Build SSH command base we will use to communicate with client
