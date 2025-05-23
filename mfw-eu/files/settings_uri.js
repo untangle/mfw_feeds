@@ -4,10 +4,10 @@
             "uri": "https://queue.edge.arista.com/v1/put",
             "host": "queue-eu.untangle.com"
         },{
-            "uri": "https://www.edge.arista.com/store/open.php",
+            "uri": "https://edge.arista.com/store/open.php",
             "host": "eu.untangle.com"
         },{
-            "uri": "https://www.edge.arista.com/cmd/networks",
+            "uri": "https://edge.arista.com/cmd/networks",
             "host": "eu.untangle.com"
         },{
             "uri": "https://www.arista.com/cmd/account/",
