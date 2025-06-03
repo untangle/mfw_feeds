@@ -3,7 +3,6 @@ include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=caswell-wifi-led
 PKG_LICENSE:=GPL-2.0
-PKG_MAINTAINER:=Brett Mastbergen <bmastbergen@untangle.com>
 PKG_VERSION=1.0
 
 include $(INCLUDE_DIR)/package.mk

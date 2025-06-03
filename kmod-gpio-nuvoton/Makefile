@@ -3,7 +3,6 @@ include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=gpio-nuvoton
 PKG_LICENSE:=GPL-2.0
-PKG_MAINTAINER:=Brett Mastbergen <bmastbergen@untangle.com>
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/kernel-defaults.mk

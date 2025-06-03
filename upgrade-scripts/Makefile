@@ -2,7 +2,6 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=upgrade-scripts
 PKG_LICENSE:=GPL-2.0
-PKG_MAINTAINER:=Dirk Morris <dmorris@untangle.com>
 PKG_SOURCE_PROTO:=git
 # FIXME: we really don't need *any* source from git right now
 PKG_SOURCE_URL:=git@github.com:untangle/mfw_feeds.git
