@@ -4,7 +4,7 @@ PKG_NAME:=geoip-database
 PKG_MAINTAINER:=Sebastien Delafond <sdelafond@gmail.com>
 PKG_VERSION:=latest
 PKG_SOURCE:=GeoLite2-Country.tar.gz
-PKG_SOURCE_URL:=https://downloads.untangle.com/download.php?resource=geoipCountry
+PKG_SOURCE_URL:=https://downloads.edge.arista.com/download.php?resource=geoipCountry
 PKG_HASH:=skip
 
 include $(INCLUDE_DIR)/package.mk
