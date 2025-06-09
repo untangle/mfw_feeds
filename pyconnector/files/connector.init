@@ -59,17 +59,14 @@ start() {
 	return 0
     fi
     
-    echo "pyconnector : check if settings.json is present"
+    # Check for settings.json to be present before proceeding
     if [ ! -f /mnt/flash/mfw-settings/settings.json ]; then
-       sleep 2
-       echo "pyconnector: Waiting for settings.json file to be present"
-       exit 5
+       exit 1
     fi
 
-    echo "Pyconnector : Wait done for settings.json file, proceed now"
+    echo "pyconnector : settings.json present, proceed"
 
     # If there are no cloud settings, just enable cloud access
-    echo "pyconnector : check if settings.json is present"
     # This is for backward compatibility
     CLOUD=`jq '.system.cloud' /mnt/flash/mfw-settings/settings.json`
     if [ -z "$CLOUD" ] ; then
