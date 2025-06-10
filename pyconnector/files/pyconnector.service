@@ -2,9 +2,14 @@
 Description=Start pyconnector
 Wants=network-online.target
 After=network-online.target
+Requires=sync-settings.service
+After=sync-settings.service
 
 [Service]
 Type=forking
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=200
 ExecStart=/etc/rc.d/init.d/pyconnector start
 ExecStop=/etc/rc.d/init.d/pyconnector stop
 

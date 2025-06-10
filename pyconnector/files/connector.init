@@ -59,6 +59,13 @@ start() {
 	return 0
     fi
     
+    # Check for settings.json to be present before proceeding
+    if [ ! -f /mnt/flash/mfw-settings/settings.json ]; then
+       exit 1
+    fi
+
+    echo "pyconnector : settings.json present, proceed"
+
     # If there are no cloud settings, just enable cloud access
     # This is for backward compatibility
     CLOUD=`jq '.system.cloud' /mnt/flash/mfw-settings/settings.json`
@@ -68,6 +75,7 @@ start() {
         ENABLED=`jq '.system.cloud.enabled' /mnt/flash/mfw-settings/settings.json`
     fi
 
+    
     if [ $ENABLED = "true" ] ; then
         wait_for_restd_start
 
