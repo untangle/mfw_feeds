@@ -10,6 +10,7 @@ Type=forking
 Restart=on-failure
 RestartSec=5
 TimeoutStartSec=200
+ExecCondition=/usr/bin/python3 /usr/local/sbin/efw-enabled.py
 ExecStart=/etc/rc.d/init.d/pyconnector start
 ExecStop=/etc/rc.d/init.d/pyconnector stop
 
