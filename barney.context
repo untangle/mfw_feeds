@@ -11,7 +11,7 @@
 			"commit": "3b0be969199d898f665426ac81d30dfbd3d73388"
 		},
 		"barney.ci/debian": {
-			"commit": "eb84e7903cfd32bffe2b0ab068bc6c87aa810885"
+			"commit": "5d22942b5cf8172ed4dd1f795e7b96b32c3c9188"
 		},
 		"barney.ci/golang": {
 			"commit": "2988f6cf24e21ef39daf513a8116102f2b3e1d34"
