@@ -127,31 +127,18 @@ class UrlUpdate:
             return self.install_full()
 
     def install_full(self) -> bool:
-        """Install a full ruleset by merging its contents into the current directory."""
-        logger.info("Performing full ruleset installation by merging files.")
+        """Install a full ruleset by copying its contents into the current directory, overwriting existing files."""
+        logger.info("Performing full ruleset installation by copying and overwriting files.")
         try:
-            current_rules_dir = os.path.join(self.current_path, 'rules')
-            os.makedirs(current_rules_dir, exist_ok=True)
-            
-            for item_name in os.listdir(self.extract_path):
-                source_item = os.path.join(self.extract_path, item_name)
-                
-                if os.path.isdir(source_item) and item_name == 'rules':
-                    for rule_file in os.listdir(source_item):
-                        shutil.copy2(os.path.join(source_item, rule_file), os.path.join(current_rules_dir, rule_file))
-                elif os.path.isfile(source_item) and item_name.endswith('.rules'):
-                    shutil.copy2(source_item, os.path.join(current_rules_dir, item_name))
-                else:
-                    dest_item = os.path.join(self.current_path, item_name)
-                    if os.path.isdir(source_item):
-                        shutil.copytree(source_item, dest_item, dirs_exist_ok=True)
-                    else:
-                        shutil.copy2(source_item, dest_item)
-
-            logger.info("Full ruleset merged into %s", self.current_path)
+            # Recursively copy from the extract path to the current path.
+            # The `dirs_exist_ok=True` argument ensures that the copy operation
+            # merges the contents into the destination, overwriting any
+            # conflicting files, which is the desired behavior.
+            shutil.copytree(self.extract_path, self.current_path, dirs_exist_ok=True)
+            logger.info("Full ruleset copied to %s", self.current_path)
             return True
         except Exception as e:
-            logger.error("Failed to merge extracted files into current path: %s", e, exc_info=self.debug)
+            logger.error("Failed to copy extracted files to current path: %s", e, exc_info=self.debug)
             return False
 
     def install_patch(self) -> bool:
@@ -250,7 +237,7 @@ class Updater:
         """Iterate through all sources, download, patch/install, and install rules."""
         logger.debug("Starting processing for all sources.")
         
-        # FIX: Ensure the 'current' directory exists but do not delete it.
+        # Ensure the 'current' directory exists but do not delete it.
         # This preserves rules from previous runs.
         os.makedirs(self.current_rules_path, exist_ok=True)
 
@@ -331,7 +318,6 @@ def main() -> None:
     i = 0
     while i < len(args):
         arg = args[i]
-        # FIX: Changed argument name to --url
         if arg == '--url':
             if i + 1 < len(args):
                 sources.append([args[i + 1], ''])
