@@ -33,7 +33,7 @@ get_sim_info()
 }
 
 boot() {
-    grep -q -e caswell-caf-0262 -e untangle-inc-default-string /tmp/sysinfo/board_name
+    grep -q -e caswell-caf-0262 -e untangle-inc-default-string -e arista-networks-inc-default-string /tmp/sysinfo/board_name
     if [ $? -eq 0 -a -c "$device" ] ; then
 	CASWELL_BOOT=1
 	get_sim_info
