@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 """
-Get signature updates
+Get signature updates from multiple sources, apply patches, and check for SID collisions.
+Handles paired URL and Suricata version arguments.
 """
 import argparse
-# import getopt
 import logging
 import os
 import pathlib
@@ -14,542 +14,392 @@ import shutil
 import sys
 import tarfile
 import time
+from urllib.parse import urlparse
 
-# from typing import TYPE_CHECKING, ClassVar, Literal
-from sync.common import Logger
+# This script assumes the sync.common.Logger is available in the environment.
+# If not, a standard Python logger can be substituted.
+try:
+    from sync.common import Logger
+    logger = Logger.getInstance()
+except ImportError:
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    logger = logging.getLogger(__name__)
 
-logger = Logger.getInstance()
 
 Debug = False
 Update_ran_file_name = "/tmp/intrusion-prevention-update.ran"
 
-Suricata_path = "/usr/bin/suricata"
-Suricata_version_regex = re.compile(r'Suricata version (\d+)\.')
-def get_suricata_verison() -> str:
-    """
-    Get version of Suricata
-    """
-    version = None
-    if os.path.exists(Suricata_path):
-        version = subprocess.check_output([Suricata_path,"-V"])
-        match = re.search(Suricata_version_regex, suricata_version.decode('ascii'))
-        if match:
-            version = match.group(1)
-        else:
-            version = None
-    return version
-
 class UrlUpdate:
     """
-    Update
+    Handles the download, extraction, and installation of rules from a single URL.
+    This can be a full ruleset or a patch.
     """
-    downloaded_status_code = 0
     chunk_size = 1024 * 1024
-
-    ##
-    ## If True, we stopped complete processing prematurely, such as
-    ## detectng that the remote and local URL sizes haven't changed (they're the same).
-    ## This indicates we don't need to process further.
-    ##
     short_circuit_success = False
-
-    def is_short_circuit_success(self) -> bool:
-        """
-        Determine if we had a short circuit success.
-        """
-        return self.short_circuit_success
 
     def __init__(self, base_path: str, url: str) -> None:
         self.debug = Debug
-
         self.base_path = base_path
-
-        self.current_relative_path = "current"
-        self.working_relative_path = "working"
-        self.extract_relative_path = "extract"
-
-        self.current_path = f"{self.base_path}/{self.current_relative_path}"
-        self.working_path = f"{self.base_path}/{self.working_relative_path}"
-
-        self.working_extract_path = f"{self.working_path}/{self.extract_relative_path}"
-        self.working_current_path = f"{self.working_path}/{self.current_relative_path}"
-
-
         self.url = url
-        if "patch" in self.url:
-            self.patch = True
-        else:
-            self.patch = False
+        self.patch = ".patch." in self.url
 
+        # Define paths
+        self.current_path = os.path.join(self.base_path, "current")
+        self.working_path = os.path.join(self.base_path, "working")
+        self.extract_path = os.path.join(self.working_path, "extract")
+        self.working_current_path = os.path.join(self.working_path, "current")
+        
         self.url_file_name = os.path.basename(url)
-        self.current_url_file_name = f"{self.base_path}/{self.url_file_name}"
-        self.working_url_file_name = f"{self.working_path}/{self.url_file_name}"
+        self.current_url_file_name = os.path.join(self.base_path, self.url_file_name)
+        self.downloaded_file_path = os.path.join(self.working_path, self.url_file_name)
 
-    def setup(self) -> bool:
-        """
-        Prepare update working directory
-        """
-        logger.debug("cleanup and create work directories")
+        os.makedirs(self.current_path, exist_ok=True)
 
+    def setup_working_dir(self) -> bool:
+        """Prepare a clean working directory for the update process."""
+        logger.debug("Cleaning up and creating work directory: %s", self.working_path)
         if os.path.isdir(self.working_path):
             try:
                 shutil.rmtree(self.working_path)
             except Exception as e:
-                logger.error("cannot remove existing working directory=%s, %s", self.working_path,e)
+                logger.error("Cannot remove existing working directory=%s, %s", self.working_path, e)
                 return False
-
         try:
-            os.makedirs(self.working_path)
+            os.makedirs(self.extract_path, exist_ok=True)
         except Exception as e:
-            logger.error("cannot create working directory=%s, %s", self.working_path, e)
+            logger.error("Cannot create working directory=%s, %s", self.working_path, e)
             return False
-
         return True
 
     def download(self) -> bool:
-        """
-        Download
-        """
-        logger.debug("get signature set")
-
-        ## Get file size to determine if we need to download
-        if os.path.isfile(self.current_url_file_name):
-            live_signatures_file_size = os.path.getsize(self.current_url_file_name)
-        else:
-            live_signatures_file_size = 0
-
-        request = None
+        """Download the rules tarball, checking sizes to avoid re-downloading."""
+        logger.info("Attempting to download from %s", self.url)
+        
         try:
-            request = requests.head(self.url)
-        except Exception as e:
-            logger.error("cannot open url=%s, %s", self.url, e)
+            head_req = requests.head(self.url, timeout=10)
+            if head_req.status_code == 404:
+                logger.warning("URL not found (404): %s", self.url)
+                return False
+            head_req.raise_for_status()
+            remote_size = int(head_req.headers.get('content-length', 0))
+        except requests.exceptions.RequestException as e:
+            logger.error("Failed to get headers from url=%s, %s", self.url, e)
             return False
 
-        self.downloaded_status_code = request.status_code
-        if self.downloaded_status_code == 404:
-            logger.error("url=%s, 404 download status", self.url)
-            return False
-
-        url_file_size = int(request.headers['content-length'])
-        if url_file_size == 0:
-            logger.info("content length is 0")
-            return False
-
-        if live_signatures_file_size == url_file_size:
-            logger.debug("current and url sizes are the same=%s", live_signatures_file_size)
-            self.short_circuit_success = True
-            return False
+        if os.path.exists(self.current_url_file_name):
+            local_size = os.path.getsize(self.current_url_file_name)
+            if local_size == remote_size:
+                logger.info("Remote file size matches local. No download needed for %s.", self.url)
+                self.short_circuit_success = True
+                return False
 
         try:
-            url = requests.get(self.url)
-        except Exception as e:
-            logger.error("cannot get url=%s, %s", self.url, e)
+            with requests.get(self.url, stream=True) as r:
+                r.raise_for_status()
+                with open(self.downloaded_file_path, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=self.chunk_size):
+                        f.write(chunk)
+            logger.debug("Saved %s to %s", self.url, self.downloaded_file_path)
+            return True
+        except requests.exceptions.RequestException as e:
+            logger.error("Failed to download from url=%s, %s", self.url, e)
             return False
-
-        try:
-            write_file = open(self.working_url_file_name, 'wb')
-        except Exception as e:
-            logger.error("cannot create working_url_file_name=%s, %s", self.working_url_file_name, e)
+        except IOError as e:
+            logger.error("Cannot create or write to file=%s, %s", self.downloaded_file_path, e)
             return False
-
-        try:
-            for chunk in url.iter_content(chunk_size=UrlUpdate.chunk_size):
-                if chunk:
-                    write_file.write(chunk)
-        except Exception as e:
-            logger.error("cannot write to working_url_file_name=%s, %s", self.working_url_file_name, e)
-            return False
-
-        write_file.close()
-        logger.debug("save %s as %s", self.url, self.working_url_file_name)
-        return True
 
     def extract(self) -> bool:
-        """
-        Extract to working directory
-        """
-        logger.debug("extract download to %s", self.working_extract_path)
-
-        if os.path.isfile(self.working_url_file_name) is False:
-            logger.error("missing download file=%s", self.working_url_file_name)
-            return False
-
+        """Extract the downloaded tarball."""
+        logger.debug("Extracting %s to %s", self.downloaded_file_path, self.extract_path)
         try:
-            os.makedirs(self.working_extract_path)
-        except Exception as e:
-            logger.error("cannot create working directory=%s, %s", self.working_path, e)
-            return False
-
-        # Extract to working directory
-        try:
-            tar = tarfile.open(self.working_url_file_name)
-            tar.extractall(path=self.working_extract_path)
-            tar.close()
-        except Exception as e:
-            logger.error("cannot extract downloaded files from %s to %s, %s", self.working_url_file_name, self.working_path, e)
-            return False
-
-        return True
-
-    def validate(self) -> bool:
-        """
-        Validate extracted files
-        """
-        if self.patch:
-            return self.validate_patch()
-        else:
-            return self.validate_full()
-
-    def validate_patch(self) -> bool:
-        """
-        Find and verify patch and companion files.
-        """
-        logger.debug("validate patch files")
-
-        self.patches = []
-        for file_name in os.listdir( self.working_extract_path ):
-            stem = pathlib.Path(file_name).stem
-            suffix = pathlib.Path(file_name).suffix
-            if suffix == ".patch":
-                if os.path.exists( f"{self.working_extract_path}/{stem}.md5") is False:
-                    # Missing .md5 means incomplete patch
-                    logger.error("missing md5 file for patch=%s", stem)
-                    return False
-                else:
-                    self.patches.append(stem)
-
-        if len(self.patches) > 0:
-            logger.debug("found patches=%s", ",".join(self.patches))
+            with tarfile.open(self.downloaded_file_path) as tar:
+                tar.extractall(path=self.extract_path)
             return True
-        else:
+        except tarfile.TarError as e:
+            logger.error("Cannot extract downloaded file %s, %s", self.downloaded_file_path, e)
             return False
-
-    def validate_full(self) -> bool:
-        logger.debug("validate full files")
-
-        return True
 
     def install(self) -> bool:
+        """Install rules, dispatching to patch or full install method."""
         if self.patch:
-            return self.install_patches()
+            return self.install_patch()
         else:
             return self.install_full()
 
-    def install_patches(self) -> bool:
-        """
-        Patch to copy of current
-        """
-        logger.debug("apply patch to copy of current")
+    def install_full(self) -> bool:
+        """Install a full ruleset by merging its contents into the current directory."""
+        logger.info("Performing full ruleset installation by merging files.")
+        try:
+            current_rules_dir = os.path.join(self.current_path, 'rules')
+            os.makedirs(current_rules_dir, exist_ok=True)
+            
+            for item_name in os.listdir(self.extract_path):
+                source_item = os.path.join(self.extract_path, item_name)
+                
+                if os.path.isdir(source_item) and item_name == 'rules':
+                    for rule_file in os.listdir(source_item):
+                        shutil.copy2(os.path.join(source_item, rule_file), os.path.join(current_rules_dir, rule_file))
+                elif os.path.isfile(source_item) and item_name.endswith('.rules'):
+                    shutil.copy2(source_item, os.path.join(current_rules_dir, item_name))
+                else:
+                    dest_item = os.path.join(self.current_path, item_name)
+                    if os.path.isdir(source_item):
+                        shutil.copytree(source_item, dest_item, dirs_exist_ok=True)
+                    else:
+                        shutil.copy2(source_item, dest_item)
 
-        ##
-        ## Copy current to update directory
-        ##
-        logger.debug("copy %s to %s", self.current_path, self.working_current_path)
+            logger.info("Full ruleset merged into %s", self.current_path)
+            return True
+        except Exception as e:
+            logger.error("Failed to merge extracted files into current path: %s", e, exc_info=self.debug)
+            return False
 
-        if os.path.isdir(self.working_current_path):
-            try:
-                shutil.rmtree(self.working_current_path)
-            except Exception as e:
-                logger.error("cannot remove existing working_current_path=%s, %s", self.working_current_path, e)
-                return False
+    def install_patch(self) -> bool:
+        """Apply a patch, replacing the entire current ruleset."""
+        logger.warning("Applying a patch will replace any rules from other sources.")
+        logger.info("Applying patch to ruleset.")
+        if not os.path.isdir(self.current_path) or not os.listdir(self.current_path):
+             logger.error("Cannot apply patch: 'current' directory is empty or does not exist.")
+             return False
 
+        logger.debug("Copying %s to %s", self.current_path, self.working_current_path)
         try:
             shutil.copytree(self.current_path, self.working_current_path)
         except Exception as e:
-            logger.error("cannot copy existing current_path=%s to working_current_path=%s, %s", self.current_path, self.working_current_path, e)
+            logger.error("Failed to copy current rules to working directory: %s", e)
             return False
 
-        for patch in self.patches:
-            ##
-            ## We support set of diffs although in practice we're only expecting one
-            ## for the entire set.
-            ##
-            logger.info("processing patch=%s", patch)
+        patch_file = None
+        for root, _, files in os.walk(self.extract_path):
+            for file in files:
+                if file.endswith(".patch"):
+                    patch_file = os.path.join(root, file)
+                    break
+            if patch_file:
+                break
+        
+        if not patch_file:
+            logger.error("No .patch file found in extracted archive.")
+            shutil.rmtree(self.working_current_path)
+            return False
 
-            ## Apply patch
-            logger.debug("patch operation: %s", ' '.join(["patch","-p2","-ruN", "-i", f"../{self.extract_relative_path}/{patch}.patch"]))
-
-            patch_command_output = None
-            patch_command = None
-            try:
-                patch_command = subprocess.Popen(["patch","-p2","-ruN", "-i", f"../{self.extract_relative_path}/{patch}.patch"], stderr=subprocess.STDOUT,stdout=subprocess.PIPE, cwd=self.working_current_path, text=True)
-                patch_command_output = patch_command.communicate()[0]
-            except Exception as e:
-                logger.error("unable to apply patch=%s to patch directory=%s, %s", patch, self.working_current_path, e)
-                if patch_command is not None:
-                    logger.error("patch returncode=%d", patch_command.returncode)
-                    if patch_command_output is not None:
-                        for output in patch_command_output.decode("ascii").split("\n"):
-                            if len(output) > 0:
-                                logger.error("patch result=%s", output)
-                return False
-
-            if patch_command.returncode != 0:
-                logger.info("patch returncode=%d", patch_command.returncode)
-                for output in patch_command_output.split("\n"):
-                    if len(output) > 0:
-                        logger.info("patch result=%s", output)
-
-            if patch_command.returncode != 0:
-                return False
-
-            ## validate md5
-            logger.debug("validate md5")
-
-            ## Read patch's md5
-            patch_md5 = None
-            patch_md5_file_name = f"{self.working_extract_path}/{patch}.md5"
-            try:
-                with open(patch_md5_file_name,"r") as file:
-                    patch_md5 = [line.rstrip('\n') for line in file]
-                patch_md5.sort()
-            except Exception as e:
-                logger.error("unable to read patch md5=%s, %s", patch_md5_file_name, e)
-
-            for output in patch_md5:
-                logger.debug("patch md5: %s", output)
-
-            # Get md5 from applied patch
-            md5 = None
-            md5_output = None
-            try:
-                md5 = subprocess.Popen(["find", ".", "!", "-name", "suricatasignatures*.md5", "-type", "f", "-exec", "md5sum", "{}", "+"], stdout=subprocess.PIPE, cwd=self.working_current_path, text=True)
-                md5_output = md5.communicate()[0]
-            except Exception as e:
-                logger.error("unable to validate md5sum, %s", e)
-
-            applied_md5 = []
-            if md5_output is not None:
-                for output in md5_output.split("\n"):
-                    if len(output) > 0:
-                        applied_md5.append(output)
-                applied_md5.sort()
-
-            for output in applied_md5:
-                logger.debug("applied md5: %s", output)
-
-            diffs = set(patch_md5) ^ set(applied_md5)
-            if len(diffs):
-                for diff in list(diffs):
-                    logger.info("md5 mismatch: %s", diff)
-                return False
-            else:
-                logger.debug("md5sums match")
-                working_current_md5_file_name = f"{self.working_current_path}/{patch}.md5"
-
-                try:
-                    shutil.copyfile(patch_md5_file_name, working_current_md5_file_name)
-                except Exception as e:
-                    logger.error("unable to copy=%s to %s, %s", patch_md5_file_name, working_current_md5_file_name, e)
-                    return False
-
-        # All patches applied successfully.  Install to live.
-        logger.debug("copy %s to %s", self.working_current_path, self.current_path)
-
-        ## Remove current directory
-        if os.path.isdir(self.current_path):
-            try:
-                shutil.rmtree(self.current_path)
-            except Exception as e:
-                logger.error("unable to remove %s, %s", self.current_path, e)
-                return False
-
-        ## Move working build to current
+        logger.debug("Applying patch file: %s", patch_file)
         try:
-            os.rename(self.working_current_path, self.current_path)
-        except Exception as e:
-            logger.error("unable to rename %s to %s, %s", self.working_current_path, self.current_path, e)
+            subprocess.run(
+                ["patch", "-p1", "-ruN", "-i", patch_file],
+                cwd=self.working_current_path,
+                capture_output=True, text=True, check=True
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            logger.error("Failed to apply patch: %s", e)
+            if hasattr(e, 'stderr'):
+                logger.error("Patch command stderr: %s", e.stderr)
+            shutil.rmtree(self.working_current_path)
             return False
 
-        return True
-
-    def install_full(self) -> bool:
-        """
-        Install full to live
-        """
-        logger.debug("copy %s to %s", self.working_extract_path, self.current_path)
-
-        ## Remove current directory
-        if os.path.isdir(self.current_path):
-            try:
-                shutil.rmtree(self.current_path)
-            except Exception as e:
-                logger.error("unable to remove %s, %s", self.current_path, e)
-                return False
-
-        ## Move extract to current
+        logger.debug("Replacing entire 'current' directory with patched version.")
         try:
-            os.rename(self.working_extract_path, self.current_path)
+            shutil.rmtree(self.current_path)
+            shutil.move(self.working_current_path, self.current_path)
+            logger.info("Successfully applied patch and replaced ruleset.")
+            return True
         except Exception as e:
-            logger.error("unable to rename %s to %s, %s", self.working_extract_path, self.current_path, e)
+            logger.error("Failed to replace current directory with patched version: %s", e)
             return False
-
-        return True
 
     def finish(self) -> bool:
-        """
-        Finish up
-        """
-        logger.debug("move %s to %s", self.working_url_file_name, self.current_url_file_name)
-
-        if os.path.isfile(self.current_url_file_name):
-            try:
-                os.remove(self.current_url_file_name)
-            except Exception as e:
-                logger.error("unable to remove=%s, %s", self.current_url_file_name, e)
-                return False
-
+        """Finalize the update by moving the downloaded file."""
+        logger.debug("Copying %s to %s", self.downloaded_file_path, self.current_url_file_name)
         try:
-            shutil.copyfile(self.working_url_file_name, self.current_url_file_name)
-        except Exception as e:
-            logger.error("unable to copy=%s to %s, %s", self.working_url_file_name, self.current_url_file_name, e)
+            shutil.copyfile(self.downloaded_file_path, self.current_url_file_name)
+            self.cleanup()
+            return True
+        except IOError as e:
+            logger.error("Failed to copy downloaded file to final destination: %s", e)
             return False
 
-        self.remove_working_path()
-        return True
-
-    def remove_working_path(self) -> bool:
-        """
-        Remove working directory
-        """
+    def cleanup(self) -> None:
+        """Remove the working directory."""
         if os.path.isdir(self.working_path):
             try:
                 shutil.rmtree(self.working_path)
+                logger.debug("Cleaned up working directory: %s", self.working_path)
             except Exception as e:
-                logger.error("cannot remove existing working directory=%s, %s", self.working_path, e)
-                return False
+                logger.warning("Could not remove working directory=%s, %s", e)
+
 
 class Updater:
-    signatures_directory = None
-    url_template = None
-    suricata_version = None
-
-    def __init__(self, signatures_directory: str, url_template: str, suricata_version: int) -> None:
-        """
-        """
+    """Manages the overall update process for multiple URL templates."""
+    def __init__(self, signatures_directory: str, sources: list[list[str]]) -> None:
         self.signatures_directory = signatures_directory
-        self.url_template = url_template
-        self.suricata_version = suricata_version
-        return
+        self.sources = sources
+        self.current_rules_path = os.path.join(self.signatures_directory, "current")
 
-    def build_urls(self) -> list[str]:
-        """
-        Create precedence list of patch and full URLs to download based on name the version.
-        End list with non-versioned URLs for fallback.    
-        """
+    def build_urls(self, url_template: str, version: str) -> list[str]:
+        """Create a precedence list of patch and full URLs to try."""
         urls = []
-
-        if self.suricata_version:
-            # Versioned
-            url = self.url_template.replace(".tar.gz", f"{self.suricata_version}.tar.gz")
-            urls.append(url.replace(".tar.gz", ".patch.tar.gz"))
-            urls.append(url)
-
-        # Non-versioned set.
-        urls.append(self.url_template.replace(".tar.gz", ".patch.tar.gz"))
-        urls.append(self.url_template)
-
+        if version:
+            versioned_url = url_template.replace(".tar.gz", f"{version}.tar.gz")
+            urls.append(versioned_url.replace(".tar.gz", ".patch.tar.gz"))
+            urls.append(versioned_url)
+        urls.append(url_template.replace(".tar.gz", ".patch.tar.gz"))
+        urls.append(url_template)
         return urls
 
-    def process(self) -> None:
-        """
-        """
-        logger.debug("process")
+    def process_all_urls(self) -> None:
+        """Iterate through all sources, download, patch/install, and install rules."""
+        logger.debug("Starting processing for all sources.")
+        
+        # FIX: Ensure the 'current' directory exists but do not delete it.
+        # This preserves rules from previous runs.
+        os.makedirs(self.current_rules_path, exist_ok=True)
 
-        urls = self.build_urls()
-    
-        logger.debug("urls=%s",", ".join(urls))
-
-        for url in urls:
-            logger.debug("url=%s", url)
-
-            url_update = UrlUpdate(self.signatures_directory, url)
-
-            if not url_update.setup() \
-                or not url_update.download() \
-                or not url_update.extract() \
-                or not url_update.validate() \
-                or not url_update.install() \
-                or not url_update.finish():
-                
-                if not url_update.is_short_circuit_success():
-                    logger.error("url=%s, failure to process", url)
+        for template, version in self.sources:
+            urls_to_try = self.build_urls(template, version)
+            logger.debug("URLs to try for template '%s' (version '%s'): %s", template, version or "none", ", ".join(urls_to_try))
+            
+            success = False
+            for url in urls_to_try:
+                url_updater = UrlUpdate(self.signatures_directory, url)
+                if not url_updater.setup_working_dir():
+                    url_updater.cleanup()
                     continue
-                else:
-                    url_update.remove_working_path()
+                
+                if url_updater.download():
+                    if url_updater.extract() and url_updater.install() and url_updater.finish():
+                        logger.info("Successfully processed update from %s", url)
+                        success = True
+                        break 
+                
+                if url_updater.short_circuit_success:
+                    logger.info("Update for %s already current.", template)
+                    success = True
+                    url_updater.cleanup()
+                    break
 
-            # Success.
-            logger.info("url=%s, success", url)
+                url_updater.cleanup()
+            
+            if not success:
+                logger.error("Could not retrieve rules for template: %s", template)
+
+    def analyze_sid_collisions(self) -> None:
+        """Recursively find all .rules files and check for duplicate SIDs."""
+        logger.info("Starting SID collision analysis...")
+        sid_map = {} # sid -> "filename (line number)"
+        sid_regex = re.compile(r"sid\s*:\s*(\d+);")
+        collision_found = False
+
+        if not os.path.isdir(self.current_rules_path):
+            logger.warning("Rules directory not found, skipping SID analysis: %s", self.current_rules_path)
             return
+
+        # Use os.walk to recursively find all .rules files
+        for root, _, files in os.walk(self.current_rules_path):
+            for file in files:
+                if file.endswith(".rules"):
+                    file_path = os.path.join(root, file)
+                    relative_path = os.path.relpath(file_path, self.current_rules_path)
+                    try:
+                        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                            for i, line in enumerate(f, 1):
+                                match = sid_regex.search(line)
+                                if match:
+                                    sid = match.group(1)
+                                    if sid in sid_map:
+                                        logger.warning(
+                                            "SID COLLISION: sid '%s' in '%s' (line %d) was already found in '%s'.",
+                                            sid, relative_path, i, sid_map[sid]
+                                        )
+                                        collision_found = True
+                                    else:
+                                        sid_map[sid] = f"{relative_path} (line {i})"
+                    except IOError as e:
+                        logger.error("Could not read rule file %s: %s", file_path, e)
+
+        if not collision_found:
+            logger.info("SID analysis complete. No collisions found.")
+        else:
+            logger.warning("SID analysis complete. Collisions were detected.")
+
 
 def main() -> None:
     global Debug
 
-    # Arguments
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    # Debug flag
-    parser.add_argument(
-        "-d",
-        "--debug",
-        action="store_true",
-        default=False,
-        help="debug mode"
-    )
-    # Top level path to store/work with signatures
-    parser.add_argument(
-        "-s", 
-        "--signatures-directory", 
-        action="store", 
-        default="/usr/local/intrusion-prevention-signatures", 
-        help="Signatures download directory"
-    )
-    # URI template.  Will be used to determine actual name based on suricata version
-    parser.add_argument(
-        "-u",
-        "--url-template",
-        action="store",
-        default='https://ids.edge.arista.com/suricatasignatures.tar.gz',
-        help="URL template",
-    )
-    # Suricata version.
-    parser.add_argument(
-        "-v",
-        "--suricata-version",
-        action="store",
-        default=get_suricata_verison(),
-        help="Suricata version",
-    )
-    parser_options = parser.parse_args()
+    sources = []
+    remaining_args = []
+    args = sys.argv[1:]
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        # FIX: Changed argument name to --url
+        if arg == '--url':
+            if i + 1 < len(args):
+                sources.append([args[i + 1], ''])
+                i += 1
+            else:
+                logger.critical("Argument --url requires a value.")
+                sys.exit(1)
+        elif arg == '--suricata-version':
+            if i + 1 < len(args) and sources:
+                sources[-1][1] = args[i + 1]
+                i += 1
+            elif not sources:
+                logger.critical("--suricata-version must be preceded by a --url.")
+                sys.exit(1)
+            else:
+                logger.critical("Argument --suricata-version requires a value.")
+                sys.exit(1)
+        else:
+            remaining_args.append(arg)
+        i += 1
+    
+    if not sources:
+        logger.critical("At least one --url argument is required.")
+        sys.exit(1)
 
-    # Setup debug mode
+    parser = argparse.ArgumentParser(
+        description="Download Suricata rules, apply patches, and check for SID collisions.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument(
+        "-d", "--debug", action="store_true", default=False, help="Enable debug logging."
+    )
+    parser.add_argument(
+        "-s", "--signatures-directory", action="store",
+        default="/usr/local/intrusion-prevention-signatures",
+        help="Base directory to store and process signatures."
+    )
+    
+    parser_options = parser.parse_args(remaining_args)
+
     Debug = parser_options.debug
     if Debug:
-        Logger.setLogLevel(logging.DEBUG)
-        for key,value in vars(parser_options).items():
-            logger.debug(f"{key}={value}")
+        if isinstance(logger, logging.Logger):
+            logger.setLevel(logging.DEBUG)
+        else:
+            Logger.setLogLevel(logging.DEBUG)
+        
+        logger.debug("--- Options ---")
+        logger.debug("Sources (URL, Version): %s", sources)
+        for key, value in vars(parser_options).items():
+            logger.debug("%s: %s", key, value)
+        logger.debug("---------------")
 
     time_begin = time.time()
-    updater = Updater(parser_options.signatures_directory, parser_options.url_template, parser_options.suricata_version)
-    updater.process()
 
-    """
-    Always update last updated time even if nothing was downloaded
-    (suricata signatures aren't updated every day)
-    Otherwise customers will call to complain.
-    """
-    if os.path.exists(Update_ran_file_name):
-        os.utime(Update_ran_file_name, None)
-    else:
-        update_ran_file = open(Update_ran_file_name, "a")
-        update_ran_file.close()
+    updater = Updater(
+        parser_options.signatures_directory,
+        sources
+    )
+    updater.process_all_urls()
+    updater.analyze_sid_collisions()
 
-    logger.info("elapsed=%.2fs", (time.time() - time_begin))
+    pathlib.Path(Update_ran_file_name).touch()
+    logger.info("Update process finished in %.2fs", (time.time() - time_begin))
 
 if __name__ == "__main__":
     try:
         main()
-    except OSError as e:
-        logger.critical("error: %s", e)
-        sys.exit(1)
-    except KeyboardInterrupt:
+    except Exception as e:
+        logger.critical("An unexpected error occurred: %s", e, exc_info=Debug)
         sys.exit(1)
