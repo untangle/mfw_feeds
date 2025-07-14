@@ -3,7 +3,6 @@
 Get signature updates from multiple sources, apply patches, and check for SID collisions.
 Handles paired URL and Suricata version arguments.
 """
-
 import argparse
 import logging
 import os
@@ -21,46 +20,20 @@ from urllib.parse import urlparse
 # If not, a standard Python logger can be substituted.
 try:
     from sync.common import Logger
-
     logger = Logger.getInstance()
 except ImportError:
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-    )
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     logger = logging.getLogger(__name__)
 
 
 Debug = False
 Update_ran_file_name = "/tmp/intrusion-prevention-update.ran"
 
-
-def send_alert(message: str):
-    """Sends an alert using the external send-alert command."""
-    alert_cmd = "/usr/bin/send-alert"
-    if not os.path.exists(alert_cmd):
-        logger.warning("send-alert command not found at %s, skipping alert.", alert_cmd)
-        return
-
-    try:
-        subprocess.run(
-            [alert_cmd, "-t", "IPS", "-s", "WARN", "-m", message],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        logger.info("Successfully sent alert: %s", message)
-    except (subprocess.CalledProcessError, FileNotFoundError) as e:
-        logger.error("Failed to send alert: %s", e)
-        if hasattr(e, "stderr"):
-            logger.error("send-alert stderr: %s", e.stderr)
-
-
 class UrlUpdate:
     """
     Handles the download, extraction, and installation of rules from a single URL.
     This can be a full ruleset or a patch.
     """
-
     chunk_size = 1024 * 1024
     short_circuit_success = False
 
@@ -75,7 +48,7 @@ class UrlUpdate:
         self.working_path = os.path.join(self.base_path, "working")
         self.extract_path = os.path.join(self.working_path, "extract")
         self.working_current_path = os.path.join(self.working_path, "current")
-
+        
         self.url_file_name = os.path.basename(url)
         self.current_url_file_name = os.path.join(self.base_path, self.url_file_name)
         self.downloaded_file_path = os.path.join(self.working_path, self.url_file_name)
@@ -89,11 +62,7 @@ class UrlUpdate:
             try:
                 shutil.rmtree(self.working_path)
             except Exception as e:
-                logger.error(
-                    "Cannot remove existing working directory=%s, %s",
-                    self.working_path,
-                    e,
-                )
+                logger.error("Cannot remove existing working directory=%s, %s", self.working_path, e)
                 return False
         try:
             os.makedirs(self.extract_path, exist_ok=True)
@@ -105,62 +74,49 @@ class UrlUpdate:
     def download(self) -> bool:
         """Download the rules tarball, checking sizes to avoid re-downloading."""
         logger.info("Attempting to download from %s", self.url)
-
+        
         try:
             head_req = requests.head(self.url, timeout=10)
             if head_req.status_code == 404:
                 logger.warning("URL not found (404): %s", self.url)
                 return False
             head_req.raise_for_status()
-            remote_size = int(head_req.headers.get("content-length", 0))
+            remote_size = int(head_req.headers.get('content-length', 0))
         except requests.exceptions.RequestException as e:
-            message = f"Failed to get headers from url={self.url}: {e}"
-            logger.error(message)
-            send_alert(message)
+            logger.error("Failed to get headers from url=%s, %s", self.url, e)
             return False
 
         if os.path.exists(self.current_url_file_name):
             local_size = os.path.getsize(self.current_url_file_name)
             if local_size == remote_size:
-                logger.info(
-                    "Remote file size matches local. No download needed for %s.",
-                    self.url,
-                )
+                logger.info("Remote file size matches local. No download needed for %s.", self.url)
                 self.short_circuit_success = True
                 return False
 
         try:
             with requests.get(self.url, stream=True) as r:
                 r.raise_for_status()
-                with open(self.downloaded_file_path, "wb") as f:
+                with open(self.downloaded_file_path, 'wb') as f:
                     for chunk in r.iter_content(chunk_size=self.chunk_size):
                         f.write(chunk)
             logger.debug("Saved %s to %s", self.url, self.downloaded_file_path)
             return True
         except requests.exceptions.RequestException as e:
-            message = f"Failed to download from url={self.url}: {e}"
-            logger.error(message)
-            send_alert(message)
+            logger.error("Failed to download from url=%s, %s", self.url, e)
             return False
         except IOError as e:
-            message = f"Cannot create or write to file={self.downloaded_file_path}: {e}"
-            logger.error(message)
-            send_alert(message)
+            logger.error("Cannot create or write to file=%s, %s", self.downloaded_file_path, e)
             return False
 
     def extract(self) -> bool:
         """Extract the downloaded tarball."""
-        logger.debug(
-            "Extracting %s to %s", self.downloaded_file_path, self.extract_path
-        )
+        logger.debug("Extracting %s to %s", self.downloaded_file_path, self.extract_path)
         try:
             with tarfile.open(self.downloaded_file_path) as tar:
                 tar.extractall(path=self.extract_path)
             return True
         except tarfile.TarError as e:
-            logger.error(
-                "Cannot extract downloaded file %s, %s", self.downloaded_file_path, e
-            )
+            logger.error("Cannot extract downloaded file %s, %s", self.downloaded_file_path, e)
             return False
 
     def install(self) -> bool:
@@ -172,19 +128,17 @@ class UrlUpdate:
 
     def install_full(self) -> bool:
         """Install a full ruleset by copying its contents into the current directory, overwriting existing files."""
-        logger.info(
-            "Performing full ruleset installation by copying and overwriting files."
-        )
+        logger.info("Performing full ruleset installation by copying and overwriting files.")
         try:
+            # Recursively copy from the extract path to the current path.
+            # The `dirs_exist_ok=True` argument ensures that the copy operation
+            # merges the contents into the destination, overwriting any
+            # conflicting files, which is the desired behavior.
             shutil.copytree(self.extract_path, self.current_path, dirs_exist_ok=True)
             logger.info("Full ruleset copied to %s", self.current_path)
             return True
         except Exception as e:
-            logger.error(
-                "Failed to copy extracted files to current path: %s",
-                e,
-                exc_info=self.debug,
-            )
+            logger.error("Failed to copy extracted files to current path: %s", e, exc_info=self.debug)
             return False
 
     def install_patch(self) -> bool:
@@ -192,10 +146,8 @@ class UrlUpdate:
         logger.warning("Applying a patch will replace any rules from other sources.")
         logger.info("Applying patch to ruleset.")
         if not os.path.isdir(self.current_path) or not os.listdir(self.current_path):
-            logger.error(
-                "Cannot apply patch: 'current' directory is empty or does not exist."
-            )
-            return False
+             logger.error("Cannot apply patch: 'current' directory is empty or does not exist.")
+             return False
 
         logger.debug("Copying %s to %s", self.current_path, self.working_current_path)
         try:
@@ -212,7 +164,7 @@ class UrlUpdate:
                     break
             if patch_file:
                 break
-
+        
         if not patch_file:
             logger.error("No .patch file found in extracted archive.")
             shutil.rmtree(self.working_current_path)
@@ -223,13 +175,11 @@ class UrlUpdate:
             subprocess.run(
                 ["patch", "-p1", "-ruN", "-i", patch_file],
                 cwd=self.working_current_path,
-                capture_output=True,
-                text=True,
-                check=True,
+                capture_output=True, text=True, check=True
             )
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
             logger.error("Failed to apply patch: %s", e)
-            if hasattr(e, "stderr"):
+            if hasattr(e, 'stderr'):
                 logger.error("Patch command stderr: %s", e.stderr)
             shutil.rmtree(self.working_current_path)
             return False
@@ -241,16 +191,12 @@ class UrlUpdate:
             logger.info("Successfully applied patch and replaced ruleset.")
             return True
         except Exception as e:
-            logger.error(
-                "Failed to replace current directory with patched version: %s", e
-            )
+            logger.error("Failed to replace current directory with patched version: %s", e)
             return False
 
     def finish(self) -> bool:
         """Finalize the update by moving the downloaded file."""
-        logger.debug(
-            "Copying %s to %s", self.downloaded_file_path, self.current_url_file_name
-        )
+        logger.debug("Copying %s to %s", self.downloaded_file_path, self.current_url_file_name)
         try:
             shutil.copyfile(self.downloaded_file_path, self.current_url_file_name)
             self.cleanup()
@@ -271,7 +217,6 @@ class UrlUpdate:
 
 class Updater:
     """Manages the overall update process for multiple URL templates."""
-
     def __init__(self, signatures_directory: str, sources: list[list[str]]) -> None:
         self.signatures_directory = signatures_directory
         self.sources = sources
@@ -291,35 +236,28 @@ class Updater:
     def process_all_urls(self) -> None:
         """Iterate through all sources, download, patch/install, and install rules."""
         logger.debug("Starting processing for all sources.")
-
+        
+        # Ensure the 'current' directory exists but do not delete it.
+        # This preserves rules from previous runs.
         os.makedirs(self.current_rules_path, exist_ok=True)
 
         for template, version in self.sources:
             urls_to_try = self.build_urls(template, version)
-            logger.debug(
-                "URLs to try for template '%s' (version '%s'): %s",
-                template,
-                version or "none",
-                ", ".join(urls_to_try),
-            )
-
+            logger.debug("URLs to try for template '%s' (version '%s'): %s", template, version or "none", ", ".join(urls_to_try))
+            
             success = False
             for url in urls_to_try:
                 url_updater = UrlUpdate(self.signatures_directory, url)
                 if not url_updater.setup_working_dir():
                     url_updater.cleanup()
                     continue
-
+                
                 if url_updater.download():
-                    if (
-                        url_updater.extract()
-                        and url_updater.install()
-                        and url_updater.finish()
-                    ):
+                    if url_updater.extract() and url_updater.install() and url_updater.finish():
                         logger.info("Successfully processed update from %s", url)
                         success = True
-                        break
-
+                        break 
+                
                 if url_updater.short_circuit_success:
                     logger.info("Update for %s already current.", template)
                     success = True
@@ -327,33 +265,29 @@ class Updater:
                     break
 
                 url_updater.cleanup()
-
+            
             if not success:
                 logger.error("Could not retrieve rules for template: %s", template)
 
     def analyze_sid_collisions(self) -> None:
         """Recursively find all .rules files and check for duplicate SIDs."""
         logger.info("Starting SID collision analysis...")
-        sid_map = {}  # sid -> "filename (line number)"
+        sid_map = {} # sid -> "filename (line number)"
         sid_regex = re.compile(r"sid\s*:\s*(\d+);")
         collision_found = False
 
         if not os.path.isdir(self.current_rules_path):
-            logger.warning(
-                "Rules directory not found, skipping SID analysis: %s",
-                self.current_rules_path,
-            )
+            logger.warning("Rules directory not found, skipping SID analysis: %s", self.current_rules_path)
             return
 
+        # Use os.walk to recursively find all .rules files
         for root, _, files in os.walk(self.current_rules_path):
             for file in files:
                 if file.endswith(".rules"):
                     file_path = os.path.join(root, file)
                     relative_path = os.path.relpath(file_path, self.current_rules_path)
                     try:
-                        with open(
-                            file_path, "r", encoding="utf-8", errors="ignore"
-                        ) as f:
+                        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                             for i, line in enumerate(f, 1):
                                 match = sid_regex.search(line)
                                 if match:
@@ -361,10 +295,7 @@ class Updater:
                                     if sid in sid_map:
                                         logger.warning(
                                             "SID COLLISION: sid '%s' in '%s' (line %d) was already found in '%s'.",
-                                            sid,
-                                            relative_path,
-                                            i,
-                                            sid_map[sid],
+                                            sid, relative_path, i, sid_map[sid]
                                         )
                                         collision_found = True
                                     else:
@@ -375,9 +306,7 @@ class Updater:
         if not collision_found:
             logger.info("SID analysis complete. No collisions found.")
         else:
-            message = "IPS update failed: SID collision(s) detected. Please check system logs for details."
-            logger.warning(message)
-            send_alert(message)
+            logger.warning("SID analysis complete. Collisions were detected.")
 
 
 def main() -> None:
@@ -389,14 +318,14 @@ def main() -> None:
     i = 0
     while i < len(args):
         arg = args[i]
-        if arg == "--url":
+        if arg == '--url':
             if i + 1 < len(args):
-                sources.append([args[i + 1], ""])
+                sources.append([args[i + 1], ''])
                 i += 1
             else:
                 logger.critical("Argument --url requires a value.")
                 sys.exit(1)
-        elif arg == "--suricata-version":
+        elif arg == '--suricata-version':
             if i + 1 < len(args) and sources:
                 sources[-1][1] = args[i + 1]
                 i += 1
@@ -409,30 +338,24 @@ def main() -> None:
         else:
             remaining_args.append(arg)
         i += 1
-
+    
     if not sources:
         logger.critical("At least one --url argument is required.")
         sys.exit(1)
 
     parser = argparse.ArgumentParser(
         description="Download Suricata rules, apply patches, and check for SID collisions.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
-        "-d",
-        "--debug",
-        action="store_true",
-        default=False,
-        help="Enable debug logging.",
+        "-d", "--debug", action="store_true", default=False, help="Enable debug logging."
     )
     parser.add_argument(
-        "-s",
-        "--signatures-directory",
-        action="store",
+        "-s", "--signatures-directory", action="store",
         default="/usr/local/intrusion-prevention-signatures",
-        help="Base directory to store and process signatures.",
+        help="Base directory to store and process signatures."
     )
-
+    
     parser_options = parser.parse_args(remaining_args)
 
     Debug = parser_options.debug
@@ -441,7 +364,7 @@ def main() -> None:
             logger.setLevel(logging.DEBUG)
         else:
             Logger.setLogLevel(logging.DEBUG)
-
+        
         logger.debug("--- Options ---")
         logger.debug("Sources (URL, Version): %s", sources)
         for key, value in vars(parser_options).items():
@@ -450,13 +373,15 @@ def main() -> None:
 
     time_begin = time.time()
 
-    updater = Updater(parser_options.signatures_directory, sources)
+    updater = Updater(
+        parser_options.signatures_directory,
+        sources
+    )
     updater.process_all_urls()
     updater.analyze_sid_collisions()
 
     pathlib.Path(Update_ran_file_name).touch()
     logger.info("Update process finished in %.2fs", (time.time() - time_begin))
-
 
 if __name__ == "__main__":
     try:
