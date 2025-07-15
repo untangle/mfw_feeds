@@ -46,7 +46,7 @@ class UrlUpdate:
         # Define paths
         self.current_path = os.path.join(self.base_path, "current")
         self.working_path = os.path.join(self.base_path, "working")
-        self.extract_path = os.path.join(self.working_path, "extract")
+        self.working_extract_path = os.path.join(self.working_path, "extract")
         self.working_current_path = os.path.join(self.working_path, "current")
         
         self.url_file_name = os.path.basename(url)
@@ -65,7 +65,7 @@ class UrlUpdate:
                 logger.error("Cannot remove existing working directory=%s, %s", self.working_path, e)
                 return False
         try:
-            os.makedirs(self.extract_path, exist_ok=True)
+            os.makedirs(self.working_extract_path, exist_ok=True)
         except Exception as e:
             logger.error("Cannot create working directory=%s, %s", self.working_path, e)
             return False
@@ -110,10 +110,10 @@ class UrlUpdate:
 
     def extract(self) -> bool:
         """Extract the downloaded tarball."""
-        logger.debug("Extracting %s to %s", self.downloaded_file_path, self.extract_path)
+        logger.debug("Extracting %s to %s", self.downloaded_file_path, self.working_extract_path)
         try:
             with tarfile.open(self.downloaded_file_path) as tar:
-                tar.extractall(path=self.extract_path)
+                tar.extractall(path=self.working_extract_path)
             return True
         except tarfile.TarError as e:
             logger.error("Cannot extract downloaded file %s, %s", self.downloaded_file_path, e)
@@ -134,7 +134,7 @@ class UrlUpdate:
             # The `dirs_exist_ok=True` argument ensures that the copy operation
             # merges the contents into the destination, overwriting any
             # conflicting files, which is the desired behavior.
-            shutil.copytree(self.extract_path, self.current_path, dirs_exist_ok=True)
+            shutil.copytree(self.working_extract_path, self.current_path, dirs_exist_ok=True)
             logger.info("Full ruleset copied to %s", self.current_path)
             return True
         except Exception as e:
@@ -157,7 +157,7 @@ class UrlUpdate:
             return False
 
         patch_file = None
-        for root, _, files in os.walk(self.extract_path):
+        for root, _, files in os.walk(self.working_extract_path):
             for file in files:
                 if file.endswith(".patch"):
                     patch_file = os.path.join(root, file)
