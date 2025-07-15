@@ -60,7 +60,7 @@ class UrlUpdate:
         logger.debug("Cleaning up and creating work directory: %s", self.working_path)
         if os.path.isdir(self.working_path):
             try:
-                shutil.rmtree(self.working_path)
+                self.cleanup()
             except Exception as e:
                 logger.error("Cannot remove existing working directory=%s, %s", self.working_path, e)
                 return False
