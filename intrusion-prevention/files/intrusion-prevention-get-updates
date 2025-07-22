@@ -29,6 +29,20 @@ except ImportError:
 Debug = False
 Update_ran_file_name = "/tmp/intrusion-prevention-update.ran"
 
+def send_alert(severity: str, message: str) -> None:
+    """
+    Sends an alert using the external /usr/bin/send-alert program.
+    """
+    cmd = ["/usr/bin/send-alert", "-s", severity, "-t", "IPS", "-m", message]
+    try:
+        subprocess.run(cmd, check=False, capture_output=True, text=True)
+        logger.debug("Executed send-alert command: %s", " ".join(cmd))
+    except FileNotFoundError:
+        logger.error("The /usr/bin/send-alert command was not found.")
+    except Exception as e:
+        logger.error("Failed to execute send-alert: %s", e)
+
+
 class UrlUpdate:
     """
     Handles the download, extraction, and installation of rules from a single URL.
@@ -79,17 +93,31 @@ class UrlUpdate:
             head_req = requests.head(self.url, timeout=10)
             if head_req.status_code == 404:
                 logger.warning("URL not found (404): %s", self.url)
+                if not self.patch:
+                    send_alert(
+                        "WARN",
+                        f"Failed to download rules from source (404 Not Found): {self.url}"
+                    )
                 return False
             head_req.raise_for_status()
             remote_size = int(head_req.headers.get('content-length', 0))
         except requests.exceptions.RequestException as e:
             logger.error("Failed to get headers from url=%s, %s", self.url, e)
+            if not self.patch:
+                send_alert(
+                    "WARN",
+                    f"Failed to download rules from source: {self.url}. Error: {e}"
+                )
             return False
 
         if os.path.exists(self.current_url_file_name):
             local_size = os.path.getsize(self.current_url_file_name)
             if local_size == remote_size:
                 logger.info("Remote file size matches local. No download needed for %s.", self.url)
+                send_alert(
+                    "INFO",
+                    f"Rules from source {self.url} are already current. No download needed."
+                )
                 self.short_circuit_success = True
                 return False
 
@@ -103,6 +131,11 @@ class UrlUpdate:
             return True
         except requests.exceptions.RequestException as e:
             logger.error("Failed to download from url=%s, %s", self.url, e)
+            if not self.patch:
+                send_alert(
+                    "WARN",
+                    f"Failed to download rules from source: {self.url}. Error: {e}"
+                )
             return False
         except IOError as e:
             logger.error("Cannot create or write to file=%s, %s", self.downloaded_file_path, e)
@@ -246,6 +279,7 @@ class Updater:
             logger.debug("URLs to try for template '%s' (version '%s'): %s", template, version or "none", ", ".join(urls_to_try))
             
             success = False
+            successful_url = None
             for url in urls_to_try:
                 url_updater = UrlUpdate(self.signatures_directory, url)
                 if not url_updater.setup_working_dir():
@@ -256,18 +290,26 @@ class Updater:
                     if url_updater.extract() and url_updater.install() and url_updater.finish():
                         logger.info("Successfully processed update from %s", url)
                         success = True
+                        successful_url = url
                         break 
                 
                 if url_updater.short_circuit_success:
                     logger.info("Update for %s already current.", template)
                     success = True
+                    successful_url = url
                     url_updater.cleanup()
                     break
 
                 url_updater.cleanup()
             
-            if not success:
+            if success:
+                send_alert(
+                    "INFO",
+                    f"Successfully updated IPS signatures from source: {successful_url}"
+                )
+            else:
                 logger.error("Could not retrieve rules for template: %s", template)
+
 
     def analyze_sid_collisions(self) -> None:
         """Recursively find all .rules files and check for duplicate SIDs."""
