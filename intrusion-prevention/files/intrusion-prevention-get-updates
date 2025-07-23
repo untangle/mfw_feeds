@@ -29,6 +29,33 @@ except ImportError:
 Debug = False
 Update_ran_file_name = "/tmp/intrusion-prevention-update.ran"
 
+def send_alert(severity: str, message: str) -> None:
+    """
+    Sends an alert using the external /usr/bin/send-alert program.
+    """
+    cmd = ["/usr/bin/send-alert", "-s", severity, "-t", "IPS", "-m", message]
+    try:
+        # Assign the result to the 'result' variable
+        result = subprocess.run(cmd, check=False, capture_output=True, text=True)
+        
+        # Log the command that was executed
+        # Note: shlex.join(cmd) is often better for representing the command
+        logger.debug("Executed command: %s", " ".join(cmd))
+
+        # Log the return code and any output 📝
+        logger.debug("send-alert return code: %d", result.returncode)
+        if result.stdout:
+            logger.debug("send-alert stdout: %s", result.stdout.strip())
+        if result.stderr:
+            # Use warning or error level for stderr depending on your needs
+            logger.warning("send-alert stderr: %s", result.stderr.strip())
+
+    except FileNotFoundError:
+        logger.error("The /usr/bin/send-alert command was not found.")
+    except Exception as e:
+        logger.error("Failed to execute send-alert: %s", e)
+
+
 class UrlUpdate:
     """
     Handles the download, extraction, and installation of rules from a single URL.
@@ -46,7 +73,7 @@ class UrlUpdate:
         # Define paths
         self.current_path = os.path.join(self.base_path, "current")
         self.working_path = os.path.join(self.base_path, "working")
-        self.extract_path = os.path.join(self.working_path, "extract")
+        self.working_extract_path = os.path.join(self.working_path, "extract")
         self.working_current_path = os.path.join(self.working_path, "current")
         
         self.url_file_name = os.path.basename(url)
@@ -60,12 +87,12 @@ class UrlUpdate:
         logger.debug("Cleaning up and creating work directory: %s", self.working_path)
         if os.path.isdir(self.working_path):
             try:
-                shutil.rmtree(self.working_path)
+                self.cleanup()
             except Exception as e:
                 logger.error("Cannot remove existing working directory=%s, %s", self.working_path, e)
                 return False
         try:
-            os.makedirs(self.extract_path, exist_ok=True)
+            os.makedirs(self.working_extract_path, exist_ok=True)
         except Exception as e:
             logger.error("Cannot create working directory=%s, %s", self.working_path, e)
             return False
@@ -79,17 +106,31 @@ class UrlUpdate:
             head_req = requests.head(self.url, timeout=10)
             if head_req.status_code == 404:
                 logger.warning("URL not found (404): %s", self.url)
+                if not self.patch:
+                    send_alert(
+                        "WARN",
+                        f"Failed to download rules from source (404 Not Found): {self.url}"
+                    )
                 return False
             head_req.raise_for_status()
             remote_size = int(head_req.headers.get('content-length', 0))
         except requests.exceptions.RequestException as e:
             logger.error("Failed to get headers from url=%s, %s", self.url, e)
+            if not self.patch:
+                send_alert(
+                    "WARN",
+                    f"Failed to get headers for rules from source: {self.url}. Error: {e}"
+                )
             return False
 
         if os.path.exists(self.current_url_file_name):
             local_size = os.path.getsize(self.current_url_file_name)
             if local_size == remote_size:
                 logger.info("Remote file size matches local. No download needed for %s.", self.url)
+                send_alert(
+                    "INFO",
+                    f"Rules from source {self.url} are already current. No download needed."
+                )
                 self.short_circuit_success = True
                 return False
 
@@ -103,6 +144,11 @@ class UrlUpdate:
             return True
         except requests.exceptions.RequestException as e:
             logger.error("Failed to download from url=%s, %s", self.url, e)
+            if not self.patch:
+                send_alert(
+                    "WARN",
+                    f"Failed to download rules file from source: {self.url}. Error: {e}"
+                )
             return False
         except IOError as e:
             logger.error("Cannot create or write to file=%s, %s", self.downloaded_file_path, e)
@@ -110,10 +156,10 @@ class UrlUpdate:
 
     def extract(self) -> bool:
         """Extract the downloaded tarball."""
-        logger.debug("Extracting %s to %s", self.downloaded_file_path, self.extract_path)
+        logger.debug("Extracting %s to %s", self.downloaded_file_path, self.working_extract_path)
         try:
             with tarfile.open(self.downloaded_file_path) as tar:
-                tar.extractall(path=self.extract_path)
+                tar.extractall(path=self.working_extract_path)
             return True
         except tarfile.TarError as e:
             logger.error("Cannot extract downloaded file %s, %s", self.downloaded_file_path, e)
@@ -134,7 +180,7 @@ class UrlUpdate:
             # The `dirs_exist_ok=True` argument ensures that the copy operation
             # merges the contents into the destination, overwriting any
             # conflicting files, which is the desired behavior.
-            shutil.copytree(self.extract_path, self.current_path, dirs_exist_ok=True)
+            shutil.copytree(self.working_extract_path, self.current_path, dirs_exist_ok=True)
             logger.info("Full ruleset copied to %s", self.current_path)
             return True
         except Exception as e:
@@ -157,7 +203,7 @@ class UrlUpdate:
             return False
 
         patch_file = None
-        for root, _, files in os.walk(self.extract_path):
+        for root, _, files in os.walk(self.working_extract_path):
             for file in files:
                 if file.endswith(".patch"):
                     patch_file = os.path.join(root, file)
@@ -246,6 +292,7 @@ class Updater:
             logger.debug("URLs to try for template '%s' (version '%s'): %s", template, version or "none", ", ".join(urls_to_try))
             
             success = False
+            successful_url = None
             for url in urls_to_try:
                 url_updater = UrlUpdate(self.signatures_directory, url)
                 if not url_updater.setup_working_dir():
@@ -256,18 +303,26 @@ class Updater:
                     if url_updater.extract() and url_updater.install() and url_updater.finish():
                         logger.info("Successfully processed update from %s", url)
                         success = True
+                        successful_url = url
                         break 
                 
                 if url_updater.short_circuit_success:
                     logger.info("Update for %s already current.", template)
                     success = True
+                    successful_url = url
                     url_updater.cleanup()
                     break
 
                 url_updater.cleanup()
             
-            if not success:
+            if success:
+                send_alert(
+                    "INFO",
+                    f"Successfully updated IPS signatures from source: {successful_url}"
+                )
+            else:
                 logger.error("Could not retrieve rules for template: %s", template)
+
 
     def analyze_sid_collisions(self) -> None:
         """Recursively find all .rules files and check for duplicate SIDs."""
