@@ -35,8 +35,21 @@ def send_alert(severity: str, message: str) -> None:
     """
     cmd = ["/usr/bin/send-alert", "-s", severity, "-t", "IPS", "-m", message]
     try:
-        subprocess.run(cmd, check=False, capture_output=True, text=True)
-        logger.debug("Executed send-alert command: %s", " ".join(cmd))
+        # Assign the result to the 'result' variable
+        result = subprocess.run(cmd, check=False, capture_output=True, text=True)
+        
+        # Log the command that was executed
+        # Note: shlex.join(cmd) is often better for representing the command
+        logger.debug("Executed command: %s", " ".join(cmd))
+
+        # Log the return code and any output 📝
+        logger.debug("send-alert return code: %d", result.returncode)
+        if result.stdout:
+            logger.debug("send-alert stdout: %s", result.stdout.strip())
+        if result.stderr:
+            # Use warning or error level for stderr depending on your needs
+            logger.warning("send-alert stderr: %s", result.stderr.strip())
+
     except FileNotFoundError:
         logger.error("The /usr/bin/send-alert command was not found.")
     except Exception as e:
@@ -106,7 +119,7 @@ class UrlUpdate:
             if not self.patch:
                 send_alert(
                     "WARN",
-                    f"Failed to download rules from source: {self.url}. Error: {e}"
+                    f"Failed to get headers for rules from source: {self.url}. Error: {e}"
                 )
             return False
 
@@ -134,7 +147,7 @@ class UrlUpdate:
             if not self.patch:
                 send_alert(
                     "WARN",
-                    f"Failed to download rules from source: {self.url}. Error: {e}"
+                    f"Failed to download rules file from source: {self.url}. Error: {e}"
                 )
             return False
         except IOError as e:
