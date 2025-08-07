@@ -24,9 +24,6 @@ images:
         - github.com/untangle/mfw_feeds
         - github.com/sivel/speedtest-cli
       build: |
-        # Remove once barnzilla%base is fixed to no longer break rpmdb
-        /usr/libexec/barnzilla/init-rpmdb-from-rpmcache
-
         MFWFEEDS_DIR="/src/github.com/untangle/mfw_feeds"
         MFWFEEDS_TARDIR="/dest/mfw-tardir/"
         RPMDIR="/dest/mfw-rpms"
