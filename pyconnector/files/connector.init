@@ -7,6 +7,10 @@
 RETVAL=0
 prog="pyconnector"
 binary=/usr/bin/pyconnector
+SETTINGS_FILE="/mnt/flash/mfw-settings/settings.json"
+# default httpPort for EOS/EFW
+DEFAULT_PORT="1024"
+HTTP_PORT=""
 
 get_translated_host()
 {
@@ -18,7 +22,9 @@ get_translated_host()
         # Only host - add https:// for lookup
         uri="https://"$uri"/"
     fi
-    translated_url=$(wget -qO- "http://127.0.0.1/api/uri/geturiwithpath/uri=$uri")
+    echo "uri is $uri"
+    translated_url=$(wget -qO- "http://127.0.0.1::$HTTP_PORT/api/uri/geturiwithpath/uri=$uri")
+    echo "translated_url is $translated_url"
     if [ "translated_url" != "" ] ; then
         host=$translated_url
     fi
@@ -26,6 +32,7 @@ get_translated_host()
     host=${host##https://}
     # Strip trailing path
     host=${host%%/*}
+    echo "host is $host"
 
 	eval "$__return_host=$host"
 }
@@ -36,7 +43,7 @@ get_translated_host()
 wait_for_restd_start() {
     local max_retries=20
     local retry_delay=1
-    local url="http://localhost/ping"
+    local url="http://localhost:$HTTP_PORT/ping"
 
     for attempt in $(seq 1 $max_retries); do
         response=$(curl -s "$url")
@@ -52,6 +59,15 @@ wait_for_restd_start() {
     echo "pyconnector: restd failed to start after $((max_retries * retry_delay)) seconds. Continuing..."
 }
 
+# Function to read HTTP port from settings.json
+load_http_port() {
+    if [ -f "$SETTINGS_FILE" ]; then
+        HTTP_PORT=$(jq -r '.system.httpPort // "'$DEFAULT_PORT'"' "$SETTINGS_FILE" 2>/dev/null)
+    fi
+
+    echo "HTTP_PORT is $HTTP_PORT"
+}
+
 start() {
     status $prog > /dev/null
     if [ $? -eq 0 ]; then
@@ -65,6 +81,8 @@ start() {
     fi
 
     echo "pyconnector : settings.json present, proceed"
+
+    load_http_port
 
     # If there are no cloud settings, just enable cloud access
     # This is for backward compatibility
